@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="/assets/css/create-post.css">
+  <title><%= pageTitle %></title>
+</head>
+<body>
+
+  <h1>Добавить новый пост</h1>
+
+  <form action="create-post" method="post" enctype="multipart/form-data">
+    <div>
+      <label for="title">Заголовок</label>
+      <input type="text" id="title" name="title" required />
+    </div>
+
+    <div>
+      <label for="content">Содержание</label>
+      <textarea id="content" name="content" required></textarea>
+    </div>
+
+    <div>
+      <label for="category">Категория</label>
+      <select id="category" name="category">
+        <option value="">-- Выберите категорию --</option>
+        <option value="tech">Технологии</option>
+        <option value="life">Жизнь</option>
+        <option value="travel">Путешествия</option>
+        <option value="education">Образование</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="image">Изображение</label>
+      <input type="file" id="image" name="image" accept="image/*" />
+    </div>
+
+    <button type="submit">Опубликовать пост</button>
+  </form>
+
+</body>
+</html>
