@@ -19,7 +19,7 @@
                             <article class="post">
                                 <header>
                                     <div class="title">
-                                        <h2><a href="single.html">
+                                        <h2><a href="/single/<%= post.id %>">
                                                 <%= post.title %>
                                             </a></h2>
                                         <p>Lorem ipsum dolor amet nullam consequat etiam feugiat</p>
@@ -30,16 +30,16 @@
                                                 src="images/avatar.jpg" alt="" /></a>
                                     </div>
                                 </header>
-                                <a href="single.html" class="image featured"><img src="<%= post.image %>" alt="" /></a>
+                                <a href="/single/<%= post.id %>" class="image featured"><img src="<%= post.image %>" alt="" /></a>
                                 <p>
                                     <%= post.content %>
                                 </p>
                                 <footer>
                                     <ul class="actions">
-                                        <li><a href="/single" class="button large">Continue Reading</a></li>
+                                        <li><a href="/single/<%= post.id %>" class="button large">Continue Reading</a></li>
                                     </ul>
                                     <ul class="stats">
-                                        <li><a href="#">
+                                        <li><a href="/categories">
                                                 <%= post.category %>
                                             </a></li>
                                         <li><a href="#" class="icon solid fa-heart">28</a></li>
@@ -74,11 +74,11 @@
                                 <!-- Mini Post -->
                                 <article class="mini-post">
                                     <header>
-                                        <h3><a href="single.html">Технологии</a></h3>
+                                        <h3><a href="/categories">Технологии</a></h3>
                                         <time class="published" datetime="2015-10-20">October 20, 2015</time>
                                         <a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
                                     </header>
-                                    <a href="single.html" class="image"><img src="images/pic04.jpg" alt="" /></a>
+                                    <a href="/single" class="image"><img src="images/pic04.jpg" alt="" /></a>
                                 </article>
 
                                 <!-- Mini Post -->

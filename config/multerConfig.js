@@ -6,7 +6,7 @@ const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     let uploadPath = 'public/images'; // базовая папка
     // Определяем поддиректорию по URL или роуту
-    if (req.path === '/create-post') {
+    if (req.path === '/create-post' || req.path === '/update-post') {
       uploadPath = path.join(uploadPath, 'posts');
     } else if (req.path === '/upload-avatar') {
       uploadPath = path.join(uploadPath, 'user-avatar');

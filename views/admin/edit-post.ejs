@@ -1,0 +1,73 @@
+<%- include('../includes/head.ejs') %>
+    <link rel="stylesheet" href="/assets/css/create-post.css">
+    </head>
+
+    <body class="single is-preload">
+
+        <!-- Wrapper -->
+        <div id="wrapper">
+            <%- include('../includes/navigation.ejs') %>
+                <!-- Main -->
+                <div id="main">
+                    <h1>
+                        <% if (editing) { %> Редактировать пост <% } else { %> Добавить новый пост <% } %>
+                    </h1>
+
+                    <form action="/admin/<% if (editing) { %>update-post<% } else {  %>create-post<% } %>" method="post"
+                        enctype="multipart/form-data">
+                        <% if (editing) { %>
+                            <input type="hidden" name="postId" value="<%=post.id%>">
+                            <% } %>
+                                <div>
+                                    <label for="title">Заголовок</label>
+                                    <input type="text" id="title" name="title" required
+                                        value="<% if (editing) { %><%=post.title%><% } %>" />
+                                </div>
+
+                                <div>
+                                    <label for="content">Содержание</label>
+                                    <textarea id="content" name="content"
+                                        required><% if (editing) { %><%=post.content%><% } %></textarea>
+                                </div>
+
+                                <div>
+                                    <label for="category">Категория</label>
+                                    <select id="category" name="category">
+                                        <% if (editing) { %>
+                                            <option value="tech" <%=post.category==='tech' ? 'selected' : '' %>
+                                                >Технологии
+                                            </option>
+                                            <option value="life" <%=post.category==='life' ? 'selected' : '' %>>Жизнь
+                                            </option>
+                                            <option value="travel" <%=post.category==='travel' ? 'selected' : '' %>
+                                                >Путешествия
+                                            </option>
+                                            <option value="education" <%=post.category==='education' ? 'selected' : ''
+                                                %>
+                                                >Образование</option>
+                                            <% } else { %>
+                                                <option value="">-- Выберите категорию --</option>
+                                                <option value="tech">Технологии</option>
+                                                <option value="life">Жизнь</option>
+                                                <option value="travel">Путешествия</option>
+                                                <option value="education">Образование</option>
+                                                <% } %>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="image">Изображение</label>
+                                    <input type="file" id="image" name="image" accept="image/*"
+                                        value="<% if (editing) { %><%=post.image%><% } %>" />
+                                </div>
+
+                                <button type="submit" class="button large">
+                                    <% if (editing) { %> Обновить пост <% } else { %> Опубликовать пост <% } %>
+                                </button>
+                               
+                    </form>
+                </div>
+        </div>
+    </body>
+
+    </html>
