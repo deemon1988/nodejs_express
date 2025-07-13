@@ -9,52 +9,72 @@ exports.getAddPost = (req, res, next) => {
 };
 
 exports.postAddPost = (req, res, next) => {
-  const id = null;
   const title = req.body.title;
   const content = req.body.content;
   const category = req.body.category;
+
+  if (!req.file) {
+    res.redirect("/admin/create-post");
+  }
   const image = "/images/posts/" + req.file.filename;
 
-  const post = new Post(id, title, content, category, image);
+  req.user
+    .createPost({
+      title: title,
+      content: content,
+      category: category,
+      image: image,
+    })
 
-  post.save();
-  res.redirect("/");
+    .then((result) => res.redirect("/admin/posts"))
+    .catch((err) => console.log(err));
 };
 
 exports.postDeletePost = (req, res, next) => {
-  const postId = req.body.postId
-  Post.delete(postId)
-  res.redirect('/admin/posts')
-}
-
+  const postId = req.body.postId;
+  Post.findByPk(postId)
+    .then((post) => {
+      return post.destroy();
+    })
+    .then((result) => {
+      res.redirect("/admin/posts");
+    })
+    .catch((err) => console.log(err));
+};
 
 exports.getAllPosts = (req, res, next) => {
-  Post.fetchAll((posts) => {
-    res.render("admin/posts", {
-      pageTitle: "Админ посты",
-      posts: posts,
-      path: "/admin/posts",
-    });
-  });
+  Post.findAll()
+    .then((posts) => {
+      res.render("admin/posts", {
+        pageTitle: "Админ посты",
+        posts: posts,
+        path: "/admin/posts",
+      });
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getEditPost = (req, res, next) => {
   const editMode = req.query.edit;
   if (!editMode) {
-    return res.redirect("/posts");
+    return res.redirect("/admin/posts");
   }
   const postId = req.params.postId;
-  Post.findByID(postId, (post) => {
-    if (!post) {
-      return res.redirect("/posts");
-    }
-    res.render("admin/edit-post", {
-      pageTitle: "Редактировать пост",
-      path: "/admin/edit-post",
-      editing: editMode,
-      post: post,
-    });
-  });
+  // req.user.getPosts({where: {id: postId}})
+  Post.findByPk(postId)
+    .then((post) => {
+      // const post = posts[0]
+      if (!post) {
+        return res.redirect("/admin/posts");
+      }
+      res.render("admin/edit-post", {
+        pageTitle: "Редактировать пост",
+        path: "/admin/edit-post",
+        editing: editMode,
+        post: post,
+      });
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.postEditPost = (req, res, next) => {
@@ -62,15 +82,17 @@ exports.postEditPost = (req, res, next) => {
   const updatedTitle = req.body.title;
   const updatedContent = req.body.content;
   const updatedCategory = req.body.category;
-  const updatedImage = "/images/posts/" + req.file.filename;
 
-  const updatedPost = new Post(
-    postId,
-    updatedTitle,
-    updatedContent,
-    updatedCategory,
-    updatedImage
-  );
-  updatedPost.save(postId);
-  res.redirect("/admin/posts");
+  Post.findByPk(postId)
+    .then((post) => {
+      let imageUrl = post.image;
+      post.title = updatedTitle;
+      post.content = updatedContent;
+      post.category = updatedCategory;
+      if (req.file) imageUrl = "/images/posts/" + req.file.filename;
+      post.image = imageUrl;
+      return post.save();
+    })
+    .then((result) => res.redirect("/admin/posts"))
+    .catch((err) => console.log(err));
 };

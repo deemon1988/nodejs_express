@@ -1,0 +1,14 @@
+const Sequelize = require('sequelize')
+const sequelize = require('../util/database')
+
+const PostComment = sequelize.define('postcomment', {
+    id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true,
+    },
+    quantity: Sequelize.INTEGER
+})
+
+module.exports = PostComment

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Комментарии пользователя</title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <noscript>
+        <link rel="stylesheet" href="/assets/css/noscript.css" />
+    </noscript>
+</head>
+
+<body class="is-preload">
+
+    <!-- Wrapper -->
+    <div id="wrapper">
+
+        <!-- Header -->
+        <header id="header">
+            <h1><a href="/">Future Imperfect</a></h1>
+            <nav class="links">
+                <ul>
+                    <li><a href="/blog">Блог</a></li>
+                    <li><a href="/profile">Профиль</a></li>
+                    <li><a href="/user-comments">Комментарии</a></li>
+                    <li><a href="/settings">Настройки</a></li>
+                </ul>
+            </nav>
+            <nav class="main">
+                <ul>
+                    <li class="search">
+                        <a class="fa-search" href="#search">Поиск</a>
+                        <form id="search" method="get" action="/search">
+                            <input type="text" name="query" placeholder="Поиск..." />
+                        </form>
+                    </li>
+                    <li class="menu">
+                        <a class="fa-bars" href="#menu">Меню</a>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Menu -->
+        <section id="menu">
+            <section>
+                <form class="search" method="get" action="/search">
+                    <input type="text" name="query" placeholder="Поиск..." />
+                </form>
+            </section>
+            <section>
+                <ul class="links">
+                    <li><a href="/profile">
+                            <h3>Профиль</h3>
+                        </a></li>
+                    <li><a href="/user-comments">
+                            <h3>Комментарии</h3>
+                        </a></li>
+                    <li><a href="/settings">
+                            <h3>Настройки</h3>
+                        </a></li>
+                </ul>
+            </section>
+        </section>
+
+        <!-- Main -->
+        <div id="main">
+
+            <article class="post">
+                <header>
+                    <div class="title">
+                        <h2>Мои комментарии</h2>
+                        <p>Все комментарии, которые вы оставили</p>
+                    </div>
+                </header>
+            </article>
+
+            <!-- User Comments List -->
+            <section class="posts">
+                <% if (comments.length> 0) { %>
+                    <% for (let comment of comments) { %>
+                        <!-- Comment 1 -->
+                        <article>
+                            <header>
+                                <h3>Комментарий к статье: <a href="/posts/42">
+                                        <Как вырастить базилик дома>
+                                    </a></h3>
+                                <time class="published" datetime="2025-07-12">12 июля 2025</time>
+                            </header>
+                            <p>
+                                <%= comment.text %>
+                            </p>
+                        </article>
+                        <% } %>
+                            <% } else { %>
+                                <h3>Нет комментариев</h3>
+                                <% } %>
+                                    <!-- Comment 2 -->
+                                    <article>
+                                        <header>
+                                            <h3>Комментарий к статье: <a href="/posts/37">10 ошибок при посадке
+                                                    помидоров</a></h3>
+                                            <time class="published" datetime="2025-06-30">30 июня 2025</time>
+                                        </header>
+                                        <p>Дополню: не стоит забывать про мульчирование — очень помогает сохранить
+                                            влагу.</p>
+                                    </article>
+
+                                    <!-- Comment 3 -->
+                                    <article>
+                                        <header>
+                                            <h3>Комментарий к статье: <a href="/posts/33">Секреты ухода за орхидеями</a>
+                                            </h3>
+                                            <time class="published" datetime="2025-06-18">18 июня 2025</time>
+                                        </header>
+                                        <p>Спасибо! Теперь понимаю, почему раньше у меня опадали бутоны.</p>
+                                    </article>
+
+                                    <!-- Можно продолжать список по мере необходимости -->
+
+            </section>
+        </div>
+
+        <!-- Sidebar -->
+        <section id="sidebar">
+            <section id="intro">
+                <a href="/profile" class="logo"><img src="/images/avatar.jpg" alt="" /></a>
+                <header>
+                    <h2>Иван Иванов</h2>
+                    <p>Мои комментарии</p>
+                </header>
+            </section>
+
+            <section>
+                <h3>Навигация</h3>
+                <ul class="plain">
+                    <li><a href="/profile">→ Профиль</a></li>
+                    <li><a href="/user-comments">→ Комментарии</a></li>
+                    <li><a href="/settings">→ Настройки</a></li>
+                </ul>
+            </section>
+        </section>
+
+        <!-- Footer -->
+        <section id="footer">
+            <ul class="icons">
+                <li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+                <li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+                <li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+            </ul>
+            <p class="copyright">
+                &copy; Future Imperfect. Шаблон от <a href="https://html5up.net">HTML5 UP</a>.
+            </p>
+        </section>
+
+    </div>
+
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/browser.min.js"></script>
+    <script src="/assets/js/breakpoints.min.js"></script>
+    <script src="/assets/js/util.js"></script>
+    <script src="/assets/js/main.js"></script>
+
+</body>
+
+</html>

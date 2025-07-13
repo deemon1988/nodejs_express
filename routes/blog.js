@@ -19,10 +19,9 @@ router.get("/about", (req, res, next) => {
   res.render("blog/about", { pageTitle: "О блоге", path: '/about' });
 });
 
-router.get("/single", (req, res, next) => {
-  res.render("blog/single", { pageTitle: "Страница поста"});
-});
+router.get("/single/:postId", postsController.getPostById);
 
+router.post("/single/:postId", postsController.postComment)
 
 
 router.get("/", postsController.getPosts);

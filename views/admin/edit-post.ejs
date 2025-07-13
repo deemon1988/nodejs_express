@@ -57,14 +57,19 @@
 
                                 <div>
                                     <label for="image">Изображение</label>
-                                    <input type="file" id="image" name="image" accept="image/*"
-                                        value="<% if (editing) { %><%=post.image%><% } %>" />
+                                    <% if (editing) { %>
+                                        <div>
+                                            <img src="<%= post.image %>" alt="<%= post.title %>"
+                                                style="max-width: 300px; max-height: 300px;">
+                                        </div>
+                                        <% } %>
+                                            <input type="file" id="image" name="image" accept="image/*" />
                                 </div>
 
                                 <button type="submit" class="button large">
                                     <% if (editing) { %> Обновить пост <% } else { %> Опубликовать пост <% } %>
                                 </button>
-                               
+
                     </form>
                 </div>
         </div>

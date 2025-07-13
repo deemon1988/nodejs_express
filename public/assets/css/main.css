@@ -2026,9 +2026,8 @@ button:hover:active,
 	background-color: rgba(46, 186, 174, 0.05);
 }
 
-#header a.active {
+#header a.active, .links a.active, .links h3.active {
 	color: rgba(46, 186, 174);
-
 }
 
 input[type="submit"]:before,
