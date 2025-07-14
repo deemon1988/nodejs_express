@@ -8,6 +8,18 @@ const Profile = sequelize.define('profile', {
         allowNull: false,
         primaryKey: true,
     },
+    firstname: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+     lastname: {
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    role: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    }
 })
 
 module.exports = Profile

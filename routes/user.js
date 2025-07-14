@@ -19,13 +19,12 @@ router.get('/register', (req, res, err) => {
 
 router.post('/register', usersController.postAddUser)
 
-router.get('/user/profile', (req, res, err) => {
-    res.render('user/profile', {
-        pageTitle: 'Профиль',
-        path: '/user/profile'
-    })
-})
+router.get('/user/profile', profileController.getProfile)
+router.get('/user/edit-profile', profileController.getEditProfile)
+router.post('/user/edit-profile', profileController.postEditProfile)
 
 router.get('/user/user-comments', profileController.getComments)
+
+
 
 module.exports = router

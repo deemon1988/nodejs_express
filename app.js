@@ -12,6 +12,7 @@ const Post = require("./models/post.js");
 const Comment = require("./models/comment.js");
 const User = require("./models/user.js");
 const Profile = require("./models/profile.js");
+const UserActivity = require('./models/user-activity.js')
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -32,6 +33,7 @@ app.use("/admin", adminRoutes);
 app.use(blogRoutes);
 app.use(userRoutes);
 
+
 app.use(errorController.get404);
 
 Comment.belongsTo(Post, { constraints: true, onDelete: "CASCADE" });
@@ -40,15 +42,17 @@ Post.belongsTo(User);
 User.hasMany(Post);
 
 User.hasOne(Profile);
-Profile.belongsTo(User)
+Profile.belongsTo(User);
 Profile.hasMany(Comment); //, { throgh: ProfileComment }
 Comment.belongsTo(Profile);
 
 Post.hasMany(Comment);
 Comment.belongsTo(Post);
 
+Profile.hasMany(UserActivity)
+
 sequelize
-    // .sync({ force: true })
+  // .sync({ force: true })
   .sync()
   .then((result) => {
     return User.findByPk(1);
@@ -63,8 +67,12 @@ sequelize
     }
     return user;
   })
-  .then((user) => {
-    return user.createProfile();
+  .then(async (user) => {
+    console.log(user.email);
+    const userProfile = await user.getProfile()
+    // console.log(await user.getProfile());
+    if (!userProfile)
+      return user.createProfile({ firstname: "Name", role: "user" });
   })
   .then((profile) => {
     app.listen(3000);

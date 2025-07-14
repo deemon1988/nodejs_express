@@ -1,0 +1,86 @@
+<%- include('../includes/head.ejs') %>
+    </head>
+
+    <body class="single is-preload">
+
+        <!-- Wrapper -->
+        <div id="wrapper">
+
+            <!-- Header -->
+            <!-- Menu -->
+            <%- include('../includes/navigation.ejs') %>
+
+                <!-- Main -->
+                <div id="main">
+
+                    <!-- Edit Profile -->
+                    <section class="edit-profile">
+                        <header>
+                            <h2>Редактировать профиль</h2>
+                        </header>
+
+                        <!-- Аватар -->
+                        <span class="image featured">
+                            <img src="/images/avatar.jpg" alt="Аватар пользователя"
+                                style="max-width: 300px; max-height: 300px;" />
+                        </span>
+
+                        <!-- Форма -->
+                        <form method="post" action="/user/edit-profile" id="edit-profile" enctype="multipart/form-data">
+                            <div class="row gtr-50">
+
+                                <!-- Имя -->
+                                <div class="col-6 col-12-small">
+                                    <input id type="text" form="edit-profile" name="firstname" placeholder="Имя"
+                                        value="<%= profile.firstname %>" />
+                                </div>
+
+                                <!-- Фамилия -->
+                                <div class="col-6 col-12-small">
+                                    <input type="text" name="lastname" placeholder="Фамилия"
+                                        value="<%= profile.lastname ? profile.lastname : '' %>" />
+                                </div>
+
+                                <!-- Email (disabled) -->
+                                <div class="col-12">
+                                    <input type="email" name="email" value="<%= user.email %>" disabled />
+                                </div>
+
+                                <!-- Загрузка аватара -->
+                                <div class="col-12">
+                                    <p><strong>Загрузить новый аватар:</strong></p>
+
+                                    <!-- <input type="file" name="avatar" id="avatar" accept="image/*" /> -->
+                                </div>
+
+                                <!-- Роль (readonly) -->
+                                <div class="col-12">
+                                    <p><strong>Роль:</strong>
+                                        <%= profile.role==='admin' ? 'Администратор' : 'Пользователь' %>
+                                    </p>
+                                </div>
+
+                                <!-- Дата регистрации (disabled) -->
+                                <div class="col-12">
+                                    <p><strong>Дата регистрации:</strong>
+                                        <%= formatDate(user.createdAt) %>
+                                    </p>
+                                </div>
+                                    
+                                <!-- Кнопка -->
+                                <div class="col-12">
+                                    <ul class="actions">
+                                        <li><button type="submit"  class="button primary">Сохранить изменения</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <input type="hidden" form="edit-profile" name="profileId" value="<%= profile.id %>">
+                        </form>
+                    </section>
+
+
+                </div>
+
+                <%- include('../includes/end.ejs') %>

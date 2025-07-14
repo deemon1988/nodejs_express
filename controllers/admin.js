@@ -1,4 +1,6 @@
 const Post = require("../models/post");
+const Profile = require("../models/profile");
+const UserActivity = require("../models/user-activity");
 
 exports.getAddPost = (req, res, next) => {
   res.render("admin/edit-post", {
@@ -12,6 +14,8 @@ exports.postAddPost = (req, res, next) => {
   const title = req.body.title;
   const content = req.body.content;
   const category = req.body.category;
+  const userId = req.user.id
+  let createdPost;
 
   if (!req.file) {
     res.redirect("/admin/create-post");
@@ -25,8 +29,21 @@ exports.postAddPost = (req, res, next) => {
       category: category,
       image: image,
     })
-
+    .then(post => {
+      createdPost = post
+      return Profile.findByPk(userId)
+    })
+    .then((profile) => {
+      UserActivity.create({
+        profileId: profile.id,
+        actionType: "post_created",
+        targetType: "post",
+        targetId: createdPost.id,
+        description: `Добавлен пост "${createdPost.title}"`,
+      });
+    })
     .then((result) => res.redirect("/admin/posts"))
+    // .then((result) => res.redirect("/admin/posts"))
     .catch((err) => console.log(err));
 };
 

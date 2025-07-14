@@ -1,5 +1,4 @@
 <%- include('../includes/head.ejs') %>
-
     </head>
 
     <body class="single is-preload">
@@ -43,25 +42,55 @@
                             </ul>
                         </footer>
 
-                        <form action="/single/<%= post.id %>" method="post">
-                            <input type="textarea" name="comment">
-                            <button type="submit">Отправить</button>
-                            <input type="hidden" name="postId" value="<%= post.id %>">
-                        </form>
-                        <section class="post-comments">
+                        <!-- Comment Form -->
+                        <section class="comment-form">
+                            <header>
+                                <h3>Оставить комментарий</h3>
+                            </header>
+                            <form method="post" action="/single/<%= post.id %>">
+                                <div class="row gtr-50">
+                                    <div class="col-6 col-12-small">
+                                        <input type="text" name="name" id="name" placeholder="Ваше имя" />
+                                    </div>
+                                    <div class="col-6 col-12-small">
+                                        <input type="email" name="email" id="email" placeholder="Ваш email" />
+                                    </div>
+                                    <div class="col-12">
+                                        <textarea name="comment" id="comment" placeholder="Ваш комментарий" rows="6"
+                                            required></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <ul class="actions">
+                                            <li><input type="submit" value="Отправить" class="button" /></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="postId" value="<%= post.id %>">
+                            </form>
+                        </section>
+
+                        <section class="post-comments" id="comments">
                             <% if (comments.length> 0) { %>
+                                <h3>Комментарии (<%= comments.length %>)</h3>
                                 <% for (let comment of comments) { %>
                                     <!-- Comment 1 -->
                                     <article>
                                         <header>
                                             <h3>Комментарий пользователя: <a href="/posts/42">
-                                                     <%= comment.profile.user.username %>
+                                                    <%= comment.profile.user.username %>
                                                 </a></h3>
-                                            <time class="published" datetime="2025-07-12">12 июля 2025</time>
+                                            <time class="published" datetime="<%= comment.createdAt %>"><%= formatDate(comment.createdAt)%></time>
                                         </header>
                                         <p>
                                             <%= comment.text %>
                                         </p>
+                                        <% if (comment.userId === userId) { %>
+                                        <form action="/single/<%= post.id %>/<%= comment.id %>" method="post">
+                                            <input type="hidden" name="commentId" value="<%= comment.id %>">
+                                            <input type="hidden" name="postId" value="<%= post.id %>">
+                                            <button type="submit">Удалить комментарий</button>
+                                        </form>
+                                        <% } %>
                                     </article>
                                     <% } %>
                                         <% } else { %>

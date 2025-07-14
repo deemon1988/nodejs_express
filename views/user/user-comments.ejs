@@ -83,10 +83,10 @@
                         <!-- Comment 1 -->
                         <article>
                             <header>
-                                <h3>Комментарий к статье: <a href="/posts/42">
-                                        <Как вырастить базилик дома>
+                                <h3>Комментарий к статье:<br> <a href="/single/<%= comment.post.id %>">
+                                        <%= comment.post.title %>
                                     </a></h3>
-                                <time class="published" datetime="2025-07-12">12 июля 2025</time>
+                                <time class="published" datetime="<%= comment.createdAt %>"><%= formatDate(comment.createdAt) %></time>
                             </header>
                             <p>
                                 <%= comment.text %>

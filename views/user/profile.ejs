@@ -1,113 +1,125 @@
 <%- include('../includes/head.ejs') %>
-    <link rel="stylesheet" href="/assets/css/create-post.css">
-    </head>
-</head>
- <body class="profile is-preload">
+  <link rel="stylesheet" href="/assets/css/create-post.css">
+  </head>
+  </head>
 
-        <!-- Wrapper -->
-        <div id="wrapper">
-            <%- include('../includes/navigation.ejs') %>
+  <body class="profile is-preload">
 
-    <!-- Main -->
-    <div id="main">
+    <!-- Wrapper -->
+    <div id="wrapper">
+      <%- include('../includes/navigation.ejs') %>
 
-      <!-- User Profile Card -->
-      <article class="post">
-        <header>
-          <div class="title">
-            <h2>Профиль пользователя</h2>
-            <p>Информация о вашем аккаунте</p>
-          </div>
-        </header>
+        <!-- Main -->
+        <div id="main">
 
-        <span class="image featured"><img src="/images/avatar.jpg" alt="Аватар пользователя" style="max-width: 300px; max-height: 300px;"/></span>
+          <!-- User Profile Card -->
+          <article class="post">
+            <header>
+              <div class="title">
+                <h2>Профиль пользователя</h2>
+                <p>Информация о вашем аккаунте</p>
+              </div>
+            </header>
 
-        <p><strong>Имя:</strong> Иван Иванов</p>
-        <p><strong>Email:</strong> ivan@example.com</p>
-        <p><strong>Дата регистрации:</strong> 13 июля 2024</p>
-        <p><strong>Роль:</strong> Пользователь</p>
+            <span class="image featured"><img src="/images/avatar.jpg" alt="Аватар пользователя"
+                style="max-width: 300px; max-height: 300px;" /></span>
 
-        <footer>
-          <ul class="actions">
-            <li><a href="/settings" class="button large">Редактировать профиль</a></li>
-          </ul>
-        </footer>
-      </article>
+            <p><strong>Имя:</strong>
+              <%= profile.firstname %>
+                <% profile.lastname ? profile.lastname : '' %>
+            </p>
+            <p><strong>Фамилия:</strong>
+              <%= profile.lastname ? profile.lastname : '' %>
+            </p>
+            <p><strong>Email:</strong>
+              <%= profile.user.email %>
+            </p>
+            <p><strong>Дата регистрации:</strong>
+              <%= formatDate(profile.user.createdAt) %>
+            </p>
+            <p><strong>Роль:</strong>
+              <%= profile.role==='admin' ? 'Администратор' : 'Пользователь' %>
+            </p>
 
-      <!-- Recent Posts Section -->
-      <section class="posts">
-        <article>
-          <header>
-            <h2><a href="/posts/1">Моя последняя статья</a></h2>
-          </header>
-          <span class="image"><img src="/images/post1.jpg" alt="" /></span>
-          <p>Краткое описание статьи или поста, размещённого пользователем.</p>
-          <ul class="actions">
-            <li><a href="/posts/1" class="button">Читать далее</a></li>
-          </ul>
-        </article>
+            <footer>
+              <ul class="actions">
+                <li><a href="/user/edit-profile" class="button large">Редактировать профиль</a></li>
+              </ul>
+            </footer>
+          </article>
 
-        <article>
-          <header>
-            <h2><a href="/posts/2">Комментарии</a></h2>
-          </header>
-          <span class="image"><img src="/images/post2.jpg" alt="" /></span>
-          <p>Оставленные комментарии.</p>
-          <ul class="actions">
-            <li><a href="/user/user-comments" class="button">Читать далее</a></li>
-          </ul>
-        </article>
-      </section>
-    </div>
+          <!-- Recent Posts Section -->
+          <section class="posts">
+            <article>
+              <header>
+                <h2>Моя последняя статья</h2>
+              </header>
+              <span class="image"><img src="/images/post1.jpg" alt="" /></span>
+              <h3><a href="/posts/1">
+                  <p>
+                    <%= lastPost.title %>
+                  </p>
+                </a></h3>
+              <p>
+                <span class="image"><img src="<%= lastPost.image %>" alt="<%= lastPost.title %>"
+                    style="width: 30%; height: 30%; min-width: 150px; " /></span>
+              </p>
+              <ul class="actions">
+                <li><a href="/posts/1" class="button">Читать далее</a></li>
+              </ul>
+            </article>
 
-    <!-- Sidebar -->
-    <section id="sidebar">
-      <section id="intro">
-        <a href="/profile" class="logo"><img src="/images/avatar.jpg" alt="" /></a>
-        <header>
-          <h2>Иван Иванов</h2>
-          <p>ivan@example.com</p>
-        </header>
-      </section>
+            <article>
+              <header>
+                <h2><a href="/posts/2">Комментарии</a></h2>
+              </header>
+              <% for (let comment of comments) { %>
+                <h3><a href="/single/<%= comment.post.id %>">
+                    <%= comment.post.title %>
+                  </a></h3>
 
-      <section>
-        <h3>Последние действия</h3>
-        <ul class="plain">
-          <li><a href="#">• Добавлен пост "Моя последняя статья"</a></li>
-          <li><a href="#">• Обновлён профиль</a></li>
-          <li><a href="#">• Прокомментировал статью</a></li>
-        </ul>
-      </section>
+                <p>
+                  <%= comment.text %>
+                </p>
+                <ul class="actions">
+                  <li><a href="/user/user-comments" class="button">Редактировать</a></li>
+                  <li><a href="/user/user-comments" class="button">Удалить</a></li>
+                </ul>
+                <% } %>
+            </article>
+          </section>
+        </div>
 
-      <section>
-        <h3>Контакты</h3>
-        <ul class="icons">
-          <li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-          <li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
-          <li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-        </ul>
-      </section>
-    </section>
+        <!-- Sidebar -->
+        <section id="sidebar">
+          <section id="intro">
+            <a href="/profile" class="logo"><img src="/images/avatar.jpg" alt="" /></a>
+            <header>
+              <h2>
+                <%= profile.firstname %>
+                  <% profile.lastname ? profile.lastname : '' %>
+              </h2>
+              <p>
+                <%= profile.user.email %>
+              </p>
+            </header>
+          </section>
 
-    <!-- Footer -->
-    <section id="footer">
-      <ul class="icons">
-        <li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-        <li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
-        <li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-      </ul>
-      <p class="copyright">
-        &copy; Future Imperfect. Сайт создан на основе шаблона от <a href="https://html5up.net">HTML5 UP</a>.
-      </p>
-    </section>
+          <section>
+            <h3>Последние действия</h3>
+            <ul class="plain">
+              <% profile.useractivities.forEach(activity=> { %>
+                <li><a href="#">
+                    <%= activity.description %>
+                  </a>
+                  <br>
+                  <small>
+                    <%= formatDate(activity.createdAt) %>
+                  </small>
+                </li>
+                <% }) %>
 
-  </div>
-
-  <script src="/assets/js/jquery.min.js"></script>
-  <script src="/assets/js/browser.min.js"></script>
-  <script src="/assets/js/breakpoints.min.js"></script>
-  <script src="/assets/js/util.js"></script>
-  <script src="/assets/js/main.js"></script>
-
-</body>
-</html>
+            </ul>
+          </section>
+    
+          <%- include('../includes/end.ejs') %>

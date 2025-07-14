@@ -22,6 +22,7 @@ router.get("/about", (req, res, next) => {
 router.get("/single/:postId", postsController.getPostById);
 
 router.post("/single/:postId", postsController.postComment)
+router.post("/single/:postId/:commentId", postsController.postDeleteComment)
 
 
 router.get("/", postsController.getPosts);

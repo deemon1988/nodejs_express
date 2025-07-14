@@ -1,8 +1,10 @@
-const { where } = require("sequelize");
+const { formatDate } = require("../util/date");
+// const { where } = require("sequelize");
 const Comment = require("../models/comment");
 const Post = require("../models/post");
 const Profile = require("../models/profile");
 const User = require("../models/user");
+const UserActivity = require("../models/user-activity");
 
 exports.getPosts = (req, res, next) => {
   Post.findAll()
@@ -30,6 +32,7 @@ exports.getPostById = (req, res, next) => {
             include: [User], // Вложенное подключение User
           },
         ],
+        order: [['createdAt', 'DESC']]
       });
     })
     .then((comments) => {
@@ -37,6 +40,8 @@ exports.getPostById = (req, res, next) => {
         post: loadedPost,
         pageTitle: loadedPost.title,
         comments: comments,
+        formatDate: formatDate,
+        userId: req.user.id,
         path: "/posts",
       });
     })
@@ -59,11 +64,13 @@ exports.postComment = (req, res, next) => {
   const postId = req.body.postId;
   const userId = req.user.id;
   const commentText = req.body.comment;
-  console.log(req.body.comment, postId, userId);
+  let createdPost;
+  let profileId;
   Profile.findByPk(userId).then((profile) => {
-    const profileId = profile.id;
+    profileId = profile.id;
     Post.findByPk(postId)
       .then((post) => {
+        createdPost = post;
         return Comment.create({
           text: commentText,
           postId: postId,
@@ -71,10 +78,54 @@ exports.postComment = (req, res, next) => {
           profileId: profileId,
         });
       })
-      .then((result) => {
-        console.log("Comment added");
-        res.redirect(`/single/${postId}`);
-      })
-      .catch((err) => console.log(err));
+      .then((comment) => {
+        return (
+          UserActivity.findOne({
+            where: {
+              profileId,
+              actionType: "comment_added",
+              targetType: "post",
+              targetId: postId,
+            },
+          })
+            .then((activity) => {
+              if (!activity) {
+                UserActivity.create({
+                  actionType: "comment_added",
+                  targetId: postId,
+                  targetType: "post",
+                  description: `Прокомментировал статью "${createdPost.title}"`,
+                  profileId,
+                });
+              } else {
+                activity.update({
+                  description: `Комментарий обновлён: "${commentText}"`,
+                  updatedAt: new Date(),
+                });
+              }
+            })
+            .then((result) => {
+              console.log("Comment added");
+              res.redirect(`/single/${postId}#comments`);
+            })
+            .catch((err) => console.log(err))
+        );
+      });
   });
+};
+
+exports.postDeleteComment = (req, res, next) => {
+  const postId = req.body.postId;
+  const commentId = req.body.commentId;
+  const userId = req.user.id;
+
+  Comment.findByPk(commentId)
+    .then((comment) => {
+      console.log(comment);
+      return comment.destroy();
+    })
+    .then((result) => {
+      res.redirect(`/single/${postId}`);
+    })
+    .catch((err) => console.log(err));
 };
