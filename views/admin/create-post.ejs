@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/assets/css/create-post.css">
-  <title><%= pageTitle %></title>
+  <title>
+    <%= pageTitle %>
+  </title>
 </head>
+
 <body>
 
   <h1>Добавить новый пост</h1>
@@ -20,6 +24,7 @@
       <label for="content">Содержание</label>
       <textarea id="content" name="content" required></textarea>
     </div>
+
 
     <div>
       <label for="category">Категория</label>
@@ -37,8 +42,10 @@
       <input type="file" id="image" name="image" accept="image/*" />
     </div>
 
+
     <button type="submit">Опубликовать пост</button>
   </form>
 
 </body>
+
 </html>

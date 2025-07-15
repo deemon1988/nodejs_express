@@ -2026,7 +2026,7 @@ button:hover:active,
 	background-color: rgba(46, 186, 174, 0.05);
 }
 
-#header a.active, .links a.active, .links h3.active {
+#header a.active, .links a.active, .links h3.active, .stats li .icon.solid.fa-heart.active:before {
 	color: rgba(46, 186, 174);
 }
 

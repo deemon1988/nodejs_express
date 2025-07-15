@@ -25,6 +25,11 @@ const Post = sequelize.define("post", {
     type: Sequelize.STRING,
     allowNull: false,
   },
+
+  likes: {
+    type: Sequelize.INTEGER,
+    allowNull: true,
+  }
 });
 
 module.exports = Post;

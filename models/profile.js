@@ -19,7 +19,11 @@ const Profile = sequelize.define('profile', {
     role: {
         type: Sequelize.STRING,
         allowNull: false,
-    }
+    },
+    avatar: {
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
 })
 
 module.exports = Profile

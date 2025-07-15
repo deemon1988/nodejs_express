@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get("/posts", postsController.getAllPosts);
 router.get("/posts/:postId", postsController.getPostById);
+router.post("/post/:postId/like", postsController.postLike);
 
 router.get("/categories", (req, res, next) => {
   res.render("blog/categories", { pageTitle: "Категории", path: '/categories' });

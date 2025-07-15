@@ -28,6 +28,7 @@ exports.postAddPost = (req, res, next) => {
       content: content,
       category: category,
       image: image,
+      likes: 0,
     })
     .then(post => {
       createdPost = post

@@ -21,8 +21,8 @@
 
                         <!-- Аватар -->
                         <span class="image featured">
-                            <img src="/images/avatar.jpg" alt="Аватар пользователя"
-                                style="max-width: 300px; max-height: 300px;" />
+                            <img src="<%= profile.avatar %>" alt="Аватар пользователя"
+                                style="max-width: 150px; max-height: 150px;" />
                         </span>
 
                         <!-- Форма -->
@@ -50,7 +50,7 @@
                                 <div class="col-12">
                                     <p><strong>Загрузить новый аватар:</strong></p>
 
-                                    <!-- <input type="file" name="avatar" id="avatar" accept="image/*" /> -->
+                                    <input type="file" name="avatar" id="avatar" accept="image/*" />
                                 </div>
 
                                 <!-- Роль (readonly) -->

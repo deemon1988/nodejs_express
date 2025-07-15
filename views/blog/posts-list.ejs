@@ -42,8 +42,8 @@
                                         <li><a href="/categories">
                                                 <%= post.category %>
                                             </a></li>
-                                        <li><a href="#" class="icon solid fa-heart">28</a></li>
-                                        <li><a href="#" class="icon solid fa-comment">128</a></li>
+                                        <li><a href="#" class="like-icon icon solid fa-heart  <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>" data-id="<%= post.id %>"><%= post.likes %></a></li>
+                                        <li><a href="#" class="icon solid fa-comment"> <%= post.comment ? post.comment.length : 0 %></a></li>
                                     </ul>
                                 </footer>
                             </article>

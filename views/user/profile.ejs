@@ -21,8 +21,8 @@
               </div>
             </header>
 
-            <span class="image featured"><img src="/images/avatar.jpg" alt="Аватар пользователя"
-                style="max-width: 300px; max-height: 300px;" /></span>
+            <span class="image featured"><img src="<%= profile.avatar %>" alt="Аватар пользователя"
+                style="max-width: 150px; max-height: 150px;" /></span>
 
             <p><strong>Имя:</strong>
               <%= profile.firstname %>
@@ -48,46 +48,56 @@
             </footer>
           </article>
 
-          <!-- Recent Posts Section -->
-          <section class="posts">
+          <article class="post">
             <article>
+              <!-- Recent Posts Section -->
               <header>
                 <h2>Моя последняя статья</h2>
               </header>
-              <span class="image"><img src="/images/post1.jpg" alt="" /></span>
-              <h3><a href="/posts/1">
-                  <p>
-                    <%= lastPost.title %>
-                  </p>
-                </a></h3>
-              <p>
-                <span class="image"><img src="<%= lastPost.image %>" alt="<%= lastPost.title %>"
-                    style="width: 30%; height: 30%; min-width: 150px; " /></span>
-              </p>
-              <ul class="actions">
-                <li><a href="/posts/1" class="button">Читать далее</a></li>
-              </ul>
-            </article>
-
-            <article>
-              <header>
-                <h2><a href="/posts/2">Комментарии</a></h2>
-              </header>
-              <% for (let comment of comments) { %>
-                <h3><a href="/single/<%= comment.post.id %>">
-                    <%= comment.post.title %>
+              <% if(lastPost) { %>
+                <span class="image"><img src="/images/post1.jpg" alt="" /></span>
+                <h3><a href="/posts/1">
+                    <p>
+                      <%= lastPost.title %>
+                    </p>
                   </a></h3>
-
                 <p>
-                  <%= comment.text %>
+                  <span class="image"><img src="<%= lastPost.image %>" alt="<%= lastPost.title %>"
+                      style="width: 30%; height: 30%; min-width: 150px; " /></span>
                 </p>
                 <ul class="actions">
-                  <li><a href="/user/user-comments" class="button">Редактировать</a></li>
-                  <li><a href="/user/user-comments" class="button">Удалить</a></li>
+                  <li><a href="/posts/1" class="button">Читать далее</a></li>
                 </ul>
-                <% } %>
+                <% } else { %>
+                  <h3>Нет добавленных статей</h3>
+                  <% } %>
             </article>
-          </section>
+          </article>
+
+
+          <article class="post">
+            <article>
+              <header>
+                <h2><a href="<%= comments.length <= 0 ? '#' : '/user/user-comments' %>">Комментарии</a></h2>
+              </header>
+              <% if(comments.length <=0) { %>
+                <h3>Нет комментариев</h3>
+                <% } %>
+                  <% for (let comment of comments) { %>
+                    <h3><a href="/single/<%= comment.post.id %>">
+                        <%= comment.post.title %>
+                      </a></h3>
+
+                    <p>
+                      <%= comment.text %>
+                    </p>
+                    <ul class="actions">
+                      <li><a href="/user/user-comments" class="button">Редактировать</a></li>
+                      <li><a href="/user/user-comments" class="button">Удалить</a></li>
+                    </ul>
+                    <% } %>
+            </article>
+          </article>
         </div>
 
         <!-- Sidebar -->
@@ -121,5 +131,5 @@
 
             </ul>
           </section>
-    
+
           <%- include('../includes/end.ejs') %>

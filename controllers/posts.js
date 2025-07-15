@@ -5,14 +5,18 @@ const Post = require("../models/post");
 const Profile = require("../models/profile");
 const User = require("../models/user");
 const UserActivity = require("../models/user-activity");
+const Like = require("../models/like");
 
 exports.getPosts = (req, res, next) => {
+  const isLoggedIn = req.session.isLoggedIn
   Post.findAll()
     .then((posts) => {
       res.render("blog/blog", {
         pageTitle: "Главная страница",
         posts: posts,
         path: "/",
+        isAuthenticated: isLoggedIn,
+
       });
     })
     .catch((err) => console.log(err));
@@ -32,7 +36,7 @@ exports.getPostById = (req, res, next) => {
             include: [User], // Вложенное подключение User
           },
         ],
-        order: [['createdAt', 'DESC']]
+        order: [["createdAt", "DESC"]],
       });
     })
     .then((comments) => {
@@ -49,7 +53,22 @@ exports.getPostById = (req, res, next) => {
 };
 
 exports.getAllPosts = (req, res, next) => {
-  Post.findAll()
+  const userId = req.user.id;
+  Post.findAll({
+    include: [
+      {
+        model: Comment,
+        as: "comments",
+        required: false,
+      },
+      {
+        model: User,
+        as: "likedUsers",
+        where: { id: userId },
+        required: false,
+      },
+    ],
+  })
     .then((posts) => {
       res.render("blog/posts-list", {
         pageTitle: "Посты",
@@ -79,37 +98,35 @@ exports.postComment = (req, res, next) => {
         });
       })
       .then((comment) => {
-        return (
-          UserActivity.findOne({
-            where: {
-              profileId,
-              actionType: "comment_added",
-              targetType: "post",
-              targetId: postId,
-            },
+        return UserActivity.findOne({
+          where: {
+            profileId,
+            actionType: "comment_added",
+            targetType: "post",
+            targetId: postId,
+          },
+        })
+          .then((activity) => {
+            if (!activity) {
+              UserActivity.create({
+                actionType: "comment_added",
+                targetId: postId,
+                targetType: "post",
+                description: `Прокомментировал статью "${createdPost.title}"`,
+                profileId,
+              });
+            } else {
+              activity.update({
+                description: `Комментарий обновлён: "${commentText}"`,
+                updatedAt: new Date(),
+              });
+            }
           })
-            .then((activity) => {
-              if (!activity) {
-                UserActivity.create({
-                  actionType: "comment_added",
-                  targetId: postId,
-                  targetType: "post",
-                  description: `Прокомментировал статью "${createdPost.title}"`,
-                  profileId,
-                });
-              } else {
-                activity.update({
-                  description: `Комментарий обновлён: "${commentText}"`,
-                  updatedAt: new Date(),
-                });
-              }
-            })
-            .then((result) => {
-              console.log("Comment added");
-              res.redirect(`/single/${postId}#comments`);
-            })
-            .catch((err) => console.log(err))
-        );
+          .then((result) => {
+            console.log("Comment added");
+            res.redirect(`/single/${postId}#comments`);
+          })
+          .catch((err) => console.log(err));
       });
   });
 };
@@ -128,4 +145,39 @@ exports.postDeleteComment = (req, res, next) => {
       res.redirect(`/single/${postId}`);
     })
     .catch((err) => console.log(err));
+};
+
+exports.postLike = (req, res, next) => {
+  const userId = req.user.id;
+  const postId = req.params.postId;
+  const like = req.query.like === "false";
+  console.log(like);
+  let likes = like ? 1 : -1;
+  console.log(likes);
+
+  let profileId;
+  let targetPost;
+
+  Post.findByPk(postId)
+    .then((post) => {
+      targetPost = post;
+      return post.update({ likes: post.likes + likes });
+    })
+    .then((updatedPost) => {
+      targetPost = updatedPost;
+      return Like.findOne({ where: { userId: userId, postId: postId } });
+    })
+    .then((foundedLike) => {
+      if (!foundedLike) {
+        return Like.create({ isLiked: true, userId, postId });
+      }
+      return foundedLike.destroy();
+      // return foundedLike.update({ isLiked: like });
+    })
+    .then((result) => {
+      return res.json({ likes: targetPost.likes });
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 };

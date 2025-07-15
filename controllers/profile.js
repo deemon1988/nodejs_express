@@ -26,6 +26,7 @@ exports.getComments = (req, res, next) => {
 exports.getProfile = (req, res, next) => {
   let fetchedComments;
   let userProfile;
+  let lastPost;
   req.user
     .getProfile({
       include: [
@@ -47,9 +48,10 @@ exports.getProfile = (req, res, next) => {
       return req.user.getPosts();
     })
     .then((posts) => {
-      const lastPost = posts.reduce((r, o) =>
-        o.createdAt < r.createdAt ? o : r
-      );
+      if (posts.length > 0) {
+        lastPost = posts.reduce((r, o) => (o.createdAt < r.createdAt ? o : r));
+      }
+
       res.render("user/profile", {
         pageTitle: "Профиль",
         path: "/user/profile",
@@ -82,8 +84,15 @@ exports.postEditProfile = (req, res, next) => {
   const userId = req.user.id;
   const profileId = req.body.profileId;
   const firstname = req.body.firstname;
+  const lastname = req.body.lastname;
+  const avatar = req.file
+    ? "/images/user/" + req.file.filename
+    : "/images/profile-avatar.jpg";
 
-  Profile.update({ firstname: firstname }, { where: { id: profileId } })
+  Profile.update(
+    { firstname: firstname, lastname: lastname, avatar: avatar },
+    { where: { id: profileId } }
+  )
     .then((result) => {
       return Profile.findByPk(profileId);
     })

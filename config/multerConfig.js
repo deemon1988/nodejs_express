@@ -8,8 +8,8 @@ const fileStorage = multer.diskStorage({
     // Определяем поддиректорию по URL или роуту
     if (req.path === '/create-post' || req.path === '/update-post') {
       uploadPath = path.join(uploadPath, 'posts');
-    } else if (req.path === '/upload-avatar') {
-      uploadPath = path.join(uploadPath, 'user-avatar');
+    } else if (req.path === '/user/edit-profile') {
+      uploadPath = path.join(uploadPath, 'user');
     } else {
       uploadPath = path.join(uploadPath, 'other');
     }

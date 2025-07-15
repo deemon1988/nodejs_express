@@ -39,12 +39,14 @@
     <!-- Links -->
     <section>
         <ul class="links">
+            <% if(isAuthenticated) { %>
             <li>
                 <a href="/user/profile" class="<%= path === '/user/profile' ? 'active' : '' %>">
                     <h3 class="<%= path === '/user/profile' ? 'active' : '' %>">Профиль</h3>
                     <p>Sed vitae justo condimentum</p>
                 </a>
             </li>
+            <% } %>
             <li>
                 <a href="#">
                     <h3>FAQ / ЧаВо</h3>
