@@ -1,5 +1,4 @@
 const { formatDate } = require("../util/date");
-// const { where } = require("sequelize");
 const Comment = require("../models/comment");
 const Post = require("../models/post");
 const Profile = require("../models/profile");
@@ -7,16 +6,13 @@ const User = require("../models/user");
 const UserActivity = require("../models/user-activity");
 const Like = require("../models/like");
 
-exports.getPosts = (req, res, next) => {
-  const isLoggedIn = req.session.isLoggedIn
+exports.getIndexPage = (req, res, next) => {
   Post.findAll()
     .then((posts) => {
       res.render("blog/blog", {
         pageTitle: "Главная страница",
         posts: posts,
         path: "/",
-        isAuthenticated: isLoggedIn,
-
       });
     })
     .catch((err) => console.log(err));
@@ -52,32 +48,87 @@ exports.getPostById = (req, res, next) => {
     .catch((err) => console.error(err));
 };
 
-exports.getAllPosts = (req, res, next) => {
-  const userId = req.user.id;
-  Post.findAll({
-    include: [
-      {
-        model: Comment,
-        as: "comments",
-        required: false,
+const { fn, col, literal, Op } = require("sequelize");
+
+exports.getAllPosts = async (req, res, next) => {
+  const userId = req.user ? req.user.id : null;
+
+  try {
+    const posts = await Post.findAll({
+      attributes: {
+        include: [
+          [fn("COUNT", literal('DISTINCT "comments"."id"')), "commentsCount"],
+          [fn("COUNT", literal('DISTINCT "likedUsers"."id"')), "likesCount"]
+        ]
       },
-      {
-        model: User,
-        as: "likedUsers",
-        where: { id: userId },
-        required: false,
-      },
-    ],
-  })
-    .then((posts) => {
-      res.render("blog/posts-list", {
-        pageTitle: "Посты",
-        posts: posts,
-        path: "/posts",
-      });
-    })
-    .catch((err) => console.log(err));
+      include: [
+        {
+          model: Comment,
+          as: "comments",
+          attributes: [],
+          required: false,
+        },
+        {
+          model: User,
+          as: "likedUsers",
+          attributes: ['id'], // нужно, чтобы мы могли проверить id
+          through: { attributes: [] },
+          where: userId ? { id: userId } : undefined,
+          required: false,
+        }
+      ],
+      group: ['post.id', 'likedUsers.id'], // обязательно указывать likedUsers.id для GROUP BY
+      order: [
+        [literal('"likesCount"'), 'DESC'],
+        [literal('"commentsCount"'), 'DESC'],
+        ['createdAt', 'DESC'],
+      ]
+    });
+
+    const serializedPosts = posts.map(p => p.toJSON());
+
+    res.render("blog/posts-list", {
+      pageTitle: "Посты",
+      posts: serializedPosts,
+      path: "/posts",
+    });
+
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
 };
+
+
+
+
+// exports.getAllPosts = (req, res, next) => {
+//   let userId = req.user ? req.user.id : null;
+//   Post.findAll({
+//     order: [["createdAt", "DESC"]],
+//     include: [
+//       {
+//         model: Comment,
+//         as: "comments",
+//         required: false,
+//       },
+//       {
+//         model: User,
+//         as: "likedUsers",
+//         where: { id: userId },
+//         required: false,
+//       },
+//     ],
+//   })
+//     .then((posts) => {
+//       res.render("blog/posts-list", {
+//         pageTitle: "Посты",
+//         posts: posts,
+//         path: "/posts",
+//       });
+//     })
+//     .catch((err) => console.log(err));
+// };
 
 exports.postComment = (req, res, next) => {
   const postId = req.body.postId;
@@ -151,11 +202,8 @@ exports.postLike = (req, res, next) => {
   const userId = req.user.id;
   const postId = req.params.postId;
   const like = req.query.like === "false";
-  console.log(like);
-  let likes = like ? 1 : -1;
-  console.log(likes);
 
-  let profileId;
+  let likes = like ? 1 : -1;
   let targetPost;
 
   Post.findByPk(postId)
@@ -172,7 +220,6 @@ exports.postLike = (req, res, next) => {
         return Like.create({ isLiked: true, userId, postId });
       }
       return foundedLike.destroy();
-      // return foundedLike.update({ isLiked: like });
     })
     .then((result) => {
       return res.json({ likes: targetPost.likes });

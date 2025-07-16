@@ -4,13 +4,18 @@ const sequelize = require("./util/database.js");
 const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
 const pgPool = require("./util/pgPool.js");
+const { formatDateOnly } = require("./util/date");
+
 
 const app = express();
 const sessionStore = new pgSession({
   pool: pgPool,
   tableName: "user_sessions",
   createTableIfMissing: true,
+   pruneSessionInterval: 60 * 60 * 24 // Чистка раз в день
 });
+
+
 
 const adminRoutes = require("./routes/admin.js");
 const blogRoutes = require("./routes/blog.js");
@@ -36,19 +41,34 @@ app.use(
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24, // 1 день
+      maxAge: 1000 * 60 * 60 * 24 // 1 день
     },
   })
 );
 
+
 app.use((req, res, next) => {
-  User.findByPk(1)
+  if (!req.session.user) {
+    return next();
+  }
+  User.findByPk(req.session.user.id)
     .then((user) => {
       req.user = user;
       next();
     })
     .catch((err) => console.log(err));
 });
+
+// Установка res.locals глобально
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn || false;
+  res.locals.isAdmin = req.user ? req.user.isAdmin : false;
+  res.locals.user = req.user || null;
+   res.locals.formatDateOnly = formatDateOnly;
+  next();
+});
+
+
 
 app.use("/admin", adminRoutes);
 app.use(blogRoutes);
@@ -79,30 +99,6 @@ sequelize
   // .sync({ force: true })
   .sync()
   .then((result) => {
-    return User.findByPk(1);
-  })
-  .then((user) => {
-    if (!user) {
-      return User.create({
-        username: "User1",
-        email: "user@email.com",
-        password: "123",
-      });
-    }
-    return user;
-  })
-  .then(async (user) => {
-    console.log(user.email);
-    const userProfile = await user.getProfile();
-    // console.log(await user.getProfile());
-    if (!userProfile)
-      return user.createProfile({
-        firstname: "Name",
-        role: "user",
-        avatar: "/images/profile-avatar.png",
-      });
-  })
-  .then((profile) => {
     app.listen(3000);
   })
   .catch((err) => console.log(err));

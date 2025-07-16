@@ -3826,3 +3826,48 @@ body.is-menu-visible #menu {
 .auth-link{
 	text-decoration: none;
 }
+
+/* Flash messages */
+.flash-message {
+  position: relative;
+  padding: 1em 2.5em 1em 1em;
+  margin: 1em 0;
+  border-radius: 5px;
+  font-size: 0.95em;
+  background: #f7f7f7;
+  border: 1px solid #ccc;
+  transition: all 0.3s ease;
+}
+
+.flash-message.success {
+  border-left: 4px solid #4caf50;
+  color: #2e7d32;
+  background-color: #e8f5e9;
+}
+
+.flash-message.error {
+  border-left: 4px solid #f44336;
+  color: #c62828;
+  background-color: #ffebee;
+}
+
+.flash-message .close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  cursor: pointer;
+  font-size: 1.2em;
+  color: #888;
+  transition: color 0.2s ease;
+}
+
+.flash-message .close-button:hover {
+  color: #000;
+}
+
+/* Анимация исчезновения */
+.flash-message.fade-out {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}

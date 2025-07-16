@@ -16,6 +16,7 @@ exports.getComments = (req, res, next) => {
             path: "/user/user-comments",
             comments: comments,
             formatDate: formatDate,
+            // isAuthenticated: req.session.isLoggedIn
           });
         })
         .catch((err) => console.log(err));
@@ -59,13 +60,14 @@ exports.getProfile = (req, res, next) => {
         lastPost: lastPost,
         profile: userProfile,
         formatDate: formatDateOnly,
+        // isAuthenticated: req.session.isLoggedIn
       });
     })
     .catch((err) => console.log(err));
 };
 
 exports.getEditProfile = (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.session.userId;
   Profile.findByPk(userId)
     .then((profile) => {
       res.render("user/edit-profile", {
@@ -74,6 +76,7 @@ exports.getEditProfile = (req, res, next) => {
         profile: profile,
         user: req.user,
         formatDate: formatDate,
+        // isAuthenticated: req.session.isLoggedIn
       });
     })
     .catch((err) => console.log(err));

@@ -1,5 +1,6 @@
 const Post = require("../models/post");
 const Profile = require("../models/profile");
+const User = require("../models/user");
 const UserActivity = require("../models/user-activity");
 
 exports.getAddPost = (req, res, next) => {
@@ -7,6 +8,7 @@ exports.getAddPost = (req, res, next) => {
     pageTitle: "Создать пост",
     path: "/admin/create-post",
     editing: false,
+    isAuthenticated: req.session.isLoggedIn,
   });
 };
 
@@ -14,7 +16,8 @@ exports.postAddPost = (req, res, next) => {
   const title = req.body.title;
   const content = req.body.content;
   const category = req.body.category;
-  const userId = req.user.id
+  const user = req.user;
+
   let createdPost;
 
   if (!req.file) {
@@ -22,17 +25,20 @@ exports.postAddPost = (req, res, next) => {
   }
   const image = "/images/posts/" + req.file.filename;
 
-  req.user
-    .createPost({
-      title: title,
-      content: content,
-      category: category,
-      image: image,
-      likes: 0,
-    })
-    .then(post => {
-      createdPost = post
-      return Profile.findByPk(userId)
+  // User.findByPk(userId)
+  //   .then((user) => { return
+       user.createPost({
+        title: title,
+        content: content,
+        category: category,
+        image: image,
+        likes: 0,
+      })
+    // })
+
+    .then((post) => {
+      createdPost = post;
+      return Profile.findByPk(user.id);
     })
     .then((profile) => {
       UserActivity.create({
@@ -44,7 +50,6 @@ exports.postAddPost = (req, res, next) => {
       });
     })
     .then((result) => res.redirect("/admin/posts"))
-    // .then((result) => res.redirect("/admin/posts"))
     .catch((err) => console.log(err));
 };
 
@@ -67,6 +72,7 @@ exports.getAllPosts = (req, res, next) => {
         pageTitle: "Админ посты",
         posts: posts,
         path: "/admin/posts",
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
@@ -90,6 +96,7 @@ exports.getEditPost = (req, res, next) => {
         path: "/admin/edit-post",
         editing: editMode,
         post: post,
+        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));

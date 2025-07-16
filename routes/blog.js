@@ -26,6 +26,6 @@ router.post("/single/:postId", postsController.postComment)
 router.post("/single/:postId/:commentId", postsController.postDeleteComment)
 
 
-router.get("/", postsController.getPosts);
+router.get("/", postsController.getIndexPage);
 
 module.exports = router;

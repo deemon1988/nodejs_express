@@ -8,8 +8,11 @@
             <li><a class="<%= path === '/categories' ? 'active' : '' %>" href="/categories">Категории</a></li>
             <li><a class="<%= path === '/about' ? 'active' : '' %>" href="/about">О блоге</a></li>
             <li><a class="<%= path === '/archive' ? 'active' : '' %>" href="/archive">Архив</a></li>
-            <li><a class="<%= path === '/admin/create-post' ? 'active' : '' %>" href="/admin/create-post">Добавить пост</a></li>
-            <li><a class="<%= path === '/admin/posts' ? 'active' : '' %>" href="/admin/posts">Админ посты</a></li>
+            <% if(isAuthenticated && isAdmin) { %>
+                <li><a class="<%= path === '/admin/create-post' ? 'active' : '' %>" href="/admin/create-post">Добавить
+                        пост</a></li>
+                <li><a class="<%= path === '/admin/posts' ? 'active' : '' %>" href="/admin/posts">Админ посты</a></li>
+                <% } %>
         </ul>
     </nav>
     <nav class="main">
@@ -40,39 +43,50 @@
     <section>
         <ul class="links">
             <% if(isAuthenticated) { %>
-            <li>
-                <a href="/user/profile" class="<%= path === '/user/profile' ? 'active' : '' %>">
-                    <h3 class="<%= path === '/user/profile' ? 'active' : '' %>">Профиль</h3>
-                    <p>Sed vitae justo condimentum</p>
-                </a>
-            </li>
+                <li>
+                    <a href="/user/profile" class="<%= path === '/user/profile' ? 'active' : '' %>">
+                        <h3 class="<%= path === '/user/profile' ? 'active' : '' %>">Профиль</h3>
+                        <p>Sed vitae justo condimentum</p>
+                    </a>
+                </li>
+                <% } %>
+                    <li>
+                        <a href="#">
+                            <h3>FAQ / ЧаВо</h3>
+                            <p>(часто задаваемые вопросы)</p>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <h3>Соцсети / Сообщество</h3>
+                            <p>Phasellus sed ultricies mi congue</p>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <h3>Политика конфиденциальности</h3>
+                            <p>Porta lectus amet ultricies</p>
+                        </a>
+                    </li>
+        </ul>
+    </section>
+
+    <% if(!isAuthenticated) { %>
+        <!-- Actions -->
+        <section>
+            <ul class="actions stacked">
+                <li><a href="/singin" class="button large fit">Войти</a></li>
+            </ul>
+        </section>
+        <% } else { %>
+            <section>
+                <ul class="actions stacked">
+                    <li>
+                        <form action="/singout" method="post">
+                            <button type="submit" class="button large fit">Выйти</button>
+                        </form>
+                    </li>
+                </ul>
+            </section>
             <% } %>
-            <li>
-                <a href="#">
-                    <h3>FAQ / ЧаВо</h3>
-                    <p>(часто задаваемые вопросы)</p>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <h3>Соцсети / Сообщество</h3>
-                    <p>Phasellus sed ultricies mi congue</p>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <h3>Политика конфиденциальности</h3>
-                    <p>Porta lectus amet ultricies</p>
-                </a>
-            </li>
-        </ul>
-    </section>
-
-    <!-- Actions -->
-    <section>
-        <ul class="actions stacked">
-            <li><a href="/singin" class="button large fit">Log In</a></li>
-        </ul>
-    </section>
-
 </section>
