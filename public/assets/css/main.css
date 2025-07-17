@@ -2026,7 +2026,10 @@ button:hover:active,
 	background-color: rgba(46, 186, 174, 0.05);
 }
 
-#header a.active, .links a.active, .links h3.active, .stats li .icon.solid.fa-heart.active:before {
+#header a.active,
+.links a.active,
+.links h3.active,
+.stats li .icon.solid.fa-heart.active:before {
 	color: rgba(46, 186, 174);
 }
 
@@ -3820,54 +3823,81 @@ body.is-menu-visible #menu {
 }
 
 .auth-helper {
-	    margin: 2em 0 0 0;
+	margin: 2em 0 0 0;
 }
 
-.auth-link{
+.auth-link {
 	text-decoration: none;
 }
 
 /* Flash messages */
 .flash-message {
-  position: relative;
-  padding: 1em 2.5em 1em 1em;
-  margin: 1em 0;
-  border-radius: 5px;
-  font-size: 0.95em;
-  background: #f7f7f7;
-  border: 1px solid #ccc;
-  transition: all 0.3s ease;
+	position: relative;
+	padding: 1em 2.5em 1em 1em;
+	margin: 1em 0;
+	border-radius: 5px;
+	font-size: 0.95em;
+	background: #f7f7f7;
+	border: 1px solid #ccc;
+	transition: all 0.3s ease;
 }
 
 .flash-message.success {
-  border-left: 4px solid #4caf50;
-  color: #2e7d32;
-  background-color: #e8f5e9;
+	border-left: 4px solid #4caf50;
+	color: #2e7d32;
+	background-color: #e8f5e9;
 }
 
 .flash-message.error {
-  border-left: 4px solid #f44336;
-  color: #c62828;
-  background-color: #ffebee;
+	border-left: 4px solid #f44336;
+	color: #c62828;
+	background-color: #ffebee;
 }
 
 .flash-message .close-button {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  cursor: pointer;
-  font-size: 1.2em;
-  color: #888;
-  transition: color 0.2s ease;
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	cursor: pointer;
+	font-size: 1.2em;
+	color: #888;
+	transition: color 0.2s ease;
 }
 
 .flash-message .close-button:hover {
-  color: #000;
+	color: #000;
 }
 
 /* Анимация исчезновения */
 .flash-message.fade-out {
-  opacity: 0;
-  transform: translateY(-10px);
-  pointer-events: none;
+	opacity: 0;
+	transform: translateY(-10px);
+	pointer-events: none;
+}
+
+.avatar {
+	width: 20%;
+	min-width: 150px;
+}
+
+.title .profile {
+	text-align: center;
+}
+
+.profile-info {
+	display: flex;
+	justify-content: space-between;
+	gap: 30px;
+}
+
+.description {
+	content: space-between;
+	width: 50%;
+}
+
+.profile-avatar {
+	width: 50%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }

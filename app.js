@@ -62,7 +62,8 @@ app.use((req, res, next) => {
 // Установка res.locals глобально
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn || false;
-  res.locals.isAdmin = req.user ? req.user.isAdmin : false;
+  res.locals.userRole = req.user ? req.user.role : 'user';
+  // res.locals.isAdmin = req.user ? req.user.role : false;
   res.locals.user = req.user || null;
    res.locals.formatDateOnly = formatDateOnly;
   next();

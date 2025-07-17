@@ -16,15 +16,16 @@ const User = sequelize.define("user", {
   email: {
     type: Sequelize.STRING,
     allowNull: false,
+    unique: true
   },
   password: {
     type: Sequelize.STRING,
     allowNull: false,
   },
-  isAdmin: {
-    type: Sequelize.BOOLEAN,
+  role: {
+    type: Sequelize.ENUM('user', 'admin'),
     allowNull: false,
-    defaultValue: false, // значение по умолчанию
+    defaultValue: 'user', // значение по умолчанию
   },
 });
 

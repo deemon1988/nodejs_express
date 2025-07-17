@@ -12,6 +12,8 @@ router.get("/categories", (req, res, next) => {
   res.render("blog/categories", { pageTitle: "Категории", path: '/categories' });
 });
 
+router.get("/category", postsController.getCategory)
+
 router.get("/archive", (req, res, next) => {
   res.render("blog/archive", { pageTitle: "Архив", path: '/archive' });
 });

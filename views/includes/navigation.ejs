@@ -8,7 +8,7 @@
             <li><a class="<%= path === '/categories' ? 'active' : '' %>" href="/categories">Категории</a></li>
             <li><a class="<%= path === '/about' ? 'active' : '' %>" href="/about">О блоге</a></li>
             <li><a class="<%= path === '/archive' ? 'active' : '' %>" href="/archive">Архив</a></li>
-            <% if(isAuthenticated && isAdmin) { %>
+            <% if(isAuthenticated && userRole === 'admin') { %>
                 <li><a class="<%= path === '/admin/create-post' ? 'active' : '' %>" href="/admin/create-post">Добавить
                         пост</a></li>
                 <li><a class="<%= path === '/admin/posts' ? 'active' : '' %>" href="/admin/posts">Админ посты</a></li>
@@ -76,6 +76,7 @@
         <section>
             <ul class="actions stacked">
                 <li><a href="/singin" class="button large fit">Войти</a></li>
+                <li><a href="/register" class="button large fit">Регистрация</a></li>
             </ul>
         </section>
         <% } else { %>

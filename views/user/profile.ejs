@@ -1,6 +1,5 @@
 <%- include('../includes/head.ejs') %>
-  <link rel="stylesheet" href="/assets/css/create-post.css">
-  </head>
+  <!-- <link rel="stylesheet" href="/assets/css/create-post.css"> -->
   </head>
 
   <body class="profile is-preload">
@@ -14,33 +13,41 @@
 
           <!-- User Profile Card -->
           <article class="post">
+
             <header>
-              <div class="title">
-                <h2>Профиль пользователя</h2>
-                <p>Информация о вашем аккаунте</p>
+              <div class="title profile">
+                <h2>
+                  <%= profile.firstname %>
+                    <% profile.lastname ? profile.lastname : '' %>
+                </h2>
+                <p>
+                  <%= profile.user.email %>
+                </p>
               </div>
             </header>
-
-            <span class="image featured"><img src="<%= profile.avatar %>" alt="Аватар пользователя"
-                style="max-width: 150px; max-height: 150px;" /></span>
-
-            <p><strong>Имя:</strong>
-              <%= profile.firstname %>
-                <% profile.lastname ? profile.lastname : '' %>
-            </p>
-            <p><strong>Фамилия:</strong>
-              <%= profile.lastname ? profile.lastname : '' %>
-            </p>
-            <p><strong>Email:</strong>
-              <%= profile.user.email %>
-            </p>
-            <p><strong>Дата регистрации:</strong>
-              <%= formatDate(profile.user.createdAt) %>
-            </p>
-            <p><strong>Роль:</strong>
-              <%= profile.role==='admin' ? 'Администратор' : 'Пользователь' %>
-            </p>
-
+            <div class="profile-info">
+              <div class="description">
+                <p><strong>Имя:</strong>
+                  <%= profile.firstname %>
+                    <% profile.lastname ? profile.lastname : '' %>
+                </p>
+                <p><strong>Фамилия:</strong>
+                  <%= profile.lastname ? profile.lastname : '' %>
+                </p>
+                <p><strong>Email:</strong>
+                  <%= profile.user.email %>
+                </p>
+                <p><strong>Дата регистрации:</strong>
+                  <%= formatDate(profile.user.createdAt) %>
+                </p>
+                <p><strong>Роль:</strong>
+                  <%= profile.role==='admin' ? 'Администратор' : 'Пользователь' %>
+                </p>
+              </div>
+              <div class="profile-avatar">
+                <img src="<%= profile.avatar %>" alt="" class="avatar" />
+              </div>
+            </div>
             <footer>
               <ul class="actions">
                 <li><a href="/user/edit-profile" class="button large">Редактировать профиль</a></li>
@@ -48,7 +55,7 @@
             </footer>
           </article>
 
-          <article class="post">
+          <article class="post profile">
             <article>
               <!-- Recent Posts Section -->
               <header>
@@ -103,15 +110,11 @@
         <!-- Sidebar -->
         <section id="sidebar">
           <section id="intro">
-            <a href="/profile" class="logo"><img src="/images/avatar.jpg" alt="" /></a>
+
             <header>
-              <h2>
-                <%= profile.firstname %>
-                  <% profile.lastname ? profile.lastname : '' %>
-              </h2>
-              <p>
-                <%= profile.user.email %>
-              </p>
+              <a href="#" class="logo"><img src="/images/logo.jpg" alt=""></a>
+              <h2>Профиль пользователя</h2>
+              <p>Информация о вашем аккаунте</p>
             </header>
           </section>
 

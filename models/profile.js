@@ -16,10 +16,10 @@ const Profile = sequelize.define('profile', {
         type: Sequelize.STRING,
         allowNull: true,
     },
-    role: {
-        type: Sequelize.STRING,
-        allowNull: false,
-    },
+    // role: {
+    //     type: Sequelize.STRING,
+    //     allowNull: false,
+    // },
     avatar: {
         type: Sequelize.STRING,
         allowNull: true,

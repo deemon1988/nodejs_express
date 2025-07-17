@@ -56,9 +56,9 @@
 												<%= post.category %>
 											</a></li>
 										<li>
-											<a href="#" class="icon solid fa-heart" <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>" data-id="<%= post.id %>"><%= post.likes %></a>
+											<a href="#" class="like-icon icon solid fa-heart" <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>" data-id="<%= post.id %>"><%= post.likes %></a>
 										</li>
-										<li><a href="#" class="icon solid fa-comment"><%= post.comment ? post.comment.length : 0 %></a></li>
+										<li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment"><%= post.comment ? post.comment.length : 0 %></a></li>
 									</ul>
 								</footer>
 							</article>

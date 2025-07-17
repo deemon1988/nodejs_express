@@ -7,7 +7,7 @@ const UserActivity = require("../models/user-activity");
 const Like = require("../models/like");
 
 exports.getIndexPage = (req, res, next) => {
-  Post.findAll()
+  Post.findAll({ order: [["likes", "DESC"]] })
     .then((posts) => {
       res.render("blog/blog", {
         pageTitle: "Главная страница",
@@ -58,8 +58,8 @@ exports.getAllPosts = async (req, res, next) => {
       attributes: {
         include: [
           [fn("COUNT", literal('DISTINCT "comments"."id"')), "commentsCount"],
-          [fn("COUNT", literal('DISTINCT "likedUsers"."id"')), "likesCount"]
-        ]
+          [fn("COUNT", literal('DISTINCT "likedUsers"."id"')), "likesCount"],
+        ],
       },
       include: [
         {
@@ -71,36 +71,32 @@ exports.getAllPosts = async (req, res, next) => {
         {
           model: User,
           as: "likedUsers",
-          attributes: ['id'], // нужно, чтобы мы могли проверить id
+          attributes: ["id"], // нужно, чтобы мы могли проверить id
           through: { attributes: [] },
-          where: userId ? { id: userId } : undefined,
+          where: { id: userId }, //userId ? { id: userId } : undefined,
           required: false,
-        }
+        },
       ],
-      group: ['post.id', 'likedUsers.id'], // обязательно указывать likedUsers.id для GROUP BY
+      group: ["post.id", "likedUsers.id"], // обязательно указывать likedUsers.id для GROUP BY
       order: [
-        [literal('"likesCount"'), 'DESC'],
-        [literal('"commentsCount"'), 'DESC'],
-        ['createdAt', 'DESC'],
-      ]
+        [literal('"likesCount"'), "DESC"],
+        [literal('"commentsCount"'), "DESC"],
+        ["createdAt", "DESC"],
+      ],
     });
 
-    const serializedPosts = posts.map(p => p.toJSON());
+    const serializedPosts = posts.map((p) => p.toJSON());
 
     res.render("blog/posts-list", {
       pageTitle: "Посты",
       posts: serializedPosts,
       path: "/posts",
     });
-
   } catch (err) {
     console.error(err);
     next(err);
   }
 };
-
-
-
 
 // exports.getAllPosts = (req, res, next) => {
 //   let userId = req.user ? req.user.id : null;
@@ -199,6 +195,9 @@ exports.postDeleteComment = (req, res, next) => {
 };
 
 exports.postLike = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Пользователь не авторизован" });
+  }
   const userId = req.user.id;
   const postId = req.params.postId;
   const like = req.query.like === "false";
@@ -227,4 +226,16 @@ exports.postLike = (req, res, next) => {
     .catch((err) => {
       console.error(err);
     });
+};
+
+exports.getCategory = (req, res, next) => {
+  const category = req.query.cat;
+  Post.findAll({where: {category: category}})
+  .then((posts) => {
+    res.render(`blog/cat/${category}`, {
+      posts: posts,
+      pageTitle: category.toUpperCase(),
+      path: '/categories'
+    });
+  });
 };

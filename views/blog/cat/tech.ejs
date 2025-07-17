@@ -1,4 +1,4 @@
-<%- include('../includes/head.ejs') %>
+<%- include('../../includes/head.ejs') %>
     </head>
 
     <body class="posts-list">
@@ -8,7 +8,7 @@
 
             <!-- Header -->
             <!-- Menu -->
-            <%- include('../includes/navigation.ejs') %>
+            <%- include('../../includes/navigation.ejs') %>
 
                 <!-- Main -->
                 <div id="main">
@@ -27,7 +27,7 @@
                                     <div class="meta">
                                         <time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
                                         <a href="#" class="author"><span class="name"><%= post.category %></span><img
-                                                src="images/avatar.jpg" alt="" /></a>
+                                                src="../images/avatar.jpg" alt="" /></a>
                                     </div>
                                 </header>
                                 <a href="/single/<%= post.id %>" class="image featured"><img src="<%= post.image %>" alt="" /></a>
@@ -39,7 +39,7 @@
                                         <li><a href="/single/<%= post.id %>" class="button large">Continue Reading</a></li>
                                     </ul>
                                     <ul class="stats">
-                                        <li><a class="category" href="/category/?cat=<%= post.category %>" data-category="<%= post.category %>">
+                                        <li><a href="/categories">
                                                 <%= post.category %>
                                             </a></li>
                                         <li><a href="#" class="like-icon icon solid fa-heart  <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>" data-id="<%= post.id %>"><%= post.likes %></a></li>
@@ -60,8 +60,8 @@
                         <section id="intro">
 
                             <header>
-                                 <a href="#" class="logo"><img src="images/logo.jpg" alt="" /></a>
-                                <h2>Статьи</h2>
+                                 <a href="#" class="logo"><img src="../images/logo.jpg" alt="" /></a>
+                                <h2>Технологии</h2>
                                 <p>Another fine responsive site template by <a href="http://html5up.net">HTML5 UP</a>
                                 </p>
                             </header>
@@ -76,9 +76,9 @@
                                     <header>
                                         <h3><a href="/categories">Технологии</a></h3>
                                         <time class="published" datetime="2015-10-20">October 20, 2015</time>
-                                        <a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
+                                        <a href="#" class="author"><img src="../images/avatar.jpg" alt="" /></a>
                                     </header>
-                                    <a href="/single" class="image"><img src="images/pic04.jpg" alt="" /></a>
+                                    <a href="/single" class="image"><img src="../images/pic04.jpg" alt="" /></a>
                                 </article>
 
                                 <!-- Mini Post -->
@@ -86,9 +86,9 @@
                                     <header>
                                         <h3><a href="single.html">Жизнь</a></h3>
                                         <time class="published" datetime="2015-10-19">October 19, 2015</time>
-                                        <a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
+                                        <a href="#" class="author"><img src="../images/avatar.jpg" alt="" /></a>
                                     </header>
-                                    <a href="single.html" class="image"><img src="images/pic05.jpg" alt="" /></a>
+                                    <a href="single.html" class="image"><img src="../images/pic05.jpg" alt="" /></a>
                                 </article>
 
                                 <!-- Mini Post -->
@@ -96,9 +96,9 @@
                                     <header>
                                         <h3><a href="single.html">Путешествия</a></h3>
                                         <time class="published" datetime="2015-10-18">October 18, 2015</time>
-                                        <a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
+                                        <a href="#" class="author"><img src="../images/avatar.jpg" alt="" /></a>
                                     </header>
-                                    <a href="single.html" class="image"><img src="images/pic06.jpg" alt="" /></a>
+                                    <a href="single.html" class="image"><img src="../images/pic06.jpg" alt="" /></a>
                                 </article>
 
                                 <!-- Mini Post -->
@@ -106,9 +106,9 @@
                                     <header>
                                         <h3><a href="single.html">Дизайн</a></h3>
                                         <time class="published" datetime="2015-10-17">October 17, 2015</time>
-                                        <a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
+                                        <a href="#" class="author"><img src="../images/avatar.jpg" alt="" /></a>
                                     </header>
-                                    <a href="single.html" class="image"><img src="images/pic07.jpg" alt="" /></a>
+                                    <a href="single.html" class="image"><img src="../images/pic07.jpg" alt="" /></a>
                                 </article>
 
                             </div>
@@ -123,7 +123,7 @@
                                             <h3><a href="single.html">Lorem ipsum fermentum ut nisl vitae</a></h3>
                                             <time class="published" datetime="2015-10-20">October 20, 2015</time>
                                         </header>
-                                        <a href="single.html" class="image"><img src="images/pic08.jpg" alt="" /></a>
+                                        <a href="single.html" class="image"><img src="../images/pic08.jpg" alt="" /></a>
                                     </article>
                                 </li>
                                 <li>
@@ -133,7 +133,7 @@
                                             </h3>
                                             <time class="published" datetime="2015-10-15">October 15, 2015</time>
                                         </header>
-                                        <a href="single.html" class="image"><img src="images/pic09.jpg" alt="" /></a>
+                                        <a href="single.html" class="image"><img src="../images/pic09.jpg" alt="" /></a>
                                     </article>
                                 </li>
                                 <li>
@@ -142,7 +142,7 @@
                                             <h3><a href="single.html">Euismod amet placerat vivamus porttitor</a></h3>
                                             <time class="published" datetime="2015-10-10">October 10, 2015</time>
                                         </header>
-                                        <a href="single.html" class="image"><img src="images/pic10.jpg" alt="" /></a>
+                                        <a href="single.html" class="image"><img src="../images/pic10.jpg" alt="" /></a>
                                     </article>
                                 </li>
                                 <li>
@@ -152,7 +152,7 @@
                                             </h3>
                                             <time class="published" datetime="2015-10-08">October 8, 2015</time>
                                         </header>
-                                        <a href="single.html" class="image"><img src="images/pic11.jpg" alt="" /></a>
+                                        <a href="single.html" class="image"><img src="../images/pic11.jpg" alt="" /></a>
                                     </article>
                                 </li>
                                 <li>
@@ -161,7 +161,7 @@
                                             <h3><a href="single.html">Congue ullam corper lorem ipsum dolor</a></h3>
                                             <time class="published" datetime="2015-10-06">October 7, 2015</time>
                                         </header>
-                                        <a href="single.html" class="image"><img src="images/pic12.jpg" alt="" /></a>
+                                        <a href="single.html" class="image"><img src="../images/pic12.jpg" alt="" /></a>
                                     </article>
                                 </li>
                             </ul>
@@ -179,4 +179,4 @@
                                 <li><a href="#" class="button">Learn More</a></li>
                             </ul>
                         </section>
-        <%- include('../includes/end.ejs') %>
+        <%- include('../../includes/end.ejs') %>

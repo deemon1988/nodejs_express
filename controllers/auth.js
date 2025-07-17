@@ -6,40 +6,93 @@ exports.getLogin = (req, res, err) => {
   });
 };
 
-exports.postLogin = (req, res, err) => {
-  User.findByPk(1)
+exports.postLogin = (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  let currentUser;
+
+  User.findOne({ where: { email: email } })
     .then((user) => {
       if (!user) {
-        return User.create({
-          username: "User1",
-          email: "user@email.com",
-          password: "123",
-          isAdmin: true,
-        });
+        throw new Error("Нет пользователя");
       }
-      return user;
+      currentUser = user;
+      return bcrypt.compare(password, user.password);
     })
-    .then(async (user) => {
+    .then((doMatch) => {
+      if (!doMatch) {
+        throw new Error("Неверный пароль");
+      }
+
       req.session.isLoggedIn = true;
-      req.session.user = user;
-      const userProfile = await user.getProfile();
-      if (!userProfile)
-        return user.createProfile({
-          firstname: "Name",
-          role: "user",
+      req.session.user = currentUser;
+      return req.session.save();
+    })
+    .then(() => {
+      return currentUser.getProfile();
+    })
+    .then((profileData) => {
+      if (!profileData) {
+        return currentUser.createProfile({
+          firstname: currentUser.username,
           avatar: "/images/profile-avatar.png",
         });
-      return userProfile;
+      }
+      return profileData;
     })
     .then((profile) => {
+      if (!profile) {
+        throw new Error("Профиль не создан");
+      }
       res.redirect("/");
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.error("Ошибка входа:", err.message);
+      res.redirect("/singin"); // Здесь только один redirect
+    });
 };
 
 exports.postLogout = (req, res, err) => {
   req.session.destroy((err) => {
     console.log(err);
     res.redirect("/");
+  });
+};
+
+const bcrypt = require("bcryptjs");
+
+exports.postRegisterUser = (req, res, err) => {
+  const username = req.body.username;
+  const email = req.body.email.trim();
+  const password = req.body.password;
+  const repeatPass = req.body.repeatPass;
+
+  User.findOne({ where: { email: email } })
+    .then((userDoc) => {
+      if (userDoc) {
+        return res.redirect("/register");
+      }
+      return bcrypt
+        .hash(password, 12)
+        .then((hashedPassword) => {
+          const user = new User({
+            username: username,
+            email: email,
+            password: hashedPassword,
+            role: "user",
+          });
+          return user.save();
+        })
+        .then((result) => {
+          res.redirect("/singin");
+        });
+    })
+    .catch((err) => console.log(err));
+};
+
+exports.getRegisterUser = (req, res, err) => {
+  res.render("user/register", {
+    pageTitle: "Регистрация",
   });
 };
