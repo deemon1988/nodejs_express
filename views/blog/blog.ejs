@@ -38,7 +38,7 @@
 									</div>
 									<div class="meta">
 										<time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
-										<a href="#" class="author"><span class="name"><%= post.category %></span><img src="images/avatar.jpg" alt="" /></a>
+										<a href="#" class="author"><span class="name"><%= post.categoryName %></span><img src="images/avatar.jpg" alt="" /></a>
 									</div>
 								</header>
 								<a href="/posts/<%= post.id %>" class="image featured"><img src="<%= post.image %>"
@@ -53,12 +53,12 @@
 									</ul>
 									<ul class="stats">
 										<li><a href="#">
-												<%= post.category %>
+												<%= post.categoryName %>
 											</a></li>
 										<li>
 											<a href="#" class="like-icon icon solid fa-heart" <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>" data-id="<%= post.id %>"><%= post.likes %></a>
 										</li>
-										<li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment"><%= post.comment ? post.comment.length : 0 %></a></li>
+										<li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment"><%= post.commentsCount || 0 %></a></li>
 									</ul>
 								</footer>
 							</article>

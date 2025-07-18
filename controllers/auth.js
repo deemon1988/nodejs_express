@@ -80,7 +80,7 @@ exports.postRegisterUser = (req, res, err) => {
             username: username,
             email: email,
             password: hashedPassword,
-            role: "user",
+            role: "admin",
           });
           return user.save();
         })

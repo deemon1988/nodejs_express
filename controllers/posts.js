@@ -1,16 +1,87 @@
-const { formatDate } = require("../util/date");
+const { formatDate, formatDateOnly } = require("../util/date");
 const Comment = require("../models/comment");
 const Post = require("../models/post");
 const Profile = require("../models/profile");
 const User = require("../models/user");
 const UserActivity = require("../models/user-activity");
 const Like = require("../models/like");
+const { fn, col, literal, Op } = require("sequelize");
+const Category = require("../models/category");
+const { Sequelize } = require("sequelize");
+const sequelize = require("../util/database"); // замените на ваш путь
+const { getPostsQuery } = require("../services/postService");
 
 exports.getIndexPage = (req, res, next) => {
-  Post.findAll({ order: [["likes", "DESC"]] })
-    .then((posts) => {
+  // Post.findAll({
+  //    attributes: {
+  //       include: [
+  //         [fn("COUNT", literal(' "comments"."id"')), "commentsCount"],
+  //       ],
+  //     },
+  //   include: [
+  //     {
+  //       model: Comment,
+  //       as: "comments",
+  //       attributes: [],
+  //       required: false,
+  //     },
+  //     {
+  //       model: Category,
+  //       as: "category",
+  //     },
+  //   ],
+  //   group: ["post.id", "category.id"],
+  //   order: [
+  //     ["likes", "DESC"],
+  //     [literal('"commentsCount"'), "DESC"],
+  //   ],
+  // })
+  getPostsQuery()
+    .then(({ rows: posts }) => {
+      return posts.map((p) => p.toJSON());
+    })
+    .then((serializedPosts) => {
       res.render("blog/blog", {
         pageTitle: "Главная страница",
+        posts: serializedPosts,
+        path: "/",
+      });
+    })
+    .catch((err) => console.log(err));
+};
+
+exports.getTopPosts = (req, res, next) => {
+  sequelize
+    .query(
+      `
+WITH ranked_posts AS (
+  SELECT
+    "post"."id",
+    "post"."title",
+    "post"."likes",
+    "post"."categoryId",
+    "post"."image",
+    "post"."createdAt",
+    "category"."name" AS "categoryName",
+    COUNT("comments"."id") AS "commentsCount",
+    ROW_NUMBER() OVER (
+      PARTITION BY "post"."categoryId"
+      ORDER BY "post"."likes" DESC, COUNT("comments"."id") DESC
+    ) AS "rank"
+  FROM "posts" AS "post"
+  LEFT JOIN "comments" AS "comments" ON "post"."id" = "comments"."postId"
+  LEFT JOIN "categories" AS "category" ON "post"."categoryId" = "category"."id"
+  GROUP BY "post"."id", "post"."categoryId", "category"."name"
+)
+SELECT * FROM ranked_posts
+WHERE "rank" = 1
+ORDER BY "likes" DESC, "commentsCount" DESC;
+  `,
+      { type: Sequelize.QueryTypes.SELECT }
+    )
+    .then((posts) => {
+      res.render("blog/blog", {
+        pageTitle: "Топ постов по категориям",
         posts: posts,
         path: "/",
       });
@@ -26,9 +97,9 @@ exports.getPostById = (req, res, next) => {
     include: [
       {
         model: Category,
-        as: 'category'
-      }
-    ]
+        as: "category",
+      },
+    ],
   })
     .then((post) => {
       loadedPost = post;
@@ -44,7 +115,6 @@ exports.getPostById = (req, res, next) => {
       });
     })
     .then((comments) => {
-
       res.render("blog/single", {
         post: loadedPost,
         pageTitle: loadedPost.title,
@@ -57,88 +127,63 @@ exports.getPostById = (req, res, next) => {
     .catch((err) => console.error(err));
 };
 
-const { fn, col, literal, Op } = require("sequelize");
-const Category = require("../models/category");
-
 exports.getAllPosts = async (req, res, next) => {
   const userId = req.user ? req.user.id : null;
 
-  try {
-    const posts = await Post.findAll({
-      attributes: {
-        include: [
-          [fn("COUNT", literal('DISTINCT "comments"."id"')), "commentsCount"],
-          [fn("COUNT", literal('DISTINCT "likedUsers"."id"')), "likesCount"],
-        ],
-      },
-      include: [
-        {
-          model: Comment,
-          as: "comments",
-          attributes: [],
-          required: false,
-        },
-        {
-          model: User,
-          as: "likedUsers",
-          attributes: ["id"], // нужно, чтобы мы могли проверить id
-          through: { attributes: [] },
-          where: { id: userId }, //userId ? { id: userId } : undefined,
-          required: false,
-        },
-        {
-          model: Category,
-          as: 'category',
-        },
-      ],
-      group: ["post.id", "likedUsers.id"], // обязательно указывать likedUsers.id для GROUP BY
-      order: [
-        [literal('"likesCount"'), "DESC"],
-        [literal('"commentsCount"'), "DESC"],
-        ["createdAt", "DESC"],
-      ],
-    });
-
-    const serializedPosts = posts.map((p) => p.toJSON());
-
-    res.render("blog/posts-list", {
-      pageTitle: "Посты",
-      posts: serializedPosts,
-      path: "/posts",
-    });
-  } catch (err) {
-    console.error(err);
-    next(err);
-  }
+  // try {
+  //   const posts = await Post.findAll({
+  //     attributes: {
+  //       include: [
+  //         [fn("COUNT", literal('DISTINCT "comments"."id"')), "commentsCount"],
+  //         [fn("COUNT", literal('DISTINCT "likedUsers"."id"')), "likesCount"],
+  //       ],
+  //     },
+  //     include: [
+  //       {
+  //         model: Comment,
+  //         as: "comments",
+  //         attributes: [],
+  //         required: false,
+  //       },
+  //       {
+  //         model: User,
+  //         as: "likedUsers",
+  //         attributes: ["id"], // нужно, чтобы мы могли проверить id
+  //         through: { attributes: [] },
+  //         where: { id: userId }, //userId ? { id: userId } : undefined,
+  //         required: false,
+  //       },
+  //       {
+  //         model: Category,
+  //         as: "category",
+  //       },
+  //     ],
+  //     group: ["post.id", "likedUsers.id", "category.id"], // обязательно указывать likedUsers.id для GROUP BY
+  //     order: [
+  //       // [literal("post.likes"), "DESC"],
+  //       [literal('"likesCount"'), "DESC"],
+  //       [literal('"commentsCount"'), "DESC"],
+  //       ["createdAt", "DESC"],
+  //     ],
+  //   });
+  getPostsQuery(userId)
+    .then(({ rows: posts }) => {
+      return posts.map((p) => p.toJSON());
+    })
+    // const serializedPosts = posts.map((p) => p.toJSON());
+    .then((serializedPosts) => {
+      res.render("blog/posts-list", {
+        pageTitle: "Посты",
+        posts: serializedPosts,
+        path: "/posts",
+      });
+    })
+    .catch((err) => console.error(err.message));
+  // } catch (err) {
+  //   console.error(err.message);
+  //   next(err);
+  // }
 };
-
-// exports.getAllPosts = (req, res, next) => {
-//   let userId = req.user ? req.user.id : null;
-//   Post.findAll({
-//     order: [["createdAt", "DESC"]],
-//     include: [
-//       {
-//         model: Comment,
-//         as: "comments",
-//         required: false,
-//       },
-//       {
-//         model: User,
-//         as: "likedUsers",
-//         where: { id: userId },
-//         required: false,
-//       },
-//     ],
-//   })
-//     .then((posts) => {
-//       res.render("blog/posts-list", {
-//         pageTitle: "Посты",
-//         posts: posts,
-//         path: "/posts",
-//       });
-//     })
-//     .catch((err) => console.log(err));
-// };
 
 exports.postComment = (req, res, next) => {
   const postId = req.body.postId;
@@ -243,13 +288,38 @@ exports.postLike = (req, res, next) => {
 };
 
 exports.getCategory = (req, res, next) => {
-  const category = req.query.cat;
-  Post.findAll({ where: { category: category } })
+  const catId = req.query.cat;
+  let category;
+  Category.findByPk(catId)
+    .then((cat) => {
+      category = cat;
+      return Post.findAll({
+        where: { categoryId: catId },
+        include: [{ model: Category, as: "category" }],
+      });
+    })
+
     .then((posts) => {
-      res.render(`blog/cat/${category}`, {
+      res.render(`blog/category/${category.name}`, {
         posts: posts,
-        pageTitle: category.toUpperCase(),
-        path: '/categories'
+        pageTitle: category.name.toUpperCase(),
+        path: "/categories",
       });
     });
+};
+
+exports.getCategories = (req, res, next) => {
+  Post.findAll({
+    include: [{ model: Category, as: "category" }],
+    order: [["likes", "DESC"]],
+  })
+    .then((posts) => {
+      res.render("blog/categories", {
+        pageTitle: "Категории",
+        path: "/categories",
+        posts: posts,
+        formatDate: formatDateOnly,
+      });
+    })
+    .catch((err) => console.log(err));
 };

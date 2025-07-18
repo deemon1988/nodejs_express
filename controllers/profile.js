@@ -28,6 +28,10 @@ exports.getProfile = (req, res, next) => {
   let fetchedComments;
   let userProfile;
   let lastPost;
+  if(!req.user && req.session) {
+      req.session.destroy()
+     return res.status(401).redirect('/');
+  }
   req.user
     .getProfile({
       include: [

@@ -26,7 +26,7 @@
                                     </div>
                                     <div class="meta">
                                         <time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
-                                        <a href="#" class="author"><span class="name"><%= post.category %></span><img
+                                        <a href="#" class="author"><span class="name"><%= post.category.name %></span><img
                                                 src="images/avatar.jpg" alt="" /></a>
                                     </div>
                                 </header>
@@ -39,8 +39,8 @@
                                         <li><a href="/single/<%= post.id %>" class="button large">Continue Reading</a></li>
                                     </ul>
                                     <ul class="stats">
-                                        <li><a class="category" href="/category/?cat=<%= post.category %>" data-category="<%= post.category %>">
-                                                <%= post.getCategory %>
+                                        <li><a class="category" href="/category/?cat=<%= post.category.name %>" data-category="<%= post.category.name %>">
+                                                <%= post.category.name %>
                                             </a></li>
                                         <li><a href="#" class="like-icon icon solid fa-heart  <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>" data-id="<%= post.id %>"><%= post.likes %></a></li>
                                         <li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment">  <%= post.commentsCount || 0 %></a></li>

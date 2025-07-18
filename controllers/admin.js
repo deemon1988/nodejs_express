@@ -27,15 +27,15 @@ exports.postAddPost = (req, res, next) => {
   const image = "/images/posts/" + req.file.filename;
 
   Category.findOne({ where: { name: categoryName } })
-    .then(findedCategory => {
+    .then((findedCategory) => {
       if (!findedCategory) {
-        return Category.create({ name: categoryName })
+        return Category.create({ name: categoryName });
       }
-      return findedCategory
+      return findedCategory;
     })
-    .then(cat => {
-      category = cat
-      return cat.save()
+    .then((cat) => {
+      category = cat;
+      return cat.save();
     })
     .then(() => {
       return user.createPost({
@@ -43,11 +43,11 @@ exports.postAddPost = (req, res, next) => {
         content: content,
         image: image,
         likes: 0,
-      })
+      });
     })
-    .then(post => {
+    .then((post) => {
       createdPost = post;
-      return post.setCategory(category)
+      return post.setCategory(category);
     })
     .then(() => {
       return Profile.findByPk(user.id);
@@ -78,7 +78,7 @@ exports.postDeletePost = (req, res, next) => {
 };
 
 exports.getAllPosts = (req, res, next) => {
-  Post.findAll()
+  Post.findAll({ include: [{ model: Category, as: "category" }] })
     .then((posts) => {
       res.render("admin/posts", {
         pageTitle: "Админ посты",
