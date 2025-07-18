@@ -88,7 +88,10 @@ exports.postRegisterUser = (req, res, err) => {
           res.redirect("/singin");
         });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.log("Ошибка регистрации:" ,err.message)
+      res.redirect('/register')
+    });
 };
 
 exports.getRegisterUser = (req, res, err) => {

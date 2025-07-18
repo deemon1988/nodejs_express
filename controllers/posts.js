@@ -21,7 +21,15 @@ exports.getIndexPage = (req, res, next) => {
 exports.getPostById = (req, res, next) => {
   const postId = req.params.postId;
   let loadedPost;
-  Post.findByPk(postId)
+
+  Post.findByPk(postId, {
+    include: [
+      {
+        model: Category,
+        as: 'category'
+      }
+    ]
+  })
     .then((post) => {
       loadedPost = post;
       return Comment.findAll({
@@ -36,6 +44,7 @@ exports.getPostById = (req, res, next) => {
       });
     })
     .then((comments) => {
+
       res.render("blog/single", {
         post: loadedPost,
         pageTitle: loadedPost.title,
@@ -49,6 +58,7 @@ exports.getPostById = (req, res, next) => {
 };
 
 const { fn, col, literal, Op } = require("sequelize");
+const Category = require("../models/category");
 
 exports.getAllPosts = async (req, res, next) => {
   const userId = req.user ? req.user.id : null;
@@ -75,6 +85,10 @@ exports.getAllPosts = async (req, res, next) => {
           through: { attributes: [] },
           where: { id: userId }, //userId ? { id: userId } : undefined,
           required: false,
+        },
+        {
+          model: Category,
+          as: 'category',
         },
       ],
       group: ["post.id", "likedUsers.id"], // обязательно указывать likedUsers.id для GROUP BY
@@ -230,12 +244,12 @@ exports.postLike = (req, res, next) => {
 
 exports.getCategory = (req, res, next) => {
   const category = req.query.cat;
-  Post.findAll({where: {category: category}})
-  .then((posts) => {
-    res.render(`blog/cat/${category}`, {
-      posts: posts,
-      pageTitle: category.toUpperCase(),
-      path: '/categories'
+  Post.findAll({ where: { category: category } })
+    .then((posts) => {
+      res.render(`blog/cat/${category}`, {
+        posts: posts,
+        pageTitle: category.toUpperCase(),
+        path: '/categories'
+      });
     });
-  });
 };

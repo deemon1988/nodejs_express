@@ -1,3 +1,4 @@
+const Category = require("../models/category");
 const Post = require("../models/post");
 const Profile = require("../models/profile");
 const User = require("../models/user");
@@ -15,29 +16,40 @@ exports.getAddPost = (req, res, next) => {
 exports.postAddPost = (req, res, next) => {
   const title = req.body.title;
   const content = req.body.content;
-  const category = req.body.category;
+  const categoryName = req.body.category;
   const user = req.user;
 
   let createdPost;
-
+  let category;
   if (!req.file) {
     res.redirect("/admin/create-post");
   }
   const image = "/images/posts/" + req.file.filename;
 
-  // User.findByPk(userId)
-  //   .then((user) => { return
-       user.createPost({
+  Category.findOne({ where: { name: categoryName } })
+    .then(findedCategory => {
+      if (!findedCategory) {
+        return Category.create({ name: categoryName })
+      }
+      return findedCategory
+    })
+    .then(cat => {
+      category = cat
+      return cat.save()
+    })
+    .then(() => {
+      return user.createPost({
         title: title,
         content: content,
-        category: category,
         image: image,
         likes: 0,
       })
-    // })
-
-    .then((post) => {
+    })
+    .then(post => {
       createdPost = post;
+      return post.setCategory(category)
+    })
+    .then(() => {
       return Profile.findByPk(user.id);
     })
     .then((profile) => {

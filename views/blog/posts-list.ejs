@@ -40,7 +40,7 @@
                                     </ul>
                                     <ul class="stats">
                                         <li><a class="category" href="/category/?cat=<%= post.category %>" data-category="<%= post.category %>">
-                                                <%= post.category %>
+                                                <%= post.getCategory %>
                                             </a></li>
                                         <li><a href="#" class="like-icon icon solid fa-heart  <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>" data-id="<%= post.id %>"><%= post.likes %></a></li>
                                         <li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment">  <%= post.commentsCount || 0 %></a></li>

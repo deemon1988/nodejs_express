@@ -35,8 +35,8 @@
                                     <p>Lorem ipsum dolor amet nullam consequat etiam feugiat</p>
                                 </div>
                                 <div class="meta">
-                                    <time class="published" datetime="2015-11-01">November 1, 2015</time>
-                                    <a href="#" class="author"><span class="name">Jane Doe</span><img
+                                    <time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
+                                    <a href="#" class="author"><span class="name"><%= post.getCategory() %></span><img
                                             src="/images/avatar.jpg" alt="" /></a>
                                 </div>
                             </header>
@@ -55,7 +55,7 @@
                                     </li>
                                 </ul>
                                 <ul class="stats">
-                                    <li><a href="#">
+                                    <li><a class="category" href="/category/?cat=<%= post.category %>" data-category="<%= post.category %>">
                                             <%= post.category %>
                                         </a></li>
                                     <li><a class="icon solid fa-heart" data-id="<%= post.id %>"></a></li>
@@ -86,7 +86,6 @@
                 <!-- Mini Posts -->
                 <section>
                     <div class="mini-posts">
-
                         <!-- Mini Post -->
                         <article class="mini-post">
                             <header>
