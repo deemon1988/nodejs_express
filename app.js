@@ -28,6 +28,7 @@ const User = require("./models/user.js");
 const Profile = require("./models/profile.js");
 const Like = require("./models/like.js");
 const UserActivity = require("./models/user-activity.js");
+const Category = require("./models/category.js");
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -95,6 +96,9 @@ User.belongsToMany(Post, { through: Like });
 Post.belongsToMany(User, { through: Like, as: "likedUsers" });
 
 Profile.hasMany(UserActivity);
+
+Category.hasMany(Post)
+Post.belongsTo(Category, {as: 'category'})
 
 sequelize
   // .sync({ force: true })

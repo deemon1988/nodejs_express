@@ -17,10 +17,10 @@ const Post = sequelize.define("post", {
     type: Sequelize.TEXT,
     allowNull: false,
   },
-  category: {
-    type: Sequelize.STRING,
-    allowNull: false,
-  },
+  // category: {
+  //   type: Sequelize.STRING,
+  //   allowNull: false,
+  // },
   image: {
     type: Sequelize.STRING,
     allowNull: false,

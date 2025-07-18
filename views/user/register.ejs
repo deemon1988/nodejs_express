@@ -11,14 +11,16 @@
                 <form method="post" action="/register">
                     <div class="row gtr-uniform auth">
                         <div class="col-8 col-12-xsmall">
-                            <input type="text" name="username" id="singin-name" value="" placeholder="Name">
+                            <input type="text" name="username" id="singin-name" value="" placeholder="Name"
+                            required>
                         </div>
                         <div class="col-8 col-12-xsmall">
-                            <input type="email" name="email" id="singin-email" value="" placeholder="Email">
+                            <input type="email" name="email" id="singin-email" value="" placeholder="Email"
+                            required>
                         </div>
                         <div class="col-8 col-12-xsmall">
                             <input type="password" name="password" id="register-password" value=""
-                                placeholder="Password">
+                                placeholder="Password" minlength="3" required>
                         </div>
                         <div class="col-8 col-12-xsmall">
                             <input type="password" name="repeatPass" id="repeat-password" value=""
