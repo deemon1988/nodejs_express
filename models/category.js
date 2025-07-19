@@ -8,10 +8,19 @@ const Category = sequelize.define('category', {
         allowNull: false,
         primaryKey: true,
     },
+    title: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
+    },
     name: {
         type: Sequelize.STRING,
         allowNull: false,
     },
+    image: {
+        type: Sequelize.STRING,
+        allowNull: true,
+    }
 })
 
 module.exports = Category

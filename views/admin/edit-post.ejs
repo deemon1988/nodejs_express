@@ -47,10 +47,13 @@
                                                 >Образование</option>
                                             <% } else { %>
                                                 <option value="">-- Выберите категорию --</option>
-                                                <option value="tech">Технологии</option>
+                                                <% for (let category of categories) { %>
+                                                     <option value="<%= category.title %>"><%= category.name %></option>
+                                                    <% } %>
+                                                <!-- <option value="tech">Технологии</option>
                                                 <option value="life">Жизнь</option>
                                                 <option value="travel">Путешествия</option>
-                                                <option value="education">Образование</option>
+                                                <option value="education">Образование</option> -->
                                                 <% } %>
                                     </select>
                                 </div>
@@ -63,7 +66,21 @@
                                                 style="max-width: 300px; max-height: 300px;">
                                         </div>
                                         <% } %>
-                                            <input type="file" id="image" name="image" accept="image/*" />
+                                            <input type="file" id="cover" name="cover" accept="image/*" multiple />
+                                            <div>
+                                                <label for="cover">Обложка</label>
+                                                <input type="file" id="logo" name="logo" accept="image/*" multiple />
+                                            </div>
+
+                                            <!-- <div>
+  <label for="gallery">Галерея</label>
+  <input type="file" id="gallery" name="gallery" accept="image/*"  multiple/>
+</div>
+
+<div>
+  <label for="logo">Логотип</label>
+  <input type="file" id="logo" name="logo" accept="image/*" multiple/>
+</div> -->
                                 </div>
 
                                 <button type="submit" class="button large">
@@ -72,4 +89,4 @@
 
                     </form>
                 </div>
-     <%- include('../includes/end.ejs') %>
+                <%- include('../includes/end.ejs') %>

@@ -22,8 +22,15 @@ router.post(
 
 router.post(
   "/create-post",
-  upload.single("image"),
+  upload.fields([
+  { name: 'cover', maxCount: 1 },
+  { name: 'logo', maxCount: 1 },
+  // { name: 'gallery', maxCount: 5 }
+]),
   adminController.postAddPost
 );
+
+router.get("/create-category", adminController.getCreateCategory);
+router.post("/create-category", upload.single("image"), adminController.postCreateCategory);
 
 module.exports = router;

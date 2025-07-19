@@ -8,9 +8,11 @@
             <li><a class="<%= path === '/categories' ? 'active' : '' %>" href="/categories">Категории</a></li>
             <li><a class="<%= path === '/about' ? 'active' : '' %>" href="/about">О блоге</a></li>
             <li><a class="<%= path === '/archive' ? 'active' : '' %>" href="/archive">Архив</a></li>
-            <% if(isAuthenticated && userRole === 'admin') { %>
+            <% if(isAuthenticated && userRole==='admin' ) { %>
                 <li><a class="<%= path === '/admin/create-post' ? 'active' : '' %>" href="/admin/create-post">Добавить
                         пост</a></li>
+                <li><a class="<%= path === '/admin/create-category' ? 'active' : '' %>" href="/admin/create-category">Добавить
+                        категорию</a></li>
                 <li><a class="<%= path === '/admin/posts' ? 'active' : '' %>" href="/admin/posts">Админ посты</a></li>
                 <% } %>
         </ul>

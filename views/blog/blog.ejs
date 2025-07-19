@@ -37,8 +37,12 @@
 										<p>Lorem ipsum dolor amet nullam consequat etiam feugiat</p>
 									</div>
 									<div class="meta">
-										<time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
-										<a href="#" class="author"><span class="name"><%= post.categoryName %></span><img src="images/avatar.jpg" alt="" /></a>
+										<time class="published" datetime="<%= post.createdAt %>">
+											<%= formatDateOnly(post.createdAt) %>
+										</time>
+										<a href="#" class="author"><span class="name">
+												<%= post.category.name %>
+											</span><img src="<%= post.category.image %>" alt="" /></a>
 									</div>
 								</header>
 								<a href="/posts/<%= post.id %>" class="image featured"><img src="<%= post.image %>"
@@ -53,12 +57,16 @@
 									</ul>
 									<ul class="stats">
 										<li><a href="#">
-												<%= post.categoryName %>
+												<%= post.category.name %>
 											</a></li>
 										<li>
-											<a href="#" class="like-icon icon solid fa-heart" <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>" data-id="<%= post.id %>"><%= post.likes %></a>
+											<a href="#" class="like-icon icon solid fa-heart" <%=post.likedUsers &&
+												post.likedUsers.length> 0 ? 'active' : '' %>" data-id="<%= post.id %>">
+													<%= post.likes %></a>
 										</li>
-										<li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment"><%= post.commentsCount || 0 %></a></li>
+										<li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment">
+												<%= post.commentsCount || 0 %>
+											</a></li>
 									</ul>
 								</footer>
 							</article>
@@ -92,99 +100,67 @@
 
 					<!-- Mini Posts -->
 					<section>
+						<h3>Топ 5 среди всех</h3>
+
 						<div class="mini-posts">
+							<% if (topPosts.length> 0) { %>
+								<!-- <% posts.slice(0, 1) %> -->
+								<% for (let post of topPosts) { %>
+									<!-- Mini Post -->
+									<article class="mini-post">
+										<header>
+											<h3><a href="single.html">
+													<%= post.title %>
+												</a></h3>
 
-							<!-- Mini Post -->
-							<article class="mini-post">
-								<header>
-									<h3><a href="single.html">Vitae sed condimentum</a></h3>
-									<time class="published" datetime="2015-10-20">October 20, 2015</time>
-									<a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
-								</header>
-								<a href="single.html" class="image"><img src="images/pic04.jpg" alt="" /></a>
-							</article>
+											<time class="published" datetime="<%= post.createdAt %>">
+												<%= formatDateOnly(post.createdAt) %>
+											</time>
 
-							<!-- Mini Post -->
-							<article class="mini-post">
-								<header>
-									<h3><a href="single.html">Rutrum neque accumsan</a></h3>
-									<time class="published" datetime="2015-10-19">October 19, 2015</time>
-									<a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
-								</header>
-								<a href="single.html" class="image"><img src="images/pic05.jpg" alt="" /></a>
-							</article>
+											<a href="#" class="author"><img src="<%= post.category.image %>"
+													alt="<%= post.category.name %>" /></a>
 
-							<!-- Mini Post -->
-							<article class="mini-post">
-								<header>
-									<h3><a href="single.html">Odio congue mattis</a></h3>
-									<time class="published" datetime="2015-10-18">October 18, 2015</time>
-									<a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
-								</header>
-								<a href="single.html" class="image"><img src="images/pic06.jpg" alt="" /></a>
-							</article>
+										</header>
 
-							<!-- Mini Post -->
-							<article class="mini-post">
-								<header>
-									<h3><a href="single.html">Enim nisl veroeros</a></h3>
-									<time class="published" datetime="2015-10-17">October 17, 2015</time>
-									<a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
-								</header>
-								<a href="single.html" class="image"><img src="images/pic07.jpg" alt="" /></a>
-							</article>
+										<a href="single.html" class="image mini"><img class="img-mini"
+												src="<%= post.image %>" alt="" /></a>
+
+									</article>
+									<% } %>
+										<% } else { %>
+											<h1>No Posts Found!</h1>
+											<% } %>
 
 						</div>
 					</section>
 
 					<!-- Posts List -->
 					<section>
+						<h3>Случайные статьи из топ 5 в каждой категории с наивысшим рейтингом</h3>
+
 						<ul class="posts">
-							<li>
-								<article>
-									<header>
-										<h3><a href="single.html">Lorem ipsum fermentum ut nisl vitae</a></h3>
-										<time class="published" datetime="2015-10-20">October 20, 2015</time>
-									</header>
-									<a href="single.html" class="image"><img src="images/pic08.jpg" alt="" /></a>
-								</article>
-							</li>
-							<li>
-								<article>
-									<header>
-										<h3><a href="single.html">Convallis maximus nisl mattis nunc id lorem</a></h3>
-										<time class="published" datetime="2015-10-15">October 15, 2015</time>
-									</header>
-									<a href="single.html" class="image"><img src="images/pic09.jpg" alt="" /></a>
-								</article>
-							</li>
-							<li>
-								<article>
-									<header>
-										<h3><a href="single.html">Euismod amet placerat vivamus porttitor</a></h3>
-										<time class="published" datetime="2015-10-10">October 10, 2015</time>
-									</header>
-									<a href="single.html" class="image"><img src="images/pic10.jpg" alt="" /></a>
-								</article>
-							</li>
-							<li>
-								<article>
-									<header>
-										<h3><a href="single.html">Magna enim accumsan tortor cursus ultricies</a></h3>
-										<time class="published" datetime="2015-10-08">October 8, 2015</time>
-									</header>
-									<a href="single.html" class="image"><img src="images/pic11.jpg" alt="" /></a>
-								</article>
-							</li>
-							<li>
-								<article>
-									<header>
-										<h3><a href="single.html">Congue ullam corper lorem ipsum dolor</a></h3>
-										<time class="published" datetime="2015-10-06">October 7, 2015</time>
-									</header>
-									<a href="single.html" class="image"><img src="images/pic12.jpg" alt="" /></a>
-								</article>
-							</li>
+							<% if (randomPosts.length> 0) { %>
+								<% for (let post of randomPosts) { %>
+									<li>
+										<article>
+											<header>
+												<h3><a href="single.html">
+														<%= post.title %>
+													</a></h3>
+												<!-- <time class="published" datetime="<%= post.createdAt %>">
+													<%= post.categoryName %>
+												</time> -->
+												<!-- <a href="#" class="published"><%= post.categoryName %></a> -->
+											</header>
+											<a href="single.html" class="image"><img src="<%= post.categoryImage %>"
+													alt="<%= post.categoryName %>" /></a>
+
+										</article>
+									</li>
+									<% } %>
+										<% } else { %>
+											<h1>No Posts Found!</h1>
+											<% } %>
 						</ul>
 					</section>
 

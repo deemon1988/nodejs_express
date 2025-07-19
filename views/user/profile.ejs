@@ -26,7 +26,7 @@
               </div>
             </header>
             <div class="profile-info">
-              <div class="description">
+              <div class="profile-description">
                 <p><strong>Имя:</strong>
                   <%= profile.firstname %>
                     <% profile.lastname ? profile.lastname : '' %>
@@ -91,17 +91,20 @@
                 <h3>Нет комментариев</h3>
                 <% } %>
                   <% for (let comment of comments) { %>
-                    <h3><a href="/single/<%= comment.post.id %>">
-                        <%= comment.post.title %>
-                      </a></h3>
+                    <div class="comments-content">
+                      <div class="comments-info">
+                        <h3><a href="/single/<%= comment.post.id %>">
+                            <%= comment.post.title %>
+                          </a></h3>
 
-                    <p>
-                      <%= comment.text %>
-                    </p>
-                    <ul class="actions">
-                      <li><a href="/user/user-comments" class="button">Редактировать</a></li>
-                      <li><a href="/user/user-comments" class="button">Удалить</a></li>
-                    </ul>
+                        <p class="comments-text">
+                          <%= comment.text %>
+                        </p>
+                      </div>
+                      <ul class="actions">
+                        <li><a href="/user/user-comments" class="button">Удалить</a></li>
+                      </ul>
+                    </div>
                     <% } %>
             </article>
           </article>

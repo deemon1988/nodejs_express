@@ -1,0 +1,63 @@
+<%- include('../includes/head.ejs') %>
+  <link rel="stylesheet" href="/assets/css/create-post.css">
+  </head>
+
+  <body class="single is-preload">
+
+    <!-- Wrapper -->
+    <div id="wrapper">
+      <%- include('../includes/navigation.ejs') %>
+        <!-- Main -->
+        <div id="main">
+          <h1>
+            <% if (editing) { %> Редактировать категорию <% } else { %> Добавить новую категорию <% } %>
+          </h1>
+
+          <form action="/admin/<% if (editing) { %>update-category<% } else {  %>create-category<% } %>" method="post"
+            enctype="multipart/form-data">
+            <% if (editing) { %>
+              <input type="hidden" name="categoryId" value="<%=category.id%>">
+              <% } %>
+                <div>
+                  <label for="title">Псевдоним категории</label>
+                  <input type="text" id="title" name="title" required
+                    value="<% if (editing) { %><%=category.title%><% } %>" />
+                </div>
+
+                <div>
+                  <label for="name">Название категории</label>
+                  <input type="text" id="name" name="name" required value="<% if (editing) { %><%=category.name%><% } %>" />
+                </div>
+
+                
+
+                <div>
+                  <label for="image">Логотип</label>
+                  <% if (editing) { %>
+                    <div>
+                      <img src="<%= category.image %>" alt="<%= category.title %>" style="max-width: 300px; max-height: 300px;">
+                    </div>
+                    <% } %>
+                      <div>
+                        <input type="file" id="image" name="image" accept="image/*" />
+                      </div>
+                </div>
+
+                <button type="submit" class="button large">
+                  <% if (editing) { %> Обновить категорию <% } else { %> Добавить категорию <% } %>
+                </button>
+          </form>
+
+          <h3>Категории</h3>
+          <ul>
+               <% if (categories.length > 0) { %>
+                 <% for (let category of categories) { %>
+                  <li>
+                    <%= category.name %>
+                    <a href="/admin/update-category/<%= category.id %>?edit=true">Редактировать</a>
+                  </li>
+                <% } %>
+                <% } %>
+          </ul>
+        </div>
+        <%- include('../includes/end.ejs') %>

@@ -227,7 +227,6 @@ textarea {
 	textarea {
 		font-size: 12pt;
 	}
-
 }
 
 @media screen and (max-width: 1280px) {
@@ -238,7 +237,6 @@ textarea {
 	textarea {
 		font-size: 12pt;
 	}
-
 }
 
 @media screen and (max-width: 980px) {
@@ -910,6 +908,9 @@ hr.major {
 		padding-top: 2em;
 	}
 
+	.image.mini {
+		max-height: 175px;
+	}
 }
 
 @media screen and (max-width: 1280px) {
@@ -1155,6 +1156,9 @@ hr.major {
 		padding-top: 2em;
 	}
 
+	.image.mini {
+		max-height: 275px;
+	}
 }
 
 @media screen and (max-width: 980px) {
@@ -1400,6 +1404,9 @@ hr.major {
 		padding-top: 2em;
 	}
 
+	.image.mini {
+		max-height: 190px;
+	}
 }
 
 @media screen and (max-width: 736px) {
@@ -1645,9 +1652,21 @@ hr.major {
 		padding-top: 2em;
 	}
 
+	.image.mini {
+		max-height: 156px;
+	}
 }
 
 @media screen and (max-width: 480px) {
+	.profile-info {
+		flex-wrap: wrap;
+		flex-direction: column-reverse;
+
+	}
+
+	.profile-avatar {
+		margin: auto;
+	}
 
 	.row {
 		display: flex;
@@ -3880,7 +3899,7 @@ body.is-menu-visible #menu {
 	min-width: 150px;
 }
 
-.title .profile {
+.title.profile {
 	text-align: center;
 }
 
@@ -3890,14 +3909,23 @@ body.is-menu-visible #menu {
 	gap: 30px;
 }
 
-.description {
-	content: space-between;
-	width: 50%;
-}
 
 .profile-avatar {
 	width: 50%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+}
+
+.profile-description {
+	font-size: 18px;
+}
+
+.img-mini {
+	object-fit: cover;
+	/* height: inherit; */
+}
+
+.comments-text {
+	word-wrap: break-word;
 }
