@@ -34,26 +34,17 @@
                                     <label for="category">Категория</label>
                                     <select id="category" name="category">
                                         <% if (editing) { %>
-                                            <option value="tech" <%=post.category==='tech' ? 'selected' : '' %>
-                                                >Технологии
-                                            </option>
-                                            <option value="life" <%=post.category==='life' ? 'selected' : '' %>>Жизнь
-                                            </option>
-                                            <option value="travel" <%=post.category==='travel' ? 'selected' : '' %>
-                                                >Путешествия
-                                            </option>
-                                            <option value="education" <%=post.category==='education' ? 'selected' : ''
-                                                %>
-                                                >Образование</option>
+                                             <% for (let category of categories) { %>
+                                                     <option value="<%= category.id %>" <%= post.categoryId === category.id ? 'selected' : '' %> >
+                                                        <%= category.name %>
+                                                    </option>
+                                                    <% } %>
+                                          
                                             <% } else { %>
                                                 <option value="">-- Выберите категорию --</option>
                                                 <% for (let category of categories) { %>
-                                                     <option value="<%= category.title %>"><%= category.name %></option>
+                                                     <option value="<%= category.name %>"><%= category.name %></option>
                                                     <% } %>
-                                                <!-- <option value="tech">Технологии</option>
-                                                <option value="life">Жизнь</option>
-                                                <option value="travel">Путешествия</option>
-                                                <option value="education">Образование</option> -->
                                                 <% } %>
                                     </select>
                                 </div>

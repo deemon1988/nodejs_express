@@ -6,8 +6,13 @@ const User = require("../models/user");
 const sequelize = require("../util/database"); // замените на ваш путь
 const { Sequelize } = require("sequelize");
 
-exports.getPostsQuery = (userId) => {
+exports.getPostsWithLikedUsersQuery = (userId, categoryId) => {
+  const whereCondition = {};
+  if (categoryId) {
+    whereCondition.categoryId = categoryId;
+  }
   return Post.findAndCountAll({
+     where: whereCondition,
     attributes: {
       include: [[fn("COUNT", literal(' "comments"."id"')), "commentsCount"]],
     },
@@ -70,7 +75,7 @@ exports.getTopPostsByCataegoryQuery = () => {
   );
 };
 
-exports.getRandomTop5ByCategoryQuery = () => {
+exports.getRandomPostsFromTop5Query = () => {
   return sequelize.query(
     `
   WITH ranked_posts AS (
@@ -113,3 +118,35 @@ exports.getTopPosts = () => {
     limit: 5,
   });
 };
+
+
+exports.getTopCreatedAtPosts = () => {
+    return sequelize.query(
+    `
+  WITH ranked_posts AS (
+    SELECT
+      "post"."id",
+      "post"."title",
+      "post"."likes",
+      "post"."categoryId",
+      "post"."image",
+      "post"."createdAt",
+      "category"."name" AS "categoryName",
+      "category"."image" AS "categoryImage",
+      COUNT("comments"."id") AS "commentsCount",
+      ROW_NUMBER() OVER (
+        PARTITION BY "post"."categoryId"
+        ORDER BY "post"."createdAt" DESC
+      ) AS "rank"
+    FROM "posts" AS "post"
+    LEFT JOIN "comments" AS "comments" ON "post"."id" = "comments"."postId"
+    LEFT JOIN "categories" AS "category" ON "post"."categoryId" = "category"."id"
+    GROUP BY "post"."id", "category"."id"
+  )
+  SELECT * FROM ranked_posts
+  WHERE "rank" = 1
+  ORDER BY "createdAt" ASC;
+    `,
+    { type: Sequelize.QueryTypes.SELECT }
+  );
+}

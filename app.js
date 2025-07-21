@@ -5,22 +5,21 @@ const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
 const pgPool = require("./util/pgPool.js");
 const { formatDateOnly } = require("./util/date");
-
+const { fixPrepositions } = require("./util/fixPrepositions.js");
 
 const app = express();
 const sessionStore = new pgSession({
   pool: pgPool,
   tableName: "user_sessions",
   createTableIfMissing: true,
-   pruneSessionInterval: 60 * 60 * 24 // Чистка раз в день
+  pruneSessionInterval: 60 * 60 * 24, // Чистка раз в день
 });
-
-
 
 const adminRoutes = require("./routes/admin.js");
 const blogRoutes = require("./routes/blog.js");
 const userRoutes = require("./routes/user.js");
 const authRoutes = require("./routes/auth.js");
+
 const errorController = require("./controllers/404.js");
 const Post = require("./models/post.js");
 const Comment = require("./models/comment.js");
@@ -29,6 +28,7 @@ const Profile = require("./models/profile.js");
 const Like = require("./models/like.js");
 const UserActivity = require("./models/user-activity.js");
 const Category = require("./models/category.js");
+const Alias = require("./models/allowed-alias.js");
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -42,11 +42,13 @@ app.use(
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 // 1 день
+      maxAge: 1000 * 60 * 60 * 24, // 1 день
+      httpOnly: true, // ❗️ Защищает от XSS
+      // secure: process.env.NODE_ENV === "production", // ❗️ Только по HTTPS
+      sameSite: "strict", // ❗️ Защита от CSRF
     },
   })
 );
-
 
 app.use((req, res, next) => {
   if (!req.session.user) {
@@ -54,6 +56,10 @@ app.use((req, res, next) => {
   }
   User.findByPk(req.session.user.id)
     .then((user) => {
+      if (!user) {
+        req.session.destroy();
+        return res.redirect("/");
+      }
       req.user = user;
       next();
     })
@@ -63,14 +69,13 @@ app.use((req, res, next) => {
 // Установка res.locals глобально
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn || false;
-  res.locals.userRole = req.user ? req.user.role : 'user';
+  res.locals.userRole = req.user ? req.user.role : "user";
   // res.locals.isAdmin = req.user ? req.user.role : false;
   res.locals.user = req.user || null;
-   res.locals.formatDateOnly = formatDateOnly;
+  res.locals.formatDateOnly = formatDateOnly;
+  res.locals.fixPrepositions = fixPrepositions;
   next();
 });
-
-
 
 app.use("/admin", adminRoutes);
 app.use(blogRoutes);
@@ -97,8 +102,11 @@ Post.belongsToMany(User, { through: Like, as: "likedUsers" });
 
 Profile.hasMany(UserActivity);
 
-Category.hasMany(Post)
-Post.belongsTo(Category, {as: 'category'})
+Category.hasMany(Post);
+Post.belongsTo(Category, { as: "category" });
+
+Category.hasOne(Alias);
+Alias.belongsTo(Category);
 
 sequelize
   // .sync({ force: true })

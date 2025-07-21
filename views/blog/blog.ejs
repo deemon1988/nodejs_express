@@ -32,7 +32,7 @@
 								<header>
 									<div class="title">
 										<h2><a href="/posts/<%= post.id %>">
-												<%= post.title %>
+												<%- fixPrepositions(post.title) %>
 											</a></h2>
 										<p>Lorem ipsum dolor amet nullam consequat etiam feugiat</p>
 									</div>
@@ -40,15 +40,16 @@
 										<time class="published" datetime="<%= post.createdAt %>">
 											<%= formatDateOnly(post.createdAt) %>
 										</time>
-										<a href="#" class="author"><span class="name">
+										<a href="#" class="author category-post-logo"><span class="name">
 												<%= post.category.name %>
 											</span><img src="<%= post.category.image %>" alt="" /></a>
 									</div>
+
 								</header>
 								<a href="/posts/<%= post.id %>" class="image featured"><img src="<%= post.image %>"
 										alt="" /></a>
 								<p>
-									<%= post.content %>
+									<%- fixPrepositions(post.content) %>
 								</p>
 								<footer>
 									<ul class="actions">
@@ -66,7 +67,8 @@
 										</li>
 										<li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment">
 												<%= post.commentsCount || 0 %>
-											</a></li>
+											</a>
+										</li>
 									</ul>
 								</footer>
 							</article>
@@ -74,8 +76,6 @@
 								<% } else { %>
 									<h1>No Posts Found!</h1>
 									<% } %>
-
-
 
 										<!-- Pagination -->
 										<ul class="actions pagination">
@@ -93,14 +93,14 @@
 					<section id="intro">
 						<a href="#" class="logo"><img src="images/logo.jpg" alt="" /></a>
 						<header>
-							<h2>Future Imperfect</h2>
-							<p>Another fine responsive site template by <a href="http://html5up.net">HTML5 UP</a></p>
+							<h2>Тема Дня — Каждый День</h2>
+							<p>Твой журнал обо всём важном и интересном</p>
 						</header>
 					</section>
 
 					<!-- Mini Posts -->
 					<section>
-						<h3>Топ 5 среди всех</h3>
+						<h3>Всё, Что Важно</h3>
 
 						<div class="mini-posts">
 							<% if (topPosts.length> 0) { %>
@@ -108,18 +108,22 @@
 								<% for (let post of topPosts) { %>
 									<!-- Mini Post -->
 									<article class="mini-post">
+
 										<header>
+
 											<h3><a href="single.html">
 													<%= post.title %>
 												</a></h3>
+											<div class="post-info">
+												<time class="published" datetime="<%= post.createdAt %>">
+													<%= formatDateOnly(post.createdAt) %>
+												</time>
+												<a href="#" class="published category-link">
+													<%= post.categoryName %>
+												</a>
 
-											<time class="published" datetime="<%= post.createdAt %>">
-												<%= formatDateOnly(post.createdAt) %>
-											</time>
-
-											<a href="#" class="author"><img src="<%= post.category.image %>"
-													alt="<%= post.category.name %>" /></a>
-
+												<a href="#" class="author"><img src="" alt="" /></a>
+											</div>
 										</header>
 
 										<a href="single.html" class="image mini"><img class="img-mini"
@@ -136,7 +140,7 @@
 
 					<!-- Posts List -->
 					<section>
-						<h3>Случайные статьи из топ 5 в каждой категории с наивысшим рейтингом</h3>
+						<h3>Мир Вокруг Нас</h3>
 
 						<ul class="posts">
 							<% if (randomPosts.length> 0) { %>
@@ -145,7 +149,7 @@
 										<article>
 											<header>
 												<h3><a href="single.html">
-														<%= post.title %>
+														<%- fixPrepositions(post.title) %>
 													</a></h3>
 												<!-- <time class="published" datetime="<%= post.createdAt %>">
 													<%= post.categoryName %>
@@ -166,12 +170,16 @@
 
 					<!-- About -->
 					<section class="blurb">
-						<h2>About</h2>
-						<p>Mauris neque quam, fermentum ut nisl vitae, convallis maximus nisl. Sed mattis nunc id lorem
-							euismod amet placerat. Vivamus porttitor magna enim, ac accumsan tortor cursus at phasellus
-							sed ultricies.</p>
+						<h2>О блоге</h2>
+						<p> <%- fixPrepositions(`The Everything Journal — твой путеводитель по миру знаний, идей и
+								вдохновения.`) %></p>
+						<p> <%- fixPrepositions(` Здесь мы говорим обо всём: от кулинарии и путешествий до технологий и
+								программирования. `) %></p>
+
+						<p> <%- fixPrepositions(`Блог создан для тех, кто любит учиться, развиваться и интересуется
+								всем, что происходит вокруг. `) %></p>
 						<ul class="actions">
-							<li><a href="#" class="button">Learn More</a></li>
+							<li><a href="/about" class="button">Далее</a></li>
 						</ul>
 					</section>
 

@@ -18,24 +18,48 @@
             <% if (editing) { %>
               <input type="hidden" name="categoryId" value="<%=category.id%>">
               <% } %>
+
                 <div>
                   <label for="title">Псевдоним категории</label>
-                  <input type="text" id="title" name="title" required
-                    value="<% if (editing) { %><%=category.title%><% } %>" />
+                  <% if (aliases.length> 0) { %>
+                    <% for (let alias of aliases) { %>
+                      <input type="radio" id="<%= alias.name %>" name="aliasId" value="<%= alias.id %>" <% if (editing)
+                        { %>checked<% } %> required />
+                        <label for="<%= alias.name %>">
+                          <%= alias.name %>
+                        </label>
+                        <% } %>
+                          <% } else { %>
+                            <h1>No Alias Found!</h1>
+                            <% } %>
+
                 </div>
 
                 <div>
                   <label for="name">Название категории</label>
-                  <input type="text" id="name" name="name" required value="<% if (editing) { %><%=category.name%><% } %>" />
+                  <input type="text" id="name" name="name" required
+                    value="<% if (editing) { %><%= category.name %><% } %>" />
                 </div>
 
-                
+                <div>
+                  <label for="tagline">Подзаголовк категории</label>
+                  <small>Краткое описание, слоган категории</small>
+                  <input type="text" id="tagline" name="tagline" required
+                    value="<% if (editing) { %><%= category.tagline %><% } %>" />
+                </div>
+                <div>
+                  <label for="description">Описание категории</label>
+                  <textarea id="description" name="description"
+                    required><% if (editing) { %><%= category.description %><% } %></textarea>
+
+                </div>
 
                 <div>
                   <label for="image">Логотип</label>
                   <% if (editing) { %>
                     <div>
-                      <img src="<%= category.image %>" alt="<%= category.title %>" style="max-width: 300px; max-height: 300px;">
+                      <img src="<%= category.image %>" alt="<%= category.title %>"
+                        style="max-width: 300px; max-height: 300px;">
                     </div>
                     <% } %>
                       <div>
@@ -48,16 +72,39 @@
                 </button>
           </form>
 
-          <h3>Категории</h3>
-          <ul>
-               <% if (categories.length > 0) { %>
-                 <% for (let category of categories) { %>
-                  <li>
-                    <%= category.name %>
-                    <a href="/admin/update-category/<%= category.id %>?edit=true">Редактировать</a>
-                  </li>
-                <% } %>
-                <% } %>
-          </ul>
+          <% if (!editing) { %>
+            <h1>Добавить новый алиас категории</h1>
+            <small>Короткое название на английском языке</small>
+            <form action="/admin/create-alias" method="post" id="create-alias">
+              <input type="text" name="alias" id="alias" required minlength="2" placeholder="Добавить новый алиас">
+              <button type="submit" id="create-alias" class="button default">
+                Добавить
+              </button>
+            </form>
+            <% } %>
+              <h3>Категории</h3>
+              <ul>
+                <% if (categories.length> 0) { %>
+                  <% for (let category of categories) { %>
+                    <li>
+                      <%= category.name %>
+                        <a href="/admin/edit-category/<%= category.id %>?edit=true">Редактировать</a>
+                    </li>
+                    <% } %>
+                      <% } %>
+              </ul>
         </div>
-        <%- include('../includes/end.ejs') %>
+
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/browser.min.js"></script>
+    <script src="/assets/js/breakpoints.min.js"></script>
+    <script src="/assets/js/util.js"></script>
+    <script src="/assets/js/main.js"></script>
+
+  </body>
+
+  </html>

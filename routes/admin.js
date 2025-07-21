@@ -31,6 +31,10 @@ router.post(
 );
 
 router.get("/create-category", adminController.getCreateCategory);
+router.get("/edit-category/:categoryId", adminController.getEditCategory);
+router.post("/update-category", upload.single("image"), adminController.postEditCategory);
 router.post("/create-category", upload.single("image"), adminController.postCreateCategory);
+router.post("/create-alias", adminController.postCreateAlias);
+
 
 module.exports = router;

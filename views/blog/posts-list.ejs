@@ -1,7 +1,7 @@
 <%- include('../includes/head.ejs') %>
     </head>
 
-    <body class="posts-list">
+    <body class="is-preload"> 
 
         <!-- Wrapper -->
         <div id="wrapper">
@@ -12,7 +12,7 @@
 
                 <!-- Main -->
                 <div id="main">
-
+                    <h1>Посты упорядоченные по дате добавления</h1>
                     <!-- Post -->
                     <% if (posts.length> 0) { %>
                         <% for (let post of posts) { %>
@@ -20,7 +20,7 @@
                                 <header>
                                     <div class="title">
                                         <h2><a href="/single/<%= post.id %>">
-                                                <%= post.title %>
+                                                <%- fixPrepositions(post.title) %>
                                             </a></h2>
                                         <p>Lorem ipsum dolor amet nullam consequat etiam feugiat</p>
                                     </div>
@@ -28,15 +28,15 @@
                                         <time class="published" datetime="<%= post.createdAt %>">
                                             <%= formatDateOnly(post.createdAt) %>
                                         </time>
-                                        <a href="#" class="author"><span class="name">
-                                                <%= post.category.name %>
-                                            </span><img src="" alt="" /></a>
+                                        <a href="#" class="author category-post-logo"><span class="name">
+												<%= post.category.name %>
+											</span><img src="<%= post.category.image %>" alt="" /></a>
                                     </div>
                                 </header>
                                 <a href="/single/<%= post.id %>" class="image featured"><img src="<%= post.image %>"
                                         alt="" /></a>
                                 <p>
-                                    <%= post.content %>
+                                    <%- fixPrepositions(post.content) %>
                                 </p>
                                 <footer>
                                     <ul class="actions">
@@ -64,6 +64,13 @@
                                     <h1>No Posts Found!</h1>
                                     <% } %>
 
+                                    <!-- Pagination -->
+										<ul class="actions pagination">
+											<li><a href="" class="disabled button large previous">Previous
+													Page</a></li>
+											<li><a href="#" class="button large next">Next Page</a></li>
+										</ul>
+
                 </div>
                 <!-- Sidebar -->
                 <section id="sidebar">
@@ -73,8 +80,8 @@
 
                         <header>
                             <a href="#" class="logo"><img src="images/logo.jpg" alt="" /></a>
-                            <h2>Статьи</h2>
-                            <p>Another fine responsive site template by <a href="http://html5up.net">HTML5 UP</a>
+                            <h2>Исследуем мир. Вместе.</h2>
+                            <p>Читай Обо всём важном и интересном
                             </p>
                         </header>
                     </section>
@@ -82,22 +89,20 @@
                     <!-- Mini Posts -->
                     <section>
                         <div class="mini-posts">
-
-                            <% if(categories.length> 0) { %>
-                                <% for(let category of categories) { %>
+                            <h1>Факты и Мысли</h1>
+                            <% if(topPosts.length> 0) { %>
+                                <% for(let post of topPosts) { %>
                                     <!-- Mini Post -->
                                     <article class="mini-post">
                                         <header>
-                                            <h1>
-                                                <%= category.postCount %>
-                                            </h1>
-                                            <h3><a href="/categories">
-                                                    <%= category.name %>
+                
+                                            <h3><a href="/category?cat=<%= post.categoryId %>">
+                                                    <%= post.title %>
                                                 </a></h3>
-                                            <time class="published" datetime="2015-10-20">October 20, 2015</time>
-                                            <a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a>
+                                            <time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
+                                            <!-- <a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a> -->
                                         </header>
-                                        <a href="/single" class="image"><img src="<%= category.image %>" alt="" /></a>
+                                        <a href="/single/<%= post.id %>" class="image"><img src="<%= post.image %>" alt="" /></a>
                                     </article>
                                     <% } %>
                                         <% } %>
@@ -107,14 +112,15 @@
 
                     <!-- Posts List -->
                     <section>
+                        <h1>Интересное В Контексте</h1>
                         <ul class="posts">
                             <% if (randomPosts.length> 0) { %>
                                 <% for (let post of randomPosts) { %>
                                     <li>
                                         <article>
                                             <header>
-                                                <h3><a href="single.html"><%= post.title %></a></h3>
-                                                <time class="published" datetime="<%= post.createdAt %>"><%= formatDate(post.createdAt) %></time>
+                                                <h3><a href="single.html"><%- fixPrepositions(post.title) %></a></h3>
+                                                <time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
                                             </header>
                                             <a href="single.html" class="image"><img src="<%= post.category.image %>"
                                                     alt="" /></a>
@@ -126,15 +132,17 @@
                     </section>
 
                     <!-- About -->
-                    <section class="blurb">
-                        <h2>About</h2>
-                        <p>Mauris neque quam, fermentum ut nisl vitae, convallis maximus nisl. Sed mattis nunc id
-                            lorem euismod
-                            amet placerat. Vivamus porttitor magna enim, ac accumsan tortor cursus at phasellus sed
-                            ultricies.
-                        </p>
-                        <ul class="actions">
-                            <li><a href="#" class="button">Learn More</a></li>
-                        </ul>
-                    </section>
+					<section class="blurb">
+						<h2>О блоге</h2>
+						<p> <%- fixPrepositions(`The Everything Journal — твой путеводитель по миру знаний, идей и
+								вдохновения.`) %></p>
+						<p> <%- fixPrepositions(` Здесь мы говорим обо всём: от кулинарии и путешествий до технологий и
+								программирования. `) %></p>
+
+						<p> <%- fixPrepositions(`Блог создан для тех, кто любит учиться, развиваться и интересуется
+								всем, что происходит вокруг. `) %></p>
+						<ul class="actions">
+							<li><a href="/about" class="button">Далее</a></li>
+						</ul>
+					</section>
                     <%- include('../includes/end.ejs') %>

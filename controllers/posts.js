@@ -10,26 +10,28 @@ const Category = require("../models/category");
 const { Sequelize } = require("sequelize");
 const sequelize = require("../util/database"); // замените на ваш путь
 const {
-  getPostsQuery,
+  getPostsWithLikedUsersQuery,
   getTopPostsByCataegoryQuery,
-  getRandomTop5ByCategoryQuery,
+  getRandomPostsFromTop5Query,
   getTopPosts,
+  getTopCreatedAtPosts,
 } = require("../services/postService");
 const { getRandomPosts } = require("../util/shuffle");
+const Alias = require("../models/allowed-alias");
 
 exports.getIndexPage = (req, res, next) => {
   const userId = req.user ? req.user.id : null;
   let allPostsJson;
   let topPosts;
 
-  getPostsQuery(userId)
+  getPostsWithLikedUsersQuery(userId)
     .then(({ rows: posts }) => {
       allPostsJson = posts.map((p) => p.toJSON());
-      return getTopPosts();
+      return getTopPostsByCataegoryQuery();
     })
     .then((posts) => {
-      topPosts = posts.map((p) => p.toJSON());
-      return getRandomTop5ByCategoryQuery();
+      topPosts = posts; //posts.map((p) => p.toJSON());
+      return getRandomPostsFromTop5Query();
     })
     .then((posts) => {
       return getRandomPosts(posts, 5);
@@ -88,16 +90,18 @@ exports.getPostById = (req, res, next) => {
 exports.getAllPosts = async (req, res, next) => {
   const userId = req.user ? req.user.id : null;
   let allPosts;
-  let topPosts;
+  let topCreatedAtPosts;
   let randomPosts;
-  getPostsQuery(userId)
+  getPostsWithLikedUsersQuery(userId)
     .then(({ rows: posts }) => {
       allPosts = posts.map((p) => p.toJSON());
+      allPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       randomPosts = getRandomPosts(allPosts, 6);
-      return getTopPosts();
+      return getTopCreatedAtPosts();
     })
     .then((posts) => {
-      topPosts = posts;
+      topCreatedAtPosts = posts;
+      console.log(topCreatedAtPosts);
       return Category.findAll();
     })
 
@@ -105,11 +109,10 @@ exports.getAllPosts = async (req, res, next) => {
       res.render("blog/posts-list", {
         pageTitle: "Посты",
         posts: allPosts,
-        topPosts: topPosts,
+        topPosts: topCreatedAtPosts,
         randomPosts: randomPosts,
         categories: categories,
         path: "/posts",
-        formatDate: formatDateOnly
       });
     })
     .catch((err) => console.error(err.message));
@@ -218,21 +221,46 @@ exports.postLike = (req, res, next) => {
 };
 
 exports.getCategory = (req, res, next) => {
+  const userId = req.user ? req.user.id : null;
   const catId = req.query.cat;
   let category;
-  Category.findByPk(catId)
+  let mostLikedPosts;
+  let byDatePosts;
+  let anotherPostsInCategory;
+  let aliasName;
+
+  Alias.findByPk(catId)
+    .then((alias) => {
+      if (!alias) {
+        throw new Error("Alias не найден");
+      }
+      aliasName = alias.name;
+      return Category.findByPk(catId);
+    })
+    // Category.findByPk(catId)
     .then((cat) => {
       category = cat;
-      return Post.findAll({
-        where: { categoryId: catId },
-        include: [{ model: Category, as: "category" }],
-      });
+      return getPostsWithLikedUsersQuery(userId, category.id);
     })
+    .then(({ rows: posts }) => {
+      const postsJson = posts.map((p) => p.toJSON());
+      mostLikedPosts = [...postsJson].sort((a, b) => b.likes - a.likes);
+      byDatePosts = [...postsJson].sort(
+        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+      );
+      anotherPostsInCategory = [...postsJson]
+        .filter((post) => post.likes === 0)
+        .sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
 
-    .then((posts) => {
-      res.render(`blog/category/${category.name}`, {
-        posts: posts,
-        pageTitle: category.name.toUpperCase(),
+      return Category.findAll();
+    })
+    .then((categories) => {
+      res.render(`blog/category/${aliasName}`, {
+        posts: mostLikedPosts,
+        pageTitle: category.name,
+        byDatePosts: byDatePosts.slice(0, 4),
+        anotherPosts: getRandomPosts(anotherPostsInCategory, 5),
+        categories: categories,
         path: "/categories",
       });
     });
@@ -274,6 +302,7 @@ exports.getCategories = (req, res, next) => {
         pageTitle: "Категории",
         path: "/categories",
         posts: allPosts,
+        randomPosts: getRandomPosts(allPosts, 5),
         categories: categoriesJson,
         formatDate: formatDateOnly,
       });

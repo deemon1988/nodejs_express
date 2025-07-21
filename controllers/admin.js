@@ -1,27 +1,39 @@
+const Alias = require("../models/allowed-alias");
 const Category = require("../models/category");
 const Post = require("../models/post");
 const Profile = require("../models/profile");
 const User = require("../models/user");
 const UserActivity = require("../models/user-activity");
+const { cleanInput } = require("../util/sanitazeHtml");
+const sanitizeHtml = require("sanitize-html");
 
 exports.getAddPost = (req, res, next) => {
-  Category.findAll()
-  .then(categories => {
-     res.render("admin/edit-post", {
-    pageTitle: "Создать пост",
-    path: "/admin/create-post",
-    editing: false,
-    categories: categories
-    // isAuthenticated: req.session.isLoggedIn,
-  })
-  })
+  Category.findAll().then((categories) => {
+    res.render("admin/edit-post", {
+      pageTitle: "Создать пост",
+      path: "/admin/create-post",
+      editing: false,
+      categories: categories,
+      // isAuthenticated: req.session.isLoggedIn,
+    });
+  });
 };
 
 exports.postAddPost = (req, res, next) => {
   const title = req.body.title;
   const content = req.body.content;
-  const categoryTitle = req.body.category;
+  const categoryName = req.body.category;
   const user = req.user;
+
+  const cleanTitle = sanitizeHtml(title, {
+    allowedTags: [],
+    allowedAttributes: {},
+  });
+  const cleanContent = cleanInput(content);
+  const cleanCategoryName = sanitizeHtml(categoryName, {
+    allowedTags: [],
+    allowedAttributes: {},
+  });
 
   let createdPost;
   let category;
@@ -36,24 +48,13 @@ exports.postAddPost = (req, res, next) => {
     : null;
   //  const imagePaths = req.files.map(file => "/images/posts/" + file.filename);
 
-  // Category.findOne({ where: { name: categoryName } })
-  //   .then((findedCategory) => {
-  //     if (!findedCategory) {
-  //       return Category.create({ name: categoryName, image: logo });
-  //     }
-  //     return findedCategory;
-  //   })
-  //   .then((cat) => {
-  //     category = cat;
-  //     return cat.save();
-  //   })
-  Category.findOne({ where: { title: categoryTitle } })
-  //   .then((findedCategory) => {
+  Category.findOne({ where: { name: cleanCategoryName } })
     .then((foundCategory) => {
-      category = foundCategory
+      category = foundCategory;
+
       return user.createPost({
-        title: title,
-        content: content,
+        title: cleanTitle,
+        content: cleanContent,
         image: cover,
         likes: 0,
       });
@@ -110,40 +111,50 @@ exports.getAllPosts = (req, res, next) => {
 
 exports.getEditPost = (req, res, next) => {
   const editMode = req.query.edit;
+  let existPost;
   if (!editMode) {
     return res.redirect("/admin/posts");
   }
   const postId = req.params.postId;
-  // req.user.getPosts({where: {id: postId}})
+
   Post.findByPk(postId)
     .then((post) => {
-      // const post = posts[0]
       if (!post) {
-        return res.redirect("/admin/posts");
+        throw new Error("Пост не найден");
+        // return res.redirect("/admin/posts");
       }
+      existPost = post;
+      return Category.findAll();
+    })
+    .then((categories) => {
       res.render("admin/edit-post", {
         pageTitle: "Редактировать пост",
         path: "/admin/edit-post",
         editing: editMode,
-        post: post,
-        isAuthenticated: req.session.isLoggedIn,
+        post: existPost,
+        categories: categories,
+        // isAuthenticated: req.session.isLoggedIn,
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.log("Ошибка:", err.message);
+      res.redirect("/admin/posts");
+    });
 };
 
 exports.postEditPost = (req, res, next) => {
   const postId = req.body.postId;
   const updatedTitle = req.body.title;
   const updatedContent = req.body.content;
-  const updatedCategory = req.body.category;
+  const categoryId = req.body.category;
+
 
   Post.findByPk(postId)
     .then((post) => {
       let imageUrl = post.image;
       post.title = updatedTitle;
       post.content = updatedContent;
-      post.category = updatedCategory;
+      post.categoryId = categoryId;
       if (req.file) imageUrl = "/images/posts/" + req.file.filename;
       post.image = imageUrl;
       return post.save();
@@ -152,65 +163,167 @@ exports.postEditPost = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
+exports.postCreateAlias = (req, res, next) => {
+  const name = req.body.alias.trim().toUpperCase();
+
+  Alias.findOne({ where: { name: name } })
+    .then((result) => {
+      if (result) {
+        throw new Error("Alias all ready exist");
+      }
+      return Alias.create({ name: name });
+    })
+    .then((alias) => {
+      // Создавать страницу с именем алиаса
+      res.redirect("/admin/create-category");
+    })
+    .catch((err) => {
+      console.log(err.message);
+      res.redirect("/admin/create-category");
+    });
+};
 exports.getCreateCategory = (req, res, next) => {
   const editMode = req.query.edit;
-  Category.findAll()
+  let existsAliases;
+
+  Alias.findAll()
+    .then((aliases) => {
+      existsAliases = aliases;
+      return Category.findAll();
+    })
     .then((categories) => {
       res.render("admin/create-category", {
         categories: categories,
+        aliases: existsAliases,
         pageTitle: "Добавить категорию",
         path: "/admin/create-category",
         editing: editMode,
-        // isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => console.log(err));
 };
 
 exports.postCreateCategory = (req, res, next) => {
-  const title = req.body.title.trim();
+  const aliasId = req.body.aliasId;
   const name = req.body.name.trim();
+  const tagline = req.body.tagline.trim();
+  const description = req.body.description.trim();
+  const logo = req.file ? "/images/category/" + req.file.filename : null
 
-  if (!req.file) {
-    throw new Error("Ошибка создания категории");
+  const cleanName = sanitizeHtml(name, {
+    allowedTags: [],
+    allowedAttributes: {},
+  });
+  const cleanTagline = cleanInput(tagline);
+
+  let cleanDescription;
+  if (description) {
+    cleanDescription = cleanInput(description);
   }
-  const logo = "/images/category/" + req.file.filename;
-  Category.findOne({ where: { name: name } })
+  // if (!req.file) {
+  //   // Вместо throw — возвращаем Promise.reject()
+  //   return Promise.reject(new Error("Ошибка создания категории")).catch(
+  //     (err) => {
+  //       console.log("Ошибка создания категории", err.message);
+  //       res.redirect("/admin/create-category");
+  //     }
+  //   );
+  // }
+
+  let existAlias;
+  let createdCategory;
+
+  Alias.findByPk(aliasId)
+    .then((alias) => {
+      if (!alias) {
+        throw new Error("Alias не найден");
+      }
+      if (alias.categoryId) {
+        throw new Error("Категория уже существует");
+      }
+      existAlias = alias;
+      return Category.findOne({ where: { name: cleanName } });
+    })
     .then((findedCategory) => {
       if (findedCategory) {
         throw new Error("Категория уже существует");
       }
-      return Category.create({ title: title, name: name, image: logo });
+      return Category.create({
+        name: cleanName,
+        tagline: cleanTagline,
+        description: cleanDescription,
+        image: logo,
+      });
     })
     .then((category) => {
+      createdCategory = category;
+      return existAlias.setCategory(createdCategory);
+    })
+    .then((result) => {
       res.redirect("/admin/create-category");
     })
     .catch((err) => {
-      console.log("Ошибка создания категории", err.message);
+      console.log("Ошибка создания категории:", err.message);
       res.redirect("/admin/create-category");
     });
 };
 
-// exports.getEditPost = (req, res, next) => {
-//   const editMode = req.query.edit;
-//   if (!editMode) {
-//     return res.redirect("/admin/posts");
-//   }
-//   const postId = req.params.postId;
-//   // req.user.getPosts({where: {id: postId}})
-//   Post.findByPk(postId)
-//     .then((post) => {
-//       // const post = posts[0]
-//       if (!post) {
-//         return res.redirect("/admin/posts");
-//       }
-//       res.render("admin/edit-post", {
-//         pageTitle: "Редактировать пост",
-//         path: "/admin/edit-post",
-//         editing: editMode,
-//         post: post,
-//         isAuthenticated: req.session.isLoggedIn,
-//       });
-//     })
-//     .catch((err) => console.log(err));
-// };
+exports.getEditCategory = (req, res, next) => {
+  const editMode = req.query.edit;
+  if (!editMode) {
+    return res.redirect("/admin/create-category");
+  }
+  const categoryId = req.params.categoryId;
+
+  let updatedCategory;
+  let existsAliases;
+  Category.findByPk(categoryId)
+    .then((category) => {
+      if (!category) {
+        throw new Error("Категория не существует");
+      }
+      updatedCategory = category;
+      return Alias.findAll();
+    })
+    .then((aliases) => {
+      if (!aliases) {
+        throw new Error("Алиасы не найдены");
+      }
+      existsAliases = aliases;
+      return Category.findAll();
+    })
+    .then((categories) => {
+      if (!categories) {
+        throw new Error("Категории не найдены");
+      }
+      res.render("admin/create-category", {
+        pageTitle: "Редактировать категорию",
+        path: "/admin/create-category",
+        editing: editMode,
+        aliases: existsAliases,
+        category: updatedCategory,
+        categories: categories,
+      });
+    })
+    .catch((err) => console.log(err));
+};
+
+exports.postEditCategory = (req, res, next) => {
+  const categoryId = req.body.categoryId;
+  const updatedName = req.body.name;
+  const updatedTagline = req.body.tagline;
+  const updatedDescription = req.body.description;
+
+  Category.findByPk(categoryId)
+    .then((category) => {
+      let logoUrl = category.image;
+      category.name = updatedName;
+      category.tagline = updatedTagline;
+      category.description = updatedDescription;
+      if (req.file) logoUrl = "/images/category/" + req.file.filename;
+      category.image = logoUrl;
+      return category.save();
+    })
+    .then((result) => res.redirect("/admin/create-category"))
+    .catch((err) => console.log(err));
+};
