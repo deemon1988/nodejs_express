@@ -6,6 +6,8 @@ const pgSession = require("connect-pg-simple")(session);
 const pgPool = require("./util/pgPool.js");
 const { formatDateOnly } = require("./util/date");
 const { fixPrepositions } = require("./util/fixPrepositions.js");
+const csrf = require("csurf");
+const flash = require("connect-flash");
 
 const app = express();
 const sessionStore = new pgSession({
@@ -14,6 +16,7 @@ const sessionStore = new pgSession({
   createTableIfMissing: true,
   pruneSessionInterval: 60 * 60 * 24, // Чистка раз в день
 });
+const csrfProtection = csrf();
 
 const adminRoutes = require("./routes/admin.js");
 const blogRoutes = require("./routes/blog.js");
@@ -50,7 +53,11 @@ app.use(
   })
 );
 
+app.use(csrfProtection);
+app.use(flash());
+
 app.use((req, res, next) => {
+  console.log(req.session);
   if (!req.session.user) {
     return next();
   }
@@ -74,6 +81,7 @@ app.use((req, res, next) => {
   res.locals.user = req.user || null;
   res.locals.formatDateOnly = formatDateOnly;
   res.locals.fixPrepositions = fixPrepositions;
+  res.locals.csrfToken = req.csrfToken();
   next();
 });
 

@@ -3830,6 +3830,7 @@ body.is-menu-visible #menu {
 .row.gtr-uniform.auth {
 	flex-direction: column;
 	align-items: center;
+	margin-top: 20px;
 }
 
 #main.auth {
@@ -3845,6 +3846,7 @@ body.is-menu-visible #menu {
 
 #wrapper.auth-wrapper {
 	justify-content: center;
+	padding-top: 100px;
 }
 
 .actions.auth {
@@ -3859,9 +3861,15 @@ body.is-menu-visible #menu {
 	text-decoration: none;
 }
 
+.auth h3 {
+	margin-top: 20px;
+}
+
 /* Flash messages */
 .flash-message {
-	position: relative;
+	width: 100%;
+	text-align: center;
+	position: absolute;
 	padding: 1em 2.5em 1em 1em;
 	margin: 1em 0;
 	border-radius: 5px;
@@ -3872,12 +3880,15 @@ body.is-menu-visible #menu {
 }
 
 .flash-message.success {
+	display: none;
 	border-left: 4px solid #4caf50;
 	color: #2e7d32;
 	background-color: #e8f5e9;
+	z-index: 10;
 }
 
 .flash-message.error {
+	display: none;
 	border-left: 4px solid #f44336;
 	color: #c62828;
 	background-color: #ffebee;

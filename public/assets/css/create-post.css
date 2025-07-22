@@ -36,3 +36,7 @@
       cursor: pointer;
       align-self: center;
     }
+
+form.category-form {
+  margin-bottom: 5em;
+}

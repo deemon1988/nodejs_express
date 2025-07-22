@@ -9,7 +9,7 @@ const Alias = sequelize.define("alias", {
     primaryKey: true,
   },
   name: {
-    type: Sequelize.STRING,
+    type: Sequelize.STRING(30),
     allowNull: false,
     unique: true,
     len: {

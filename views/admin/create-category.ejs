@@ -14,7 +14,7 @@
           </h1>
 
           <form action="/admin/<% if (editing) { %>update-category<% } else {  %>create-category<% } %>" method="post"
-            enctype="multipart/form-data">
+            enctype="multipart/form-data" class="category-form">
             <% if (editing) { %>
               <input type="hidden" name="categoryId" value="<%=category.id%>">
               <% } %>
@@ -70,17 +70,50 @@
                 <button type="submit" class="button large">
                   <% if (editing) { %> Обновить категорию <% } else { %> Добавить категорию <% } %>
                 </button>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           </form>
 
           <% if (!editing) { %>
             <h1>Добавить новый алиас категории</h1>
             <small>Короткое название на английском языке</small>
-            <form action="/admin/create-alias" method="post" id="create-alias">
+            <form action="/admin/create-alias" method="post" id="create-alias" class="category-form">
               <input type="text" name="alias" id="alias" required minlength="2" placeholder="Добавить новый алиас">
               <button type="submit" id="create-alias" class="button default">
                 Добавить
               </button>
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             </form>
+
+            <h1>Редактировать алиас</h1>
+            <form action="/admin/edit-alias" method="post" id="edit-alias" >
+              <div>
+              <% for (let alias of aliases) { %>
+                <input type="radio" name="aliasId" value="<%= alias.id %>" id="<%= alias.id %>-edit" data-name="<%= alias.name %>">
+                <label for="<%= alias.id %>-edit"><%= alias.name %></label>
+                <% } %>
+                </div>
+
+            <div id="updatedNameContainer" style="display: none;">
+                  <label for="updatedName">Изменить навзвание алиаса</label>
+                  <input type="text" name="updatedName" id="updatedName" value="" required >
+                  <div>
+                  <button type="submit" id="edit-alias" name="action" value="edit" class="button default">
+                    Редактировать
+                  </button>
+                  <button type="submit" id="delete-alias" name="action" value="delete" class="button default"
+                  onclick="return confirm('Вы уверены, что хотите удалить этот алиас?')">
+                    Удалить
+                  </button>
+                  </div>
+                </div>
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            </form>
+            <!-- <form action="/admin/delete-alias" method="post" id="create-alias">
+              <input type="text" name="alias" id="alias" required minlength="2" placeholder="Добавить новый алиас">
+              <button type="submit" id="create-alias" class="button default">
+                Добавить
+              </button>
+            </form> -->
             <% } %>
               <h3>Категории</h3>
               <ul>
@@ -105,6 +138,22 @@
     <script src="/assets/js/util.js"></script>
     <script src="/assets/js/main.js"></script>
 
+    <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const radioButtons = document.querySelectorAll('input[name="aliasId"]');
+    const updatedNameContainer = document.getElementById('updatedNameContainer');
+    const updatedNameInput = document.getElementById('updatedName');
+
+    radioButtons.forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (radio.checked) {
+          updatedNameContainer.style.display = 'block';
+          updatedNameInput.value = radio.dataset.name;
+        }
+      });
+    });
+  });
+</script>
   </body>
 
   </html>

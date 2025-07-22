@@ -66,6 +66,7 @@
                                     </div>
                                 </div>
                                 <input type="hidden" name="postId" value="<%= post.id %>">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             </form>
                         </section>
 
@@ -89,6 +90,7 @@
                                             <input type="hidden" name="commentId" value="<%= comment.id %>">
                                             <input type="hidden" name="postId" value="<%= post.id %>">
                                             <button type="submit">Удалить комментарий</button>
+                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                         </form>
                                         <% } %>
                                     </article>

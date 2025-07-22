@@ -71,9 +71,12 @@ exports.getProfile = (req, res, next) => {
 };
 
 exports.getEditProfile = (req, res, next) => {
-  const userId = req.session.userId;
+  const userId = req.user.id;
   Profile.findByPk(userId)
     .then((profile) => {
+      if(!profile){
+        throw new Error("Профиль не найден")
+      }
       res.render("user/edit-profile", {
         pageTitle: "Редактировать профиль",
         path: "/user/profile",
@@ -83,7 +86,7 @@ exports.getEditProfile = (req, res, next) => {
         // isAuthenticated: req.session.isLoggedIn
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log("Ошибка:", err.message));
 };
 
 exports.postEditProfile = (req, res, next) => {

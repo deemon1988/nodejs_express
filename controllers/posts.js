@@ -42,6 +42,7 @@ exports.getIndexPage = (req, res, next) => {
         topPosts: topPosts,
         posts: allPostsJson,
         randomPosts: randomPosts,
+        successMessage: req.flash('success'),
         path: "/",
       });
     })

@@ -5,7 +5,10 @@ const Profile = require("../models/profile");
 const User = require("../models/user");
 const UserActivity = require("../models/user-activity");
 const { cleanInput } = require("../util/sanitazeHtml");
+const path = require("path");
 const sanitizeHtml = require("sanitize-html");
+const createHtmlTemplate = require("../util/createHtml");
+
 
 exports.getAddPost = (req, res, next) => {
   Category.findAll().then((categories) => {
@@ -14,7 +17,6 @@ exports.getAddPost = (req, res, next) => {
       path: "/admin/create-post",
       editing: false,
       categories: categories,
-      // isAuthenticated: req.session.isLoggedIn,
     });
   });
 };
@@ -148,7 +150,6 @@ exports.postEditPost = (req, res, next) => {
   const updatedContent = req.body.content;
   const categoryId = req.body.category;
 
-
   Post.findByPk(postId)
     .then((post) => {
       let imageUrl = post.image;
@@ -173,8 +174,26 @@ exports.postCreateAlias = (req, res, next) => {
       }
       return Alias.create({ name: name });
     })
-    .then((alias) => {
+    .then(async (alias) => {
       // Создавать страницу с именем алиаса
+      const filePath = path.resolve(
+        __dirname,
+        `../views/blog/category/${alias.name}.ejs`
+      );
+      const templatePath = path.resolve(
+        __dirname,
+        "../views/blog/category/template.ejs"
+      );
+      return await createHtmlTemplate(
+        filePath,
+        `${alias.name}.ejs`,
+        templatePath
+      );
+    })
+    .then((file) => {
+      if (!file) {
+        throw new Error("не удалось создать шаблон");
+      }
       res.redirect("/admin/create-category");
     })
     .catch((err) => {
@@ -182,6 +201,24 @@ exports.postCreateAlias = (req, res, next) => {
       res.redirect("/admin/create-category");
     });
 };
+
+exports.postEditAlias = (req, res, next) => {
+  const aliasId = req.body.aliasId;
+  const updatedName = req.body.updatedName;
+  const actionType = req.body.action;
+
+  Alias.findByPk(aliasId)
+    .then((alias) => {
+      if (actionType === "delete") {
+        return alias.destroy();
+      }
+      alias.name = updatedName;
+      return alias.save();
+    })
+    .then((result) => res.redirect("/admin/create-category"))
+    .catch((err) => console.log(err));
+};
+
 exports.getCreateCategory = (req, res, next) => {
   const editMode = req.query.edit;
   let existsAliases;
@@ -208,7 +245,7 @@ exports.postCreateCategory = (req, res, next) => {
   const name = req.body.name.trim();
   const tagline = req.body.tagline.trim();
   const description = req.body.description.trim();
-  const logo = req.file ? "/images/category/" + req.file.filename : null
+  const logo = req.file ? "/images/category/" + req.file.filename : null;
 
   const cleanName = sanitizeHtml(name, {
     allowedTags: [],
@@ -313,9 +350,22 @@ exports.postEditCategory = (req, res, next) => {
   const updatedName = req.body.name;
   const updatedTagline = req.body.tagline;
   const updatedDescription = req.body.description;
+  const aliasId = req.body.aliasId;
+  let existAlias;
 
-  Category.findByPk(categoryId)
+  Alias.findByPk(aliasId)
+    .then((alias) => {
+      existAlias = alias;
+      return Category.findByPk(categoryId);
+    })
     .then((category) => {
+      if (
+        existAlias.categoryId === "null" ||
+        existAlias.categoryId === "undefined" ||
+        existAlias.categoryId !== category.id
+      ) {
+        existAlias.setCategory(category);
+      }
       let logoUrl = category.image;
       category.name = updatedName;
       category.tagline = updatedTagline;

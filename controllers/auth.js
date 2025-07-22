@@ -3,6 +3,8 @@ const User = require("../models/user");
 exports.getLogin = (req, res, err) => {
   res.render("user/singin", {
     pageTitle: "Авторизация",
+    errorMessage: req.flash("error"),
+    successMessage: req.flash("success"),
   });
 };
 
@@ -15,6 +17,7 @@ exports.postLogin = (req, res, next) => {
   User.findOne({ where: { email: email } })
     .then((user) => {
       if (!user) {
+        req.flash("error", "Неверный адрес электронной почты или пароль!");
         throw new Error("Нет пользователя");
       }
       currentUser = user;
@@ -22,12 +25,17 @@ exports.postLogin = (req, res, next) => {
     })
     .then((doMatch) => {
       if (!doMatch) {
+        req.flash("error", "Неверный адрес электронной почты или пароль!");
         throw new Error("Неверный пароль");
       }
-
       req.session.isLoggedIn = true;
       req.session.user = currentUser;
-      return req.session.save();
+      return new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) return reject(err);
+          resolve();
+        });
+      });
     })
     .then(() => {
       return currentUser.getProfile();
@@ -45,6 +53,7 @@ exports.postLogin = (req, res, next) => {
       if (!profile) {
         throw new Error("Профиль не создан");
       }
+      req.flash("success", "Вы успешно авторизовались!");
       res.redirect("/");
     })
     .catch((err) => {
@@ -56,8 +65,8 @@ exports.postLogin = (req, res, next) => {
 exports.postLogout = (req, res, err) => {
   req.session.destroy((err) => {
     console.log(err);
-    res.redirect("/");
   });
+  res.redirect("/");
 };
 
 const bcrypt = require("bcryptjs");
@@ -71,7 +80,12 @@ exports.postRegisterUser = (req, res, err) => {
   User.findOne({ where: { email: email } })
     .then((userDoc) => {
       if (userDoc) {
-        return res.redirect("/register");
+        req.flash(
+          "error",
+          "Пользователь с этим адресом электронной почты уже зарегистрирован!"
+        );
+        throw new Error("Email уже зарегистрирован");
+        // return res.redirect("/register");
       }
       return bcrypt
         .hash(password, 12)
@@ -89,13 +103,14 @@ exports.postRegisterUser = (req, res, err) => {
         });
     })
     .catch((err) => {
-      console.log("Ошибка регистрации:" ,err.message)
-      res.redirect('/register')
+      console.log("Ошибка регистрации:", err.message);
+      res.redirect("/register");
     });
 };
 
 exports.getRegisterUser = (req, res, err) => {
   res.render("user/register", {
     pageTitle: "Регистрация",
+    errorMessage: req.flash("error"),
   });
 };

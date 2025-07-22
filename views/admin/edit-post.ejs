@@ -77,7 +77,7 @@
                                 <button type="submit" class="button large">
                                     <% if (editing) { %> Обновить пост <% } else { %> Опубликовать пост <% } %>
                                 </button>
-
+                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">       
                     </form>
                 </div>
                 <%- include('../includes/end.ejs') %>

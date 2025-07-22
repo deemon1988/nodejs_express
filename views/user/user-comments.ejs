@@ -33,6 +33,7 @@
                         <a class="fa-search" href="#search">Поиск</a>
                         <form id="search" method="get" action="/search">
                             <input type="text" name="query" placeholder="Поиск..." />
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         </form>
                     </li>
                     <li class="menu">
@@ -47,6 +48,7 @@
             <section>
                 <form class="search" method="get" action="/search">
                     <input type="text" name="query" placeholder="Поиск..." />
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 </form>
             </section>
             <section>

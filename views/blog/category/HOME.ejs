@@ -1,0 +1,156 @@
+<%- include('../../includes/head.ejs') %>
+    </head>
+
+    <body class="posts-list">
+
+        <!-- Wrapper -->
+        <div id="wrapper">
+
+            <!-- Header -->
+            <!-- Menu -->
+            <%- include('../../includes/navigation.ejs') %>
+
+                <!-- Main -->
+                <div id="main">
+                    
+                    <section id="category-filter" class="box">
+                        <header>
+                        </header>
+                        <ul class="actions stacked categories-filter-list">
+                            <li><a href="/categories" class="button">Все</a></li>
+                            <% if (categories.length > 0) { %>
+                                 <% for (let category of categories) { %>
+                            <li><a href="/category?cat=<%= category.id %>" class="button"><%= category.name %></a></li>
+                            <% } %>
+                             <% } %>
+                        </ul>
+                    </section>
+
+                    <!-- Post -->
+                    <% if (posts.length> 0) { %>
+                        <% for (let post of posts) { %>
+                            <article class="post">
+                                <header>
+                                    <div class="title">
+                                        <h2><a href="/single/<%= post.id %>">
+                                                <%- fixPrepositions(post.title) %>
+                                            </a></h2>
+                                        <p>Lorem ipsum dolor amet nullam consequat etiam feugiat</p>
+                                    </div>
+                                    <div class="meta">
+                                        <time class="published" datetime="<%= post.createdAt %>">
+                                            <%= formatDateOnly(post.createdAt) %>
+                                        </time>
+                                        <a href="#" class="author category-post-logo"><span class="name">
+                                                <%= post.category.name %>
+                                            </span><img src="<%= post.category.image %>" alt="" /></a>
+                                    </div>
+                                </header>
+                                <a href="/single/<%= post.id %>" class="image featured"><img src="<%= post.image %>"
+                                        alt="" /></a>
+                                <p>
+                                    <%= post.content %>
+                                </p>
+                                <footer>
+                                    <ul class="actions">
+                                        <li><a href="/single/<%= post.id %>" class="button large">Continue Reading</a>
+                                        </li>
+                                    </ul>
+                                    <ul class="stats">
+                                        <li><a href="/category/?cat=<%= post.category.id %>">
+                                                <%= post.category.name %>
+                                            </a></li>
+                                        <li><a href="#"
+                                                class="like-icon icon solid fa-heart  <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>"
+                                                data-id="<%= post.id %>">
+                                                <%= post.likes %>
+                                            </a></li>
+                                        <li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment">
+                                                <%= post.commentsCount || 0 %>
+                                            </a></li>
+                                    </ul>
+                                </footer>
+                            </article>
+                            <% } %>
+                                <% } else { %>
+                                    <h1>No Posts Found!</h1>
+                                    <% } %>
+
+                </div>
+                <!-- Sidebar -->
+                <section id="sidebar">
+
+                    <!-- Intro -->
+                    <section id="intro">
+
+                        <header>
+                            <a href="#" class="logo"><img src="../images/logo.jpg" alt="" /></a>
+                            <h2>
+                                <%= pageTitle %>
+                            </h2>
+                            <p>Another fine responsive site template by <a href="http://html5up.net">HTML5 UP</a>
+                            </p>
+                        </header>
+                    </section>
+
+                    <!-- Mini Posts -->
+                    <section>
+                        <div class="mini-posts">
+                            <!-- Mini Post -->
+                            <% if(byDatePosts.length> 0) { %>
+                                <% for (let post of byDatePosts) { %>
+                                    <article class="mini-post">
+                                        <header>
+                                            <h3><a href="/single/<%= post.id %>"><%- fixPrepositions(post.title) %></a>
+                                            </h3>
+                                            <time class="published" datetime="<%= post.updatedAt %>">
+                                                <%= formatDateOnly(post.updatedAt) %>
+                                            </time>
+                                            <a href="#" class="author"><img src="" alt="" /></a>
+                                        </header>
+                                        <a href="/single/<%= post.id %>" class="image"><img src="<%= post.image %>"
+                                                alt="" /></a>
+                                    </article>
+                                    <% } %>
+                                        <% } %>
+                        </div>
+                    </section>
+
+                    <!-- Posts List -->
+                    <section>
+                        <ul class="posts">
+                            <% if(anotherPosts.length> 0) { %>
+                                <% for (let post of anotherPosts) { %>
+                                    <li>
+                                        <article>
+                                            <header>
+                                                <h3><a href="/single/<%= post.id %>"><%- fixPrepositions(post.title)
+                                                            %></a></h3>
+                                                <time class="published" datetime="<%= post.updatedAt %>">
+                                                    <%= formatDateOnly(post.updatedAt) %>
+                                                </time>
+                                            </header>
+                                            <a href="/single/<%= post.id %>" class="image"><img src="<%= post.category.image %>"
+                                                    alt="" /></a>
+                                        </article>
+                                    </li>
+                                    <% } %>
+                                        <% } %>
+                        </ul>
+                    </section>
+
+                    <!-- About -->
+                    <section class="blurb">
+                        <h2>О блоге</h2>
+                        <p> <%- fixPrepositions(`The Everything Journal — твой путеводитель по миру знаний, идей и
+                                вдохновения.`) %></p>
+                        <p> <%- fixPrepositions(` Здесь мы говорим обо всём: от кулинарии и путешествий до технологий и
+                                программирования. `) %></p>
+
+                        <p> <%- fixPrepositions(`Блог создан для тех, кто любит учиться, развиваться и интересуется
+                                всем, что происходит вокруг. `) %></p>
+                        <ul class="actions">
+                            <li><a href="/about" class="button">Далее</a></li>
+                        </ul>
+                    </section>
+                    <%- include('../../includes/end.ejs') %>
