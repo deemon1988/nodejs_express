@@ -15,6 +15,7 @@
 
           <form action="/admin/<% if (editing) { %>update-category<% } else {  %>create-category<% } %>" method="post"
             enctype="multipart/form-data" class="category-form">
+             <!-- <input type="hidden" name="_csrf" value="<%= csrfToken %>"> -->
             <% if (editing) { %>
               <input type="hidden" name="categoryId" value="<%=category.id%>">
               <% } %>
@@ -70,7 +71,6 @@
                 <button type="submit" class="button large">
                   <% if (editing) { %> Обновить категорию <% } else { %> Добавить категорию <% } %>
                 </button>
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           </form>
 
           <% if (!editing) { %>
@@ -108,21 +108,16 @@
                 </div>
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             </form>
-            <!-- <form action="/admin/delete-alias" method="post" id="create-alias">
-              <input type="text" name="alias" id="alias" required minlength="2" placeholder="Добавить новый алиас">
-              <button type="submit" id="create-alias" class="button default">
-                Добавить
-              </button>
-            </form> -->
+
             <% } %>
               <h3>Категории</h3>
-              <ul>
+              <ul class="exist-categories-list">
                 <% if (categories.length> 0) { %>
                   <% for (let category of categories) { %>
                     <li>
-                      <%= category.name %>
-                        <a href="/admin/edit-category/<%= category.id %>?edit=true">Редактировать</a>
-                    </li>
+                      <strong class="categories-list-item-name"><%= category.name %></strong>
+                        <a href="/admin/edit-category/<%= category.id %>?edit=true" class="button default">Редактировать</a>
+                      </li>
                     <% } %>
                       <% } %>
               </ul>

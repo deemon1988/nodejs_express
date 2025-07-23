@@ -9,6 +9,12 @@
             </div>
             <% } %>
 
+             <% if(successMessage && successMessage.length> 0) { %>
+            <div class="flash-message success" style="display: block">
+                <%= successMessage %>
+                    <span class="close-button">&times;</span>
+            </div>
+            <% } %>
 
                 <!-- Wrapper -->
                 <div id="wrapper" class="auth-wrapper">

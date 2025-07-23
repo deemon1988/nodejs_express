@@ -1,13 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const logoutBtn = document.getElementById('logout-btn')
-  if(logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      localStorage.setItem('isLogout', true)
-    })
-  } else if( localStorage.getItem('isLogout')) {
-    localStorage.removeItem('isLogout')
-  }
-
   const messages = document.querySelectorAll(".flash-message");
 
   messages.forEach((msg) => {
@@ -16,14 +7,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (msg.classList.contains("success")) {
       setTimeout(() => {
         fadeAndRemove(msg);
-        // msg.classList.add("fade-out");
       }, 4000);
     }
 
     if (closeBtn) {
       closeBtn.addEventListener("click", () => {
         fadeAndRemove(msg);
-        // msg.classList.add("fade-out");
       });
     }
   });

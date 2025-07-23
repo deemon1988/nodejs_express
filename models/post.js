@@ -17,19 +17,26 @@ const Post = sequelize.define("post", {
     type: Sequelize.TEXT,
     allowNull: false,
   },
-  // category: {
-  //   type: Sequelize.STRING,
-  //   allowNull: false,
-  // },
-  image: {
-    type: Sequelize.STRING,
-    allowNull: false,
-  },
-
   likes: {
     type: Sequelize.INTEGER,
     allowNull: true,
-  }
+  },
+   image: {
+    type: Sequelize.STRING,
+    allowNull: true,
+  },
+  cover: {
+    type: Sequelize.STRING,
+    allowNull: true,
+  },
+   image: {
+    type: Sequelize.STRING,
+    allowNull: true,
+  },
+  gallery: {
+    type: Sequelize.JSON,
+    allowNull: true,
+  },
 });
 
 module.exports = Post;

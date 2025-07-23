@@ -1,9 +1,11 @@
 const express = require("express");
 const postsController = require("../controllers/posts");
 const router = express.Router();
+const csrf = require('csurf');
+const csrfProtection = csrf();
 
-router.get("/posts", postsController.getAllPosts);
-router.get("/posts/:postId", postsController.getPostById);
+router.get("/posts", csrfProtection, postsController.getAllPosts);
+router.get("/posts/:postId", csrfProtection, postsController.getPostById);
 router.post("/post/:postId/like", postsController.postLike);
 
 router.get("/categories", postsController.getCategories);
@@ -24,6 +26,6 @@ router.post("/single/:postId", postsController.postComment)
 router.post("/single/:postId/:commentId", postsController.postDeleteComment)
 
 
-router.get("/", postsController.getIndexPage);
+router.get("/", csrfProtection, postsController.getIndexPage);
 
 module.exports = router;

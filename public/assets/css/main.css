@@ -4009,3 +4009,74 @@ body.is-menu-visible #menu {
 	gap: 20px;
 	align-items: center;
 }
+
+.row.gtr-50.edit-profile {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+
+
+.edit-profile-main {
+	display: flex;
+	padding-top: 30px;
+	gap: 15px;
+	flex-wrap: wrap;
+	justify-content: space-between;
+}
+
+.edit-profile-avatar {
+	width: 35%;
+	margin-right: 25px;
+	margin-bottom: 35px;
+}
+
+.edit-profile-form {
+	width: 60%;
+}
+
+#wrapper.edit-profile-wrapper {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+}
+
+.user-info {
+	padding-top: 2em;
+}
+
+@media screen and (max-width: 980px) {
+	.edit-profile-form {
+		width: 100%;
+	}
+
+	.edit-profile-avatar {
+		display: flex;
+		flex-grow: 1;
+		flex-wrap: wrap;
+	}
+
+	.avatar-info {
+		margin-right: 50px;
+	}
+}
+
+.exist-categories-list {
+	list-style: decimal;
+}
+
+
+
+.categories-list-item-name {
+	margin-right: 30px;
+}
+
+.image.featured.cover-single img, .image.featured.cover-index img {
+	width: 100%;
+	height: 300px;
+}
+
+.post-content {
+	display: flex;
+}

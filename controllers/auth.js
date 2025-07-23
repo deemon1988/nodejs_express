@@ -5,6 +5,7 @@ exports.getLogin = (req, res, err) => {
     pageTitle: "Авторизация",
     errorMessage: req.flash("error"),
     successMessage: req.flash("success"),
+    csrfToken: req.csrfToken(),
   });
 };
 
@@ -71,46 +72,49 @@ exports.postLogout = (req, res, err) => {
 
 const bcrypt = require("bcryptjs");
 
-exports.postRegisterUser = (req, res, err) => {
+exports.postRegisterUser = async (req, res, err) => {
   const username = req.body.username;
   const email = req.body.email.trim();
   const password = req.body.password;
   const repeatPass = req.body.repeatPass;
 
-  User.findOne({ where: { email: email } })
-    .then((userDoc) => {
-      if (userDoc) {
-        req.flash(
-          "error",
-          "Пользователь с этим адресом электронной почты уже зарегистрирован!"
-        );
-        throw new Error("Email уже зарегистрирован");
-        // return res.redirect("/register");
-      }
-      return bcrypt
-        .hash(password, 12)
-        .then((hashedPassword) => {
-          const user = new User({
-            username: username,
-            email: email,
-            password: hashedPassword,
-            role: "admin",
-          });
-          return user.save();
-        })
-        .then((result) => {
-          res.redirect("/singin");
-        });
-    })
-    .catch((err) => {
-      console.log("Ошибка регистрации:", err.message);
-      res.redirect("/register");
+  try {
+    const userDoc = await User.findOne({ where: { email: email } });
+    if (userDoc) {
+      req.flash(
+        "error",
+        "Пользователь с этим адресом электронной почты уже зарегистрирован!"
+      );
+      throw new Error("Email уже зарегистрирован");
+    }
+
+    if (password !== repeatPass) {
+      req.flash("error", "Введенные пароли не совпадают!");
+      throw new Error("Пароли не совпадают");
+    }
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = new User({
+      username: username,
+      email: email,
+      password: hashedPassword,
+      role: "admin",
     });
+
+    await user.save();
+
+    req.flash("success", "Вы успешно зарегестрировались!");
+    res.redirect("/singin");
+  } catch (error) {
+    console.log("Ошибка регистрации:", error.message);
+    res.redirect("/register");
+  }
 };
 
 exports.getRegisterUser = (req, res, err) => {
   res.render("user/register", {
     pageTitle: "Регистрация",
     errorMessage: req.flash("error"),
+    csrfToken: req.csrfToken(),
   });
 };

@@ -9,6 +9,17 @@ const path = require("path");
 const sanitizeHtml = require("sanitize-html");
 const createHtmlTemplate = require("../util/createHtml");
 
+exports.postAddImage = (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "Файл не загружен" });
+  }
+
+  // Путь, который вернётся в редактор
+  const imageUrl = `/images/posts/${req.file.filename}`;
+
+  // TinyMCE ожидает { location: '...' }
+  res.json({ location: imageUrl });
+};
 
 exports.getAddPost = (req, res, next) => {
   Category.findAll().then((categories) => {
@@ -17,6 +28,7 @@ exports.getAddPost = (req, res, next) => {
       path: "/admin/create-post",
       editing: false,
       categories: categories,
+      csrfToken: req.csrfToken(),
     });
   });
 };
@@ -42,13 +54,19 @@ exports.postAddPost = (req, res, next) => {
   if (!req.files) {
     throw new Error("Ошибка создания поста");
   }
+  const image = req.files["image"]
+    ? "/images/posts/" + req.files["image"][0].filename
+    : null;
   const cover = req.files["cover"]
-    ? "/images/posts/" + req.files["cover"][0].filename
+    ? "/images/posts/cover/" + req.files["cover"][0].filename
     : null;
-  const logo = req.files["logo"]
-    ? "/images/icons/" + req.files["logo"][0].filename
-    : null;
-  //  const imagePaths = req.files.map(file => "/images/posts/" + file.filename);
+
+  // Галерея — массив файлов
+  const gallery = req.files["gallery"]
+    ? req.files["gallery"].map(
+        (file) => "/images/posts/gallery/" + file.filename
+      )
+    : [];
 
   Category.findOne({ where: { name: cleanCategoryName } })
     .then((foundCategory) => {
@@ -57,7 +75,9 @@ exports.postAddPost = (req, res, next) => {
       return user.createPost({
         title: cleanTitle,
         content: cleanContent,
-        image: cover,
+        image: image,
+        cover: cover,
+        gallery: gallery,
         likes: 0,
       });
     })
@@ -66,7 +86,7 @@ exports.postAddPost = (req, res, next) => {
       return post.setCategory(category);
     })
     .then(() => {
-      return Profile.findByPk(user.id);
+      return Profile.findOne({ where: { userId: user.id } });
     })
     .then((profile) => {
       UserActivity.create({
@@ -105,7 +125,7 @@ exports.getAllPosts = (req, res, next) => {
         pageTitle: "Админ посты",
         posts: posts,
         path: "/admin/posts",
-        isAuthenticated: req.session.isLoggedIn,
+        csrfToken: req.csrfToken(),
       });
     })
     .catch((err) => console.log(err));
@@ -235,6 +255,7 @@ exports.getCreateCategory = (req, res, next) => {
         pageTitle: "Добавить категорию",
         path: "/admin/create-category",
         editing: editMode,
+        csrfToken: req.csrfToken(),
       });
     })
     .catch((err) => console.log(err));
@@ -340,6 +361,7 @@ exports.getEditCategory = (req, res, next) => {
         aliases: existsAliases,
         category: updatedCategory,
         categories: categories,
+        csrfToken: req.csrfToken(),
       });
     })
     .catch((err) => console.log(err));

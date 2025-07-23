@@ -53,23 +53,22 @@ app.use(
   })
 );
 
-app.use(csrfProtection);
+
 app.use(flash());
 
 app.use((req, res, next) => {
-  console.log(req.session);
   if (!req.session.user) {
     return next();
   }
   User.findByPk(req.session.user.id)
-    .then((user) => {
-      if (!user) {
-        req.session.destroy();
-        return res.redirect("/");
-      }
-      req.user = user;
-      next();
-    })
+  .then((user) => {
+    if (!user) {
+      req.session.destroy();
+      return res.redirect("/");
+    }
+    req.user = user;
+    next();
+  })
     .catch((err) => console.log(err));
 });
 
@@ -81,7 +80,7 @@ app.use((req, res, next) => {
   res.locals.user = req.user || null;
   res.locals.formatDateOnly = formatDateOnly;
   res.locals.fixPrepositions = fixPrepositions;
-  res.locals.csrfToken = req.csrfToken();
+  app.locals.tinyApiKey = process.env.TINY_API_KEY;
   next();
 });
 

@@ -18,6 +18,7 @@ const {
 } = require("../services/postService");
 const { getRandomPosts } = require("../util/shuffle");
 const Alias = require("../models/allowed-alias");
+const { viewHistory } = require("../util/viewHistory");
 
 exports.getIndexPage = (req, res, next) => {
   const userId = req.user ? req.user.id : null;
@@ -42,8 +43,9 @@ exports.getIndexPage = (req, res, next) => {
         topPosts: topPosts,
         posts: allPostsJson,
         randomPosts: randomPosts,
-        successMessage: req.flash('success'),
+        successMessage: req.flash("success"),
         path: "/",
+        csrfToken: req.csrfToken(),
       });
     })
 
@@ -53,6 +55,7 @@ exports.getIndexPage = (req, res, next) => {
 exports.getPostById = (req, res, next) => {
   const postId = req.params.postId;
   let loadedPost;
+  const userId = req.user ? req.user.id : null;
 
   Post.findByPk(postId, {
     include: [
@@ -60,9 +63,18 @@ exports.getPostById = (req, res, next) => {
         model: Category,
         as: "category",
       },
+      {
+        model: User,
+        as: "likedUsers",
+        attributes: ["id"], // нужно, чтобы мы могли проверить id
+        through: { attributes: [] },
+        where: { id: userId }, //userId ? { id: userId } : undefined,
+        required: false,
+      },
     ],
   })
     .then((post) => {
+      viewHistory(req, post.id);
       loadedPost = post;
       return Comment.findAll({
         where: { postId: postId },
@@ -81,8 +93,9 @@ exports.getPostById = (req, res, next) => {
         pageTitle: loadedPost.title,
         comments: comments,
         formatDate: formatDate,
-        userId: req.user.id,
+        userId: userId,
         path: "/posts",
+        csrfToken: req.csrfToken(),
       });
     })
     .catch((err) => console.error(err));
@@ -114,6 +127,7 @@ exports.getAllPosts = async (req, res, next) => {
         randomPosts: randomPosts,
         categories: categories,
         path: "/posts",
+        csrfToken: req.csrfToken(),
       });
     })
     .catch((err) => console.error(err.message));
@@ -200,7 +214,6 @@ exports.postLike = (req, res, next) => {
 
   Post.findByPk(postId)
     .then((post) => {
-      targetPost = post;
       return post.update({ likes: post.likes + likes });
     })
     .then((updatedPost) => {

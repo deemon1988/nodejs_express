@@ -40,8 +40,9 @@
 													</div>
 
 												</header>
-												<a href="/posts/<%= post.id %>" class="image featured"><img
-														src="<%= post.image %>" alt="" /></a>
+												<a href="/posts/<%= post.id %>" class="image featured">
+													<img src="<%= post.image %>" alt="" />
+												</a>
 												<p>
 													<%- fixPrepositions(post.content) %>
 												</p>
@@ -56,12 +57,15 @@
 														<li><a href="#">
 																<%= post.category.name %>
 															</a></li>
+															<% if(isAuthenticated) { %>
 														<li>
-															<a href="#" class="like-icon icon solid fa-heart"
-																<%=post.likedUsers && post.likedUsers.length> 0 ?
-																'active' : '' %>" data-id="<%= post.id %>">
-																	<%= post.likes %></a>
+															<a href="#"
+																class="like-icon icon solid fa-heart  <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>"
+																data-id="<%= post.id %>">
+																<%= post.likes %>
+															</a>
 														</li>
+														<% } %>
 														<li><a href="/single/<%= post.id %>#comments"
 																class="icon solid fa-comment">
 																<%= post.commentsCount || 0 %>

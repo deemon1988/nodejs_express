@@ -1,83 +1,124 @@
-<%- include('../includes/head.ejs') %>
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>
+        <%= pageTitle %>
+    </title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
     <link rel="stylesheet" href="/assets/css/create-post.css">
-    </head>
+    <script src="https://cdn.tiny.cloud/1/<%= tinyApiKey %>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+</head>
 
-    <body class="single is-preload">
+<body class="single is-preload">
 
-        <!-- Wrapper -->
-        <div id="wrapper">
-            <%- include('../includes/navigation.ejs') %>
-                <!-- Main -->
-                <div id="main">
-                    <h1>
-                        <% if (editing) { %> Редактировать пост <% } else { %> Добавить новый пост <% } %>
-                    </h1>
+    <!-- Wrapper -->
+    <div id="wrapper">
+        <%- include('../includes/navigation.ejs') %>
+            <!-- Main -->
+            <div id="main">
+                <h1>
+                    <% if (editing) { %> Редактировать пост <% } else { %> Добавить новый пост <% } %>
+                </h1>
 
-                    <form action="/admin/<% if (editing) { %>update-post<% } else {  %>create-post<% } %>" method="post"
-                        enctype="multipart/form-data">
-                        <% if (editing) { %>
-                            <input type="hidden" name="postId" value="<%=post.id%>">
-                            <% } %>
-                                <div>
-                                    <label for="title">Заголовок</label>
-                                    <input type="text" id="title" name="title" required
-                                        value="<% if (editing) { %><%=post.title%><% } %>" />
-                                </div>
+                <form action="/admin/<% if (editing) { %>update-post<% } else {  %>create-post<% } %>" method="post"
+                    enctype="multipart/form-data">
+                    <% if (editing) { %>
+                        <input type="hidden" name="postId" value="<%=post.id%>">
+                        <% } %>
+                            <div>
+                                <label for="title">Заголовок</label>
+                                <input type="text" id="title" name="title" required
+                                    value="<% if (editing) { %><%=post.title%><% } %>" />
+                            </div>
 
-                                <div>
-                                    <label for="content">Содержание</label>
-                                    <textarea id="content" name="content"
-                                        required><% if (editing) { %><%=post.content%><% } %></textarea>
-                                </div>
+                            <div>
+                                <label for="content">Содержание</label>
+                                <textarea id="content"
+                                    name="content"><% if (editing) { %><%=post.content%><% } %></textarea>
+                            </div>
 
-                                <div>
-                                    <label for="category">Категория</label>
-                                    <select id="category" name="category">
-                                        <% if (editing) { %>
-                                             <% for (let category of categories) { %>
-                                                     <option value="<%= category.id %>" <%= post.categoryId === category.id ? 'selected' : '' %> >
-                                                        <%= category.name %>
-                                                    </option>
-                                                    <% } %>
-                                          
-                                            <% } else { %>
-                                                <option value="">-- Выберите категорию --</option>
-                                                <% for (let category of categories) { %>
-                                                     <option value="<%= category.name %>"><%= category.name %></option>
-                                                    <% } %>
-                                                <% } %>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="image">Изображение</label>
+                            <div>
+                                <label for="category">Категория</label>
+                                <select id="category" name="category">
                                     <% if (editing) { %>
+                                        <% for (let category of categories) { %>
+                                            <option value="<%= category.id %>" <%=post.categoryId===category.id
+                                                ? 'selected' : '' %> >
+                                                <%= category.name %>
+                                            </option>
+                                            <% } %>
+
+                                                <% } else { %>
+                                                    <option value="">-- Выберите категорию --</option>
+                                                    <% for (let category of categories) { %>
+                                                        <option value="<%= category.name %>">
+                                                            <%= category.name %>
+                                                        </option>
+                                                        <% } %>
+                                                            <% } %>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="image">Изображение</label>
+                                <% if (editing) { %>
+                                    <div>
+                                        <img src="<%= post.image %>" alt="<%= post.title %>"
+                                            style="max-width: 300px; max-height: 300px;">
+                                    </div>
+                                    <% } %>
+                                        <input type="file" id="image" name="image" accept="image/*"  />
                                         <div>
-                                            <img src="<%= post.image %>" alt="<%= post.title %>"
-                                                style="max-width: 300px; max-height: 300px;">
+                                            <label for="cover">Обложка</label>
+                                            <input type="file" id="cover" name="cover" accept="image/*"  />
                                         </div>
-                                        <% } %>
-                                            <input type="file" id="cover" name="cover" accept="image/*" multiple />
-                                            <div>
-                                                <label for="cover">Обложка</label>
-                                                <input type="file" id="logo" name="logo" accept="image/*" multiple />
-                                            </div>
 
-                                            <!-- <div>
-  <label for="gallery">Галерея</label>
-  <input type="file" id="gallery" name="gallery" accept="image/*"  multiple/>
-</div>
+                                        <div>
+                                            <label for="gallery">Галерея</label>
+                                            <input type="file" id="gallery" name="gallery" accept="image/*" multiple />
+                                        </div>
 
+                                        <!--
 <div>
   <label for="logo">Логотип</label>
   <input type="file" id="logo" name="logo" accept="image/*" multiple/>
 </div> -->
-                                </div>
+                            </div>
 
-                                <button type="submit" class="button large">
-                                    <% if (editing) { %> Обновить пост <% } else { %> Опубликовать пост <% } %>
-                                </button>
-                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">       
-                    </form>
-                </div>
-                <%- include('../includes/end.ejs') %>
+                            <button type="submit" class="button large">
+                                <% if (editing) { %> Обновить пост <% } else { %> Опубликовать пост <% } %>
+                            </button>
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                </form>
+            </div>
+            <!-- <%- include('../includes/end.ejs') %> -->
+
+    </div>
+
+    <!-- Scripts -->
+    <!-- <script>
+        tinymce.init({
+            selector: 'textarea#content',
+            plugins: 'image code lists table',
+            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | image | bullist numlist | code',
+            images_upload_url: '/admin/upload-image',
+            automatic_uploads: true,
+            file_picker_types: 'image',
+            image_title: true,
+            content_style: 'img { max-width: 100%; height: auto; }'
+        });
+    </script> -->
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/browser.min.js"></script>
+    <script src="/assets/js/breakpoints.min.js"></script>
+    <script src="/assets/js/util.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/postHandler.js"></script>
+    <script src="/assets/js/close-message.js"></script>
+
+</body>
+
+</html>

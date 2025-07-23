@@ -3,6 +3,7 @@ const Post = require("../models/post");
 const User = require("../models/user");
 const UserActivity = require("../models/user-activity");
 const Profile = require("../models/profile");
+const { where } = require("sequelize");
 
 exports.getComments = (req, res, next) => {
   req.user
@@ -28,9 +29,9 @@ exports.getProfile = (req, res, next) => {
   let fetchedComments;
   let userProfile;
   let lastPost;
-  if(!req.user && req.session) {
-      req.session.destroy()
-     return res.status(401).redirect('/');
+  if (!req.user && req.session) {
+    req.session.destroy();
+    return res.status(401).redirect("/");
   }
   req.user
     .getProfile({
@@ -64,49 +65,67 @@ exports.getProfile = (req, res, next) => {
         lastPost: lastPost,
         profile: userProfile,
         formatDate: formatDateOnly,
-        // isAuthenticated: req.session.isLoggedIn
+        csrfToken: req.csrfToken(),
       });
     })
     .catch((err) => console.log(err));
 };
 
-exports.getEditProfile = (req, res, next) => {
+exports.getEditProfile = async (req, res, next) => {
   const userId = req.user.id;
-  Profile.findByPk(userId)
-    .then((profile) => {
-      if(!profile){
-        throw new Error("Профиль не найден")
-      }
-      res.render("user/edit-profile", {
-        pageTitle: "Редактировать профиль",
-        path: "/user/profile",
-        profile: profile,
-        user: req.user,
-        formatDate: formatDate,
-        // isAuthenticated: req.session.isLoggedIn
-      });
-    })
-    .catch((err) => console.log("Ошибка:", err.message));
+  try {
+    const profile = await Profile.findOne({where: {userId: userId}});
+    if (!profile) {
+      throw new Error("Профиль не найден");
+    }
+
+    res.render("user/edit-profile", {
+      pageTitle: "Редактировать профиль",
+      path: "/user/profile",
+      profile: profile,
+      user: req.user,
+      formatDate: formatDate,
+      csrfToken: req.csrfToken(),
+    });
+  } catch (err) {
+    console.log("Ошибка:", err.message);
+  }
+
+  // Profile.findByPk(userId)
+  //   .then((profile) => {
+  //     if (!profile) {
+  //       throw new Error("Профиль не найден");
+  //     }
+  //     res.render("user/edit-profile", {
+  //       pageTitle: "Редактировать профиль",
+  //       path: "/user/profile",
+  //       profile: profile,
+  //       user: req.user,
+  //       formatDate: formatDate,
+  //       csrfToken: req.csrfToken(),
+  //     });
+  //   })
+  //   .catch((err) => console.log("Ошибка:", err.message));
 };
 
 exports.postEditProfile = (req, res, next) => {
-  console.log(req.body);
-  const userId = req.user.id;
   const profileId = req.body.profileId;
   const firstname = req.body.firstname;
   const lastname = req.body.lastname;
-  const avatar = req.file
-    ? "/images/user/" + req.file.filename
-    : "/images/profile-avatar.jpg";
 
-  Profile.update(
-    { firstname: firstname, lastname: lastname, avatar: avatar },
-    { where: { id: profileId } }
-  )
-    .then((result) => {
-      return Profile.findByPk(profileId);
-    })
+  let avatar;
+
+  Profile.findByPk(profileId)
     .then((profile) => {
+      avatar = req.file ? "/images/user/" + req.file.filename : profile.avatar;
+
+      return Profile.update(
+        { firstname: firstname, lastname: lastname, avatar: avatar },
+        { where: { id: profileId } }
+      );
+    })
+
+    .then((result) => {
       res.redirect("/user/profile");
     })
     .catch((err) => console.log(err));
