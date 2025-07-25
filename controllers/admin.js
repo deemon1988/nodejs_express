@@ -149,13 +149,14 @@ exports.getEditPost = (req, res, next) => {
       return Category.findAll();
     })
     .then((categories) => {
-      res.render("admin/edit-post", {
+      res.render("admin/edit-post-copy", {
         pageTitle: "Редактировать пост",
         path: "/admin/edit-post",
         editing: editMode,
         post: existPost,
         categories: categories,
-        // isAuthenticated: req.session.isLoggedIn,
+        csrfToken: req.csrfToken(),
+
       });
     })
     .catch((err) => {

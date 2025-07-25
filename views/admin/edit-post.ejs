@@ -1,18 +1,9 @@
-<!DOCTYPE HTML>
-<html>
-
-<head>
-    <title>
-        <%= pageTitle %>
-    </title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <link rel="stylesheet" href="/assets/css/main.css" />
+<%- include('../includes/head.ejs') %>
     <link rel="stylesheet" href="/assets/css/create-post.css">
     <script src="https://cdn.tiny.cloud/1/<%= tinyApiKey %>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-</head>
+    </head>
 
-<body class="single is-preload">
+<body class="is-preload single">
 
     <!-- Wrapper -->
     <div id="wrapper">
@@ -81,11 +72,6 @@
                                             <input type="file" id="gallery" name="gallery" accept="image/*" multiple />
                                         </div>
 
-                                        <!--
-<div>
-  <label for="logo">Логотип</label>
-  <input type="file" id="logo" name="logo" accept="image/*" multiple/>
-</div> -->
                             </div>
 
                             <button type="submit" class="button large">
@@ -94,7 +80,7 @@
                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 </form>
             </div>
-            <!-- <%- include('../includes/end.ejs') %> -->
+
 
     </div>
 
@@ -116,8 +102,8 @@
     <script src="/assets/js/breakpoints.min.js"></script>
     <script src="/assets/js/util.js"></script>
     <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/postHandler.js"></script>
-    <script src="/assets/js/close-message.js"></script>
+    <!-- <script src="/assets/js/postHandler.js"></script> -->
+    <!-- <script src="/assets/js/close-message.js"></script> -->
 
 </body>
 

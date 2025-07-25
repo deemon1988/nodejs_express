@@ -2,19 +2,7 @@
     </head>
 
     <body class="auth">
-        <% if(errorMessage && errorMessage.length> 0) { %>
-            <div class="flash-message error" style="display: block">
-                <%= errorMessage %>
-                    <span class="close-button">&times;</span>
-            </div>
-            <% } %>
-
-             <% if(successMessage && successMessage.length> 0) { %>
-            <div class="flash-message success" style="display: block">
-                <%= successMessage %>
-                    <span class="close-button">&times;</span>
-            </div>
-            <% } %>
+      
 
                 <!-- Wrapper -->
                 <div id="wrapper" class="auth-wrapper">
@@ -23,11 +11,9 @@
                         <h3>Авторизация</h3>
                         <form method="post" action="/singin">
                             <div class="row gtr-uniform auth">
-                                <!-- <div class="col-8 col-12-xsmall">
-                            <input type="text" name="singin-name" id="singin-name" value="" placeholder="Name">
-                        </div> -->
+                             
                                 <div class="col-8 col-12-xsmall">
-                                    <input type="email" name="email" id="email" value="" placeholder="Email" required>
+                                    <input type="email" name="email" id="email" value="<%= userDoc.comment ? userDoc.email : '' %>" placeholder="Email" required>
                                 </div>
                                 <div class="col-8 col-12-xsmall">
                                     <input type="password" name="password" id="password" value="" placeholder="Password"
@@ -37,6 +23,9 @@
 
                                 <div class="col-12">
                                     <ul class="actions auth">
+                                        <% if(!isAuthenticated) { %>
+                                    <input type="hidden" name="postId" value="<%= userDoc.postId %>">
+                                            <% } %>
                                         <li><input type="submit" value="Войти"></li>
                                         <li><input type="reset" value="Reset"></li>
                                     </ul>

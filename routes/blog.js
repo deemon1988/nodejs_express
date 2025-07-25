@@ -20,10 +20,9 @@ router.get("/about", (req, res, next) => {
   res.render("blog/about", { pageTitle: "О блоге", path: '/about' });
 });
 
-router.get("/single/:postId", postsController.getPostById);
 
-router.post("/single/:postId", postsController.postComment)
-router.post("/single/:postId/:commentId", postsController.postDeleteComment)
+router.post("/comment/:postId", postsController.postComment)
+router.post("/posts/:postId/:commentId", postsController.postDeleteComment)
 
 
 router.get("/", csrfProtection, postsController.getIndexPage);

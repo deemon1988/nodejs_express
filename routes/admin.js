@@ -11,7 +11,7 @@ router.get("/create-post", csrfProtection, isAuth, isAdmin, adminController.getA
 
 router.get("/posts", csrfProtection, isAuth, isAdmin, adminController.getAllPosts);
 
-router.get("/edit-post/:postId", isAuth, isAdmin, adminController.getEditPost);
+router.get("/edit-post/:postId", csrfProtection, isAuth, isAdmin, adminController.getEditPost);
 
 router.post("/delete-post", isAuth, isAdmin, adminController.postDeletePost);
 

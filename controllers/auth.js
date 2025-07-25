@@ -1,15 +1,39 @@
 const User = require("../models/user");
 
 exports.getLogin = (req, res, err) => {
-  res.render("user/singin", {
-    pageTitle: "Авторизация",
-    errorMessage: req.flash("error"),
-    successMessage: req.flash("success"),
-    csrfToken: req.csrfToken(),
-  });
+  const userDoc = {
+    comment: req.query.comment || null,
+    postId: req.query.postId || null,
+    email: req.query.email || null,
+  };
+    // Функция для отрисовки страницы логина
+  const renderLoginPage = () => {
+    res.render("user/singin", {
+      pageTitle: "Авторизация",
+      errorMessage: req.flash("error"),
+      successMessage: req.flash("success"),
+      csrfToken: req.csrfToken(),
+      userDoc: userDoc,
+    });
+  };
+  if (userDoc.comment) {
+    User.findOne({ where: { email: userDoc.email } })
+      .then((user) => {
+        if (!user) {
+          return res.redirect(
+            `/register?useremail=${encodeURIComponent(userDoc.email)}`
+          );
+        }
+        return renderLoginPage()
+      })
+      .catch((err) => console.log(err));
+  } else {
+  renderLoginPage()
 };
+}
 
 exports.postLogin = (req, res, next) => {
+  const postId = req.body.postId || null;
   const email = req.body.email;
   const password = req.body.password;
 
@@ -55,6 +79,9 @@ exports.postLogin = (req, res, next) => {
         throw new Error("Профиль не создан");
       }
       req.flash("success", "Вы успешно авторизовались!");
+      if (postId) {
+        return res.redirect(`/posts/${postId}#comments`);
+      }
       res.redirect("/");
     })
     .catch((err) => {
@@ -112,9 +139,11 @@ exports.postRegisterUser = async (req, res, err) => {
 };
 
 exports.getRegisterUser = (req, res, err) => {
+  const useremail = req.query.useremail || null;
   res.render("user/register", {
     pageTitle: "Регистрация",
     errorMessage: req.flash("error"),
     csrfToken: req.csrfToken(),
+    useremail: useremail,
   });
 };
