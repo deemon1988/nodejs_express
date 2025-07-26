@@ -2,6 +2,7 @@ const viewHistory = (req, postId) => {
   // Инициализируем историю просмотров, если её нет
   if (!req.session.viewHistory) {
     req.session.viewHistory = [];
+    req.session.addedViewedPosts = []
   }
 
   // Удаляем дубликат, если уже был просмотрен

@@ -7,8 +7,7 @@ const UserActivity = require("../models/user-activity");
 const Like = require("../models/like");
 const { fn, col, literal, Op } = require("sequelize");
 const Category = require("../models/category");
-const { Sequelize } = require("sequelize");
-const sequelize = require("../util/database"); // замените на ваш путь
+
 const {
   getPostsWithLikedUsersQuery,
   getTopPostsByCataegoryQuery,
@@ -19,15 +18,61 @@ const {
 const { getRandomPosts } = require("../util/shuffle");
 const Alias = require("../models/allowed-alias");
 const { viewHistory } = require("../util/viewHistory");
+const { getRecommendedPosts } = require("../util/recomendedPosts");
+const { getAllPosts } = require("../util/allPostsPerPage");
+const { getMergedPosts } = require("../util/mergedPosts");
+const { getViewedPosts } = require("../util/viewedPosts");
 
-exports.getIndexPage = (req, res, next) => {
+exports.getIndexPage = async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 10
+
+  const viewHistory = req.session.viewHistory || null
+
+  console.log("viewHistory:",viewHistory)
   const userId = req.user ? req.user.id : null;
-  let allPostsJson;
+
+  let allPostsJson = {};
   let topPosts;
+
+  let allPostsData = await getAllPosts(page, 5)
+
+  let recomendetData =  await getRecommendedPosts(viewHistory, page, 5)
+
+  let unionPosts = await getMergedPosts(viewHistory, page, 5)
+  
+  
+  let resultPosts = viewHistory ? recomendetData : allPostsData
+
+  if(viewHistory) {
+    if(recomendetData.posts.length < 5 || recomendetData.page === recomendetData.totalPages){
+      let filteredViewedHistory = [...viewHistory];
+      if(filteredViewedHistory.length > 0) {
+  const addedViewedPosts = req.session.addedViewedPosts || null
+    console.log("Добавленные просмотренные посты:" ,addedViewedPosts)
+    if(addedViewedPosts) {
+      filteredViewedHistory = [...viewHistory.filter(id => !addedViewedPosts.includes(id))]
+    }
+    const viewedPosts = await getViewedPosts(filteredViewedHistory)
+    console.log("Не добавленные просмотренные посты:", viewedPosts.length)
+    const addedPosts = []
+    for(let i = 0; recomendetData.posts.length < 5 && i < viewedPosts.length; i++) {
+      recomendetData.posts.push(viewedPosts[i])
+      addedPosts.push(viewedPosts[i].id)
+    }
+    recomendetData.totalPages += 1
+    req.session.addedViewedPosts.push(...addedPosts)
+    }
+      }
+  
+
+  }
+  console.log("Viewed History:", viewHistory)
+  console.log("Посты на страницу:", resultPosts.posts.length)
 
   getPostsWithLikedUsersQuery(userId)
     .then(({ rows: posts }) => {
-      allPostsJson = posts.map((p) => p.toJSON());
+      allPostsJson['posts'] = posts.map((p) => p.toJSON());
       return getTopPostsByCataegoryQuery();
     })
     .then((posts) => {
@@ -41,11 +86,12 @@ exports.getIndexPage = (req, res, next) => {
       res.render("blog/blog", {
         pageTitle: "Главная страница",
         topPosts: topPosts,
-        posts: allPostsJson,
+        allPosts: resultPosts,  
         randomPosts: randomPosts,
         successMessage: req.flash("success"),
         path: "/",
         csrfToken: req.csrfToken(),
+        recomendetPosts: recomendetData
       });
     })
 
@@ -68,7 +114,7 @@ exports.getPostById = (req, res, next) => {
         as: "likedUsers",
         attributes: ["id"], // нужно, чтобы мы могли проверить id
         through: { attributes: [] },
-        where: { id: userId }, //userId ? { id: userId } : undefined,
+        where: { id: userId },
         required: false,
       },
     ],
@@ -80,8 +126,8 @@ exports.getPostById = (req, res, next) => {
         where: { postId: postId },
         include: [
           {
-            model: Profile,
-            include: [User], // Вложенное подключение User
+            model: User,
+            include: [Profile], // Вложенное подключение Profile
           },
         ],
         order: [["createdAt", "DESC"]],
@@ -134,12 +180,12 @@ exports.getAllPosts = async (req, res, next) => {
 };
 
 exports.postComment = (req, res, next) => {
-  const postId = req.body.postId;
+  const postId = req.params.postId;
   const userId = req.user.id;
   const commentText = req.body.comment;
   let createdPost;
   let profileId;
-  Profile.findByPk(userId).then((profile) => {
+  Profile.findOne({where: {userId: userId}}).then((profile) => {
     profileId = profile.id;
     Post.findByPk(postId)
       .then((post) => {
@@ -178,7 +224,7 @@ exports.postComment = (req, res, next) => {
           })
           .then((result) => {
             console.log("Comment added");
-            res.redirect(`/single/${postId}#comments`);
+            res.redirect(`/posts/${postId}#comments`);
           })
           .catch((err) => console.log(err));
       });
@@ -186,9 +232,8 @@ exports.postComment = (req, res, next) => {
 };
 
 exports.postDeleteComment = (req, res, next) => {
-  const postId = req.body.postId;
-  const commentId = req.body.commentId;
-  const userId = req.user.id;
+  const postId = req.params.postId;
+  const commentId = req.params.commentId;
 
   Comment.findByPk(commentId)
     .then((comment) => {
@@ -196,7 +241,7 @@ exports.postDeleteComment = (req, res, next) => {
       return comment.destroy();
     })
     .then((result) => {
-      res.redirect(`/single/${postId}`);
+      res.redirect(`/posts/${postId}`);
     })
     .catch((err) => console.log(err));
 };

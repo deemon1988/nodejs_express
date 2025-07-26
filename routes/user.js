@@ -13,7 +13,6 @@ router.get('/user/profile', csrfProtection, isAuth, profileController.getProfile
 router.get('/user/edit-profile', csrfProtection, isAuth, profileController.getEditProfile)
 router.post('/user/edit-profile', isAuth, upload.single('avatar'), profileController.postEditProfile)
 
-router.get('/user/user-comments', isAuth, profileController.getComments)
 
 
 

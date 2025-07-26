@@ -20,7 +20,7 @@
                   <%= user.username %>
                 </h2>
                 <p>
-                  <%= profile.user.email %>
+                  <%= user.email %>
                 </p>
               </div>
             </header>
@@ -34,10 +34,10 @@
                   <%= profile.lastname ? profile.lastname : '' %>
                 </p>
                 <p><strong>Email:</strong>
-                  <%= profile.user.email %>
+                  <%= user.email %>
                 </p>
                 <p><strong>Дата регистрации:</strong>
-                  <%= formatDate(profile.user.createdAt) %>
+                  <%= formatDateOnly(profile.createdAt) %>
                 </p>
                 <p><strong>Роль:</strong>
                   <%= profile.role==='admin' ? 'Администратор' : 'Пользователь' %>
@@ -84,7 +84,7 @@
           <article class="post">
             <article>
               <header>
-                <h2><a href="<%= comments.length <= 0 ? '#' : '/user/user-comments' %>">Комментарии</a></h2>
+                <h2>Комментарии</h2>
               </header>
               <% if(comments.length <=0) { %>
                 <h3>Нет комментариев</h3>
@@ -129,7 +129,7 @@
                   </a>
                   <br>
                   <small>
-                    <%= formatDate(activity.createdAt) %>
+                    <%= formatDateOnly(activity.createdAt) %>
                   </small>
                 </li>
                 <% }) %>

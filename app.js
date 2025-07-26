@@ -56,7 +56,10 @@ app.use(
 
 app.use(flash());
 
+
 app.use((req, res, next) => {
+  console.log(req.user)
+  console.log(req.session.user)
   if (!req.session.user) {
     return next();
   }
@@ -76,13 +79,14 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn || false;
   res.locals.userRole = req.user ? req.user.role : "user";
-  // res.locals.isAdmin = req.user ? req.user.role : false;
   res.locals.user = req.user || null;
   res.locals.formatDateOnly = formatDateOnly;
   res.locals.fixPrepositions = fixPrepositions;
   app.locals.tinyApiKey = process.env.TINY_API_KEY;
   next();
 });
+
+
 
 app.use("/admin", adminRoutes);
 app.use(blogRoutes);
@@ -92,17 +96,15 @@ app.use(authRoutes);
 app.use(errorController.get404);
 
 Comment.belongsTo(Post, { constraints: true, onDelete: "CASCADE" });
+Post.hasMany(Comment);
+
 Comment.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
+User.hasMany(Comment);
+
 Post.belongsTo(User);
 User.hasMany(Post);
 
 User.hasOne(Profile);
-Profile.belongsTo(User);
-Profile.hasMany(Comment); //, { throgh: ProfileComment }
-Comment.belongsTo(Profile);
-
-Post.hasMany(Comment);
-Comment.belongsTo(Post);
 
 User.belongsToMany(Post, { through: Like });
 Post.belongsToMany(User, { through: Like, as: "likedUsers" });

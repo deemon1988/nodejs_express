@@ -57,7 +57,7 @@
                                 </div>
                             </div>
                             <% } %>
-                                <footer>
+                                <!-- <footer>
                                     <ul class="stats">
 														<li><a href="#">
 																<%= post.category.name %>
@@ -75,32 +75,44 @@
 															</a>
 														</li>
 													</ul>
-                                </footer>
+                                </footer> -->
 
                                 <!-- Comment Form -->
                                 <section class="comment-form">
                                     <header>
-                                        <h3>Оставить комментарий</h3>
+                                        <h3>
+                                            <%= isAuthenticated ? 'Оставить комментарий'
+                                                : 'Войдите чтобы оставить комментарий' %>
+                                        </h3>
                                     </header>
-                                    <form method="post" action="/single/<%= post.id %>">
+                                    <form method="<%= isAuthenticated ? 'post' : 'get' %>"
+                                        action="<%= isAuthenticated ? '/comment/'+ post.id : '/singin'  %>">
                                         <div class="row gtr-50">
-                                            <div class="col-6 col-12-small">
-                                                <input type="text" name="name" id="name" placeholder="Ваше имя" />
-                                            </div>
-                                            <div class="col-6 col-12-small">
-                                                <input type="email" name="email" id="email" placeholder="Ваш email" />
-                                            </div>
-                                            <div class="col-12">
-                                                <textarea name="comment" id="comment" placeholder="Ваш комментарий"
-                                                    rows="6" required></textarea>
-                                            </div>
-                                            <div class="col-12">
-                                                <ul class="actions">
-                                                    <li><input type="submit" value="Отправить" class="button" /></li>
-                                                </ul>
-                                            </div>
+                                            <% if(!isAuthenticated) { %>
+                                                <div class="col-6 col-12-small">
+                                                    <input type="email" name="email" id="email"
+                                                        placeholder="Ваш email" />
+                                                </div>
+                                                <div class="col-12">
+                                                    <ul class="actions">
+                                                        <li><input type="submit" value="Войти" class="button" /></li>
+                                                    </ul>
+                                                </div>
+                                                <input type="hidden" name="comment" value="true">
+
+                                                <% } else { %>
+                                                    <div class="col-12">
+                                                        <textarea name="comment" id="comment"
+                                                            placeholder="Ваш комментарий" rows="6" required></textarea>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <ul class="actions">
+                                                            <li><input type="submit" value="Отправить" class="button" />
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                    <% } %>
                                         </div>
-                                        <input type="hidden" name="postId" value="<%= post.id %>">
                                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                     </form>
                                 </section>
@@ -112,9 +124,7 @@
                                             <!-- Comment 1 -->
                                             <article>
                                                 <header>
-                                                    <h3>Комментарий пользователя: <a href="/posts/42">
-                                                            <%= comment.profile.user.username %>
-                                                        </a></h3>
+                                                    <h3><%= comment.user.profile.firstname %></h3>
                                                     <time class="published" datetime="<%= comment.createdAt %>">
                                                         <%= formatDate(comment.createdAt)%>
                                                     </time>
@@ -123,10 +133,8 @@
                                                     <%= comment.text %>
                                                 </p>
                                                 <% if (comment.userId===userId) { %>
-                                                    <form action="/single/<%= post.id %>/<%= comment.id %>"
+                                                    <form action="/posts/<%= post.id %>/<%= comment.id %>"
                                                         method="post">
-                                                        <input type="hidden" name="commentId" value="<%= comment.id %>">
-                                                        <input type="hidden" name="postId" value="<%= post.id %>">
                                                         <button type="submit">Удалить комментарий</button>
                                                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                     </form>

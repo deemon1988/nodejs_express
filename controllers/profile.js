@@ -3,27 +3,28 @@ const Post = require("../models/post");
 const User = require("../models/user");
 const UserActivity = require("../models/user-activity");
 const Profile = require("../models/profile");
-const { where } = require("sequelize");
+const Comment = require("../models/comment");
 
-exports.getComments = (req, res, next) => {
-  req.user
-    .getProfile()
-    .then((profile) => {
-      return profile
-        .getComments({ include: [{ model: Post, as: "post" }] })
-        .then((comments) => {
-          res.render("user/user-comments", {
-            pageTitle: "Комментарии пользователя",
-            path: "/user/user-comments",
-            comments: comments,
-            formatDate: formatDate,
-            // isAuthenticated: req.session.isLoggedIn
-          });
-        })
-        .catch((err) => console.log(err));
-    })
-    .catch((err) => console.log(err));
-};
+// exports.getComments = (req, res, next) => {
+//   // req.user
+//   //   .getProfile()
+//    Profile.findOne({where: {userId: req.user.id}})
+//     .then((profile) => {
+//       return req.user
+//         .getComments({ include: [{ model: Post, as: "post" }] })
+//         .then((comments) => {
+//           res.render("user/user-comments", {
+//             pageTitle: "Комментарии пользователя",
+//             path: "/user/user-comments",
+//             comments: comments,
+//             formatDate: formatDate,
+//             // isAuthenticated: req.session.isLoggedIn
+//           });
+//         })
+//         .catch((err) => console.log(err));
+//     })
+//     .catch((err) => console.log(err));
+// };
 
 exports.getProfile = (req, res, next) => {
   let fetchedComments;
@@ -36,18 +37,21 @@ exports.getProfile = (req, res, next) => {
   req.user
     .getProfile({
       include: [
-        { model: User, as: "user" },
+        // { model: User, as: "user" },
         {
           model: UserActivity,
           as: "useractivities",
           order: [["createdAt", "DESC"]],
           limit: 20,
         },
+        // {
+        //   model: Comment, as:  'comments'
+        // },
       ],
     })
     .then((profile) => {
       userProfile = profile;
-      return profile.getComments({ include: [{ model: Post, as: "post" }] });
+      return Comment.findAll({where: {userId:  req.user.id},  include: [{ model: Post, as: "post" }] }) //req.user.getComments({ include: [{ model: Post, as: "post" }] });
     })
     .then((comments) => {
       fetchedComments = comments;
@@ -64,7 +68,7 @@ exports.getProfile = (req, res, next) => {
         comments: fetchedComments,
         lastPost: lastPost,
         profile: userProfile,
-        formatDate: formatDateOnly,
+        // formatDate: formatDateOnly,
         csrfToken: req.csrfToken(),
       });
     })
