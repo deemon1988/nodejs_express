@@ -4094,3 +4094,54 @@ body.is-menu-visible #menu {
 .comment-form .button {
 	margin-top: 20px;
 }
+
+
+/* Footer menu */
+.footer-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2em;
+    margin-bottom: 2em;
+}
+
+.footer-menu section {
+    flex: 1;
+    min-width: 150px;
+}
+
+.footer-menu h3 {
+    font-size: 0.8em;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 1em;
+}
+
+.footer-menu .links li {
+    padding: 0.25em 0;
+	list-style: none;
+}
+
+.footer-menu ul {
+	padding-left: 0;
+}
+
+.footer-menu .links a {
+    color: #666;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.footer-menu .links a:hover {
+    color: #000;
+}
+
+@media screen and (max-width: 736px) {
+    .footer-menu {
+        flex-direction: column;
+        gap: 1em;
+    }
+    
+    .footer-menu section {
+        width: 100%;
+    }
+}

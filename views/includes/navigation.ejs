@@ -11,7 +11,8 @@
             <% if(isAuthenticated && userRole==='admin' ) { %>
                 <li><a class="<%= path === '/admin/create-post' ? 'active' : '' %>" href="/admin/create-post">Добавить
                         пост</a></li>
-                <li><a class="<%= path === '/admin/create-category' ? 'active' : '' %>" href="/admin/create-category">Добавить
+                <li><a class="<%= path === '/admin/create-category' ? 'active' : '' %>"
+                        href="/admin/create-category">Добавить
                         категорию</a></li>
                 <li><a class="<%= path === '/admin/posts' ? 'active' : '' %>" href="/admin/posts">Админ посты</a></li>
                 <% } %>
@@ -52,24 +53,23 @@
                     </a>
                 </li>
                 <% } %>
-                    <li>
-                        <a href="#">
-                            <h3>FAQ / ЧаВо</h3>
+                    <li><a class="<%= path === '/posts' ? 'active' : '' %>" href="/posts">
+                            <h3>Посты</h3>
                             <p>(часто задаваемые вопросы)</p>
-                        </a>
-                    </li>
-                    <li>
+                        </a></li>
+                    <li><a class="<%= path === '/categories' ? 'active' : '' %>" href="/categories">
+                            <h3>Категории</h3>
+                            <p>(часто задаваемые вопросы)</p>
+                        </a></li>
+                   <li>
                         <a href="#">
                             <h3>Соцсети / Сообщество</h3>
                             <p>Phasellus sed ultricies mi congue</p>
                         </a>
                     </li>
-                    <li>
-                        <a href="#">
-                            <h3>Политика конфиденциальности</h3>
-                            <p>Porta lectus amet ultricies</p>
-                        </a>
-                    </li>
+                    
+                    
+                   
         </ul>
     </section>
 

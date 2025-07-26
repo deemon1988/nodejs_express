@@ -1,14 +1,45 @@
 <!-- Footer -->
 <section id="footer">
-	<ul class="icons">
-		<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-		<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
-		<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-		<li><a href="#" class="icon solid fa-rss"><span class="label">RSS</span></a></li>
-		<li><a href="#" class="icon solid fa-envelope"><span class="label">Email</span></a></li>
-	</ul>
-	<p class="copyright">&copy; Untitled. Design: <a href="http://html5up.net">HTML5 UP</a>. Images: <a
-			href="http://unsplash.com">Unsplash</a>.</p>
+    <!-- Меню в футере -->
+    <div class="footer-menu">
+        <section>
+            <h3>Навигация</h3>
+            <ul class="links">
+                <li><a class="<%= path === '/archive' ? 'active' : '' %>" href="/archive">Архив</a></li>
+                <li><a href="/faq">FAQ / ЧаВо</a></li>
+                <li><a class="<%= path === '/about' ? 'active' : '' %>" href="/about">О блоге</a></li>
+            </ul>
+        </section>
+        <section>
+            <h3>Дополнительно</h3>
+            <ul class="links">
+                <li><a href="/privacy">Политика конфиденциальности</a></li>
+                <li><a href="/contacts">Контакты</a></li>
+            </ul>
+        </section>
+        <% if(isAuthenticated) { %>
+        <section>
+            <h3>Администрирование</h3>
+            <ul class="links">
+                <li><a href="/admin/create-post">Добавить пост</a></li>
+                <li><a href="/admin/create-category">Добавить категорию</a></li>
+                <li><a href="/admin/posts">Админ посты</a></li>
+            </ul>
+        </section>
+        <% } %>
+    </div>
+    
+    <!-- Социальные иконки -->
+    <ul class="icons">
+        <li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+        <li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+        <li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+        <li><a href="#" class="icon solid fa-rss"><span class="label">RSS</span></a></li>
+        <li><a href="#" class="icon solid fa-envelope"><span class="label">Email</span></a></li>
+    </ul>
+    
+    <p class="copyright">&copy; Untitled. Design: <a href="http://html5up.net">HTML5 UP</a>. Images: <a
+            href="http://unsplash.com">Unsplash</a>.</p>
 </section>
 
 </section>

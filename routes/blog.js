@@ -12,12 +12,12 @@ router.get("/categories", postsController.getCategories);
 
 router.get("/category", postsController.getCategory)
 
-router.get("/archive", (req, res, next) => {
-  res.render("blog/archive", { pageTitle: "Архив", path: '/archive' });
+router.get("/archive", csrfProtection, (req, res, next) => {
+  res.render("blog/archive", {csrfToken: req.csrfToken(), pageTitle: "Архив", path: '/archive' });
 });
 
-router.get("/about", (req, res, next) => {
-  res.render("blog/about", { pageTitle: "О блоге", path: '/about' });
+router.get("/about", csrfProtection, (req, res, next) => {
+  res.render("blog/about", {csrfToken: req.csrfToken(), pageTitle: "О блоге", path: '/about' });
 });
 
 
