@@ -67,12 +67,19 @@
                             <p>Phasellus sed ultricies mi congue</p>
                         </a>
                     </li>
-                    
-                    
-                   
+
         </ul>
     </section>
-
+     <% if(isAuthenticated) { %>
+        <h3>Администрирование</h3>
+        <section>
+            <ul class="links">
+                <li><a href="/admin/create-post">Добавить пост</a></li>
+                <li><a href="/admin/create-category">Добавить категорию</a></li>
+                <li><a href="/admin/posts">Админ посты</a></li>
+            </ul>
+        </section>
+        <% } %>
     <% if(!isAuthenticated) { %>
         <!-- Actions -->
         <section>

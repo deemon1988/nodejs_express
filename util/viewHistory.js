@@ -3,6 +3,7 @@ const viewHistory = (req, postId) => {
   if (!req.session.viewHistory) {
     req.session.viewHistory = [];
     req.session.addedViewedPosts = []
+    req.session.isEmptyPage = false
   }
 
   // Удаляем дубликат, если уже был просмотрен

@@ -25,54 +25,159 @@ const { getViewedPosts } = require("../util/viewedPosts");
 
 exports.getIndexPage = async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = 10
+  const limit = 10;
 
-  const viewHistory = req.session.viewHistory || null
+  const viewHistory = req.session.viewHistory || null;
 
-  console.log("viewHistory:",viewHistory)
+  console.log("viewHistory:", viewHistory);
   const userId = req.user ? req.user.id : null;
 
   let allPostsJson = {};
   let topPosts;
 
-  let allPostsData = await getAllPosts(page, 5)
+  let allPostsData = await getAllPosts(page, 5);
 
-  let recomendetData =  await getRecommendedPosts(viewHistory, page, 5)
-
-  let unionPosts = await getMergedPosts(viewHistory, page, 5)
+  let unionPosts = await getMergedPosts(viewHistory, page, 5);
   
+  let recomendetData = await getRecommendedPosts(viewHistory, page, 5);
   
-  let resultPosts = viewHistory ? recomendetData : allPostsData
+  if (viewHistory) {
+    let hasReset = false
+    // если уже все посты из истории были добавлены, то обнуляем список
+    if (req.session.addedViewedPosts.length === viewHistory.length) {
+      req.session.addedViewedPosts = [];
+       hasReset = true
+      recomendetData.totalPages = Math.ceil(recomendetData.total / recomendetData.limit); 
+    }
+    // установка флага если это последняя страница с рекомендуемыми постами
+    if (
+      recomendetData.posts.length < 5 &&
+      recomendetData.page === recomendetData.totalPages
+    ) {
+      req.session.isEmptyPage = true;
+      // recomendetData.totalPages += 1;
+    // установка флага если это последняя страница с рекомендуемыми постами
+    } else if (
+      recomendetData.posts.length === 5 &&
+      recomendetData.page === recomendetData.totalPages
+    ) {
+      req.session.isEmptyPage = true;
+      recomendetData.totalPages += 1;
+    }
 
-  if(viewHistory) {
-    if(recomendetData.posts.length < 5 || recomendetData.page === recomendetData.totalPages){
-      let filteredViewedHistory = [...viewHistory];
-      if(filteredViewedHistory.length > 0) {
-  const addedViewedPosts = req.session.addedViewedPosts || null
-    console.log("Добавленные просмотренные посты:" ,addedViewedPosts)
-    if(addedViewedPosts) {
-      filteredViewedHistory = [...viewHistory.filter(id => !addedViewedPosts.includes(id))]
-    }
-    const viewedPosts = await getViewedPosts(filteredViewedHistory)
-    console.log("Не добавленные просмотренные посты:", viewedPosts.length)
-    const addedPosts = []
-    for(let i = 0; recomendetData.posts.length < 5 && i < viewedPosts.length; i++) {
-      recomendetData.posts.push(viewedPosts[i])
-      addedPosts.push(viewedPosts[i].id)
-    }
-    recomendetData.totalPages += 1
-    req.session.addedViewedPosts.push(...addedPosts)
-    }
+
+    // если флаг установлен, то можно добавлять посты
+    if (recomendetData.posts.length < 5 && req.session.isEmptyPage) {
+      // получаем id рекомендуемых постов, чтобы исключить их из списка последних постов
+      const existRecomendetPostsIds = recomendetData.posts.map(post => post.id)
+      console.log("Можно добавить посты в recomendetData.posts");
+
+      // получаем историю просмотров без уже добавленных ранее постов
+      let filteredViewHistory = viewHistory.filter(
+        (id) => !req.session.addedViewedPosts.includes(id)
+      );
+      // если список был обнулен и есть список id постов с последней страницы то исключаем их
+      if(req.session.lastesPostsOnPage) {
+        filteredViewHistory = filteredViewHistory.filter(id => !req.session.lastesPostsOnPage.includes(id))
       }
-  
+      const viewedPosts = await getViewedPosts(filteredViewHistory);
 
+      // если это последняя страница и есть список последних добавленных постов для этой страницы, 
+      // то добавляем эти посты
+      if(req.session.lastesPostsOnPage && recomendetData.page === recomendetData.totalPages) {
+         const postsForLastPage = await getViewedPosts(req.session.lastesPostsOnPage);
+           for (
+        let i = 0;
+        recomendetData.posts.length < 5 && i < postsForLastPage.length;
+        i++
+      ) {
+        recomendetData.posts.push(postsForLastPage[i]);
+         if(!req.session.addedViewedPosts.includes(postsForLastPage[i].id)){
+          req.session.addedViewedPosts.push(postsForLastPage[i].id);
+        }
+        // req.session.addedViewedPosts.push(postsForLastPage[i].id);
+      }
+      } else {
+        // в цикле добавляем до 5 постов к уже существующим рекомендуемым постам 
+      for (
+        let i = 0;
+        recomendetData.posts.length < 5 && i < viewedPosts.length;
+        i++
+      ) {
+        recomendetData.posts.push(viewedPosts[i]);
+        if(!req.session.addedViewedPosts.includes(viewedPosts[i].id)){
+          req.session.addedViewedPosts.push(viewedPosts[i].id);
+        }
+      }
+      }
+      
+
+      // если это последняя страница с рекомендованными постами, 
+      // то получаем id постов которые были добавлены
+      if(recomendetData.page === recomendetData.totalPages){
+        const lastAddedPosts =  recomendetData.posts.filter(post => !existRecomendetPostsIds.includes(post.id))
+        const lastAddedPostsIds = lastAddedPosts.map(post => post.id)
+        console.log(lastAddedPostsIds)
+        req.session.lastesPostsOnPage = lastAddedPostsIds
+        console.log( req.session.lastesPostsOnPage)
+
+      }
+
+       // увеличиваем страницу только если ещё не все посты добавлены (с учетом постов с последней страницы)
+        if (recomendetData.page > recomendetData.totalPages && req.session.lastesPostsOnPage.length > 0 && hasReset) {
+          req.session.addedViewedPosts.length += req.session.lastesPostsOnPage.length
+        }
+       if(  req.session.addedViewedPosts.length < viewHistory.length) {
+        recomendetData.totalPages += 1;
+      }
+
+    // если флаг установлен, то можно добавлять посты
+    } else if (recomendetData.posts.length === 0 && req.session.isEmptyPage) {
+      
+       // получаем историю просмотров без уже добавленных ранее постов
+      let filteredViewHistory = viewHistory.filter(
+        (id) => !req.session.addedViewedPosts.includes(id)
+      );
+
+      // исключаем посты с последней страницы 
+      if(req.session.lastesPostsOnPage){
+        filteredViewHistory = filteredViewHistory.filter(id => !req.session.lastesPostsOnPage.includes(id))
+      }
+
+      console.log("Отвильтрованная история без постов с последней странице - ",filteredViewHistory)
+      const viewedPosts = await getViewedPosts(filteredViewHistory);
+
+      // в цикле добавляем столько постов сколько получено из истории (максимум до 5 штук)
+      for (
+        let i = 0;
+        recomendetData.posts.length < 5 && i < filteredViewHistory.length;
+        i++
+      ) {
+        recomendetData.posts.push(viewedPosts[i]);
+        req.session.addedViewedPosts.push(viewedPosts[i].id);
+      }
+
+      //
+      if( req.session.addedViewedPosts.length < viewHistory.length) {
+        recomendetData.totalPages += 1;
+      }
+
+      // если все посты были добавлены, то сохраняем id всех добавленных постов 
+      //  if(req.session.addedViewedPosts.length === viewHistory.length){
+      //   const lastAddedPostsIds =  recomendetData.posts.map(post =>  post.id)
+      //   req.session.lastesPostsOnPage = [...lastAddedPostsIds]
+      // }
+    }
   }
-  console.log("Viewed History:", viewHistory)
-  console.log("Посты на страницу:", resultPosts.posts.length)
+    console.log(" Посты которые уже были добавленны :",  req.session.addedViewedPosts)
+    console.log("req.session.lastesPostsOnPage =  ", req.session.lastesPostsOnPage);
+  console.log("Посты на страницу:", recomendetData.posts.length);
+  console.log("Страница:", recomendetData.page);
+  console.log("viewHistory:", viewHistory);
 
   getPostsWithLikedUsersQuery(userId)
     .then(({ rows: posts }) => {
-      allPostsJson['posts'] = posts.map((p) => p.toJSON());
+      allPostsJson["posts"] = posts.map((p) => p.toJSON());
       return getTopPostsByCataegoryQuery();
     })
     .then((posts) => {
@@ -86,12 +191,12 @@ exports.getIndexPage = async (req, res, next) => {
       res.render("blog/blog", {
         pageTitle: "Главная страница",
         topPosts: topPosts,
-        allPosts: resultPosts,  
+        allPosts: viewHistory ? recomendetData : allPostsData,
         randomPosts: randomPosts,
         successMessage: req.flash("success"),
         path: "/",
         csrfToken: req.csrfToken(),
-        recomendetPosts: recomendetData
+        recomendetPosts: recomendetData,
       });
     })
 
@@ -185,7 +290,7 @@ exports.postComment = (req, res, next) => {
   const commentText = req.body.comment;
   let createdPost;
   let profileId;
-  Profile.findOne({where: {userId: userId}}).then((profile) => {
+  Profile.findOne({ where: { userId: userId } }).then((profile) => {
     profileId = profile.id;
     Post.findByPk(postId)
       .then((post) => {
