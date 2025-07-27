@@ -57,15 +57,15 @@
 												<li><a href="#">
 														<%= post.category.name %>
 													</a></li>
-												<% if(isAuthenticated) { %>
+												
 													<li>
 														<a href="#"
-															class="like-icon icon solid fa-heart  <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>"
+															class="like-icon icon solid fa-heart <%= isAuthenticated ? '' : 'not-hover' %> <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>"
 															data-id="<%= post.id %>">
 															<%= post.likes %>
 														</a>
 													</li>
-													<% } %>
+												
 														<li>
 															<% if (isAuthenticated) { %>
 																<a href="/posts/<%= post.id %>#comments"
@@ -121,7 +121,7 @@
 							<!-- Mini Posts -->
 							<section>
 								<h3>Всё, Что Важно</h3>
-								<p>Карточки самых популярных постов из всех постов, если recomendetPosts >= 5, то показывать рекомендуемые - самые популярные из найденных ( 5 карточек)</p>
+								<p>3-5 случайных карточек</p>
 								<div class="mini-posts">
 									<% if (topPosts.length > 0) { %>
 									
@@ -160,11 +160,11 @@
 
 							<section>
 								<h3>Рекомендуемое вам</h3>
-
+								<p>ПОказывать 3-5 карточек из рекомендуемых постов с наивысших рейтингом</p>
 								<div class="mini-posts">
-									<% if (recomendetPosts.posts.length > 0) { %>
+									<% if (topPosts.length > 0) { %>
 									
-										<% for (let post of recomendetPosts.posts) { %>
+										<% for (let post of topPosts) { %>
 											<!-- Mini Post -->
 											<article class="mini-post">
 
@@ -200,7 +200,7 @@
 							<!-- Posts List -->
 							<section>
 								<h3>Мир Вокруг Нас</h3>
-
+								<p>Самый новый пост в каждой категории</p>
 								<ul class="posts">
 									<% if (randomPosts.length> 0) { %>
 										<% for (let post of randomPosts) { %>

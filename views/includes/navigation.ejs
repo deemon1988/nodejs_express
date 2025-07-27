@@ -47,24 +47,24 @@
         <ul class="links">
             <% if(isAuthenticated) { %>
                 <li>
-                    <a href="/user/profile" class="<%= path === '/user/profile' ? 'active' : '' %>">
+                    <a href="/user/profile" >
                         <h3 class="<%= path === '/user/profile' ? 'active' : '' %>">Профиль</h3>
-                        <p>Sed vitae justo condimentum</p>
+                        <p>Настройки аккаунта и история активности</p>
                     </a>
                 </li>
                 <% } %>
-                    <li><a class="<%= path === '/posts' ? 'active' : '' %>" href="/posts">
-                            <h3>Посты</h3>
-                            <p>(часто задаваемые вопросы)</p>
+                    <li><a href="/posts">
+                            <h3 class="<%= path === '/posts' ? 'active' : '' %>">Посты</h3>
+                            <p>Интересные материалы и публикации</p>
                         </a></li>
-                    <li><a class="<%= path === '/categories' ? 'active' : '' %>" href="/categories">
-                            <h3>Категории</h3>
-                            <p>(часто задаваемые вопросы)</p>
+                    <li><a href="/categories">
+                            <h3 class="<%= path === '/categories' ? 'active' : '' %>">Категории</h3>
+                            <p>Разделы с тематическими материалами</p>
                         </a></li>
                    <li>
                         <a href="#">
                             <h3>Соцсети / Сообщество</h3>
-                            <p>Phasellus sed ultricies mi congue</p>
+                            <p>Ссылки на социальные сети и информация о сообществе</p>
                         </a>
                     </li>
 

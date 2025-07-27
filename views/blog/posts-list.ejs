@@ -50,7 +50,7 @@
                                             </a></li>
                                         <li>
                                             <a href="#"
-                                                class="like-icon icon solid fa-heart  <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>"
+                                                class="like-icon icon solid fa-heart <%= isAuthenticated ? '' : 'not-hover' %> <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>"
                                                 data-id="<%= post.id %>">
                                                 <%= post.likes %>
                                             </a>
@@ -92,9 +92,9 @@
                     <section>
                         <div class="mini-posts">
                             <h1>Факты и Мысли</h1>
-                            <p>Карточка самого нового поста из каждой категории, если recomendetPosts >= 5, то показывать рекомендуемыe - самый популярный пост в каждой категории ( 5 карточек)</p>
-                            <% if(topPosts.length> 0) { %>
-                                <% for(let post of topPosts) { %>
+                            <p>Карточки рекомендуемых постов или самых популярных, если нет просмотренных</p>
+                            <% if(topOrRecomendetPosts.length> 0) { %>
+                                <% for(let post of topOrRecomendetPosts) { %>
                                     <!-- Mini Post -->
                                     <article class="mini-post">
                                         <header>

@@ -12,7 +12,7 @@ exports.getPostsWithLikedUsersQuery = (userId, categoryId) => {
     whereCondition.categoryId = categoryId;
   }
   return Post.findAndCountAll({
-     where: whereCondition,
+    where: whereCondition,
     attributes: {
       include: [[fn("COUNT", literal(' "comments"."id"')), "commentsCount"]],
     },
@@ -119,9 +119,8 @@ exports.getTopPosts = () => {
   });
 };
 
-
 exports.getTopCreatedAtPosts = () => {
-    return sequelize.query(
+  return sequelize.query(
     `
   WITH ranked_posts AS (
     SELECT
@@ -149,4 +148,33 @@ exports.getTopCreatedAtPosts = () => {
     `,
     { type: Sequelize.QueryTypes.SELECT }
   );
-}
+};
+
+exports.getAllPostsByDate = async (dateFilter) => {
+  try {
+    const postsByDate = await Post.findAll({
+      attributes: [
+        'post.id',
+        'title',
+        'content',
+        'post.createdAt',  
+        [sequelize.fn("DATE", sequelize.col("post.createdAt")), "date"]
+      ],
+      group: [
+        sequelize.fn("DATE", sequelize.col("post.createdAt")),
+        "post.id",
+        "category.id",
+      ],
+      include: [
+        {
+          model: Category,
+          as: "category",
+        },
+      ],
+    });
+
+    return postsByDate;
+  } catch (error) {
+    console.log("Ошибка получения постов:", error);
+  }
+};

@@ -8,13 +8,11 @@ router.get("/posts", csrfProtection, postsController.getAllPosts);
 router.get("/posts/:postId", csrfProtection, postsController.getPostById);
 router.post("/post/:postId/like", postsController.postLike);
 
-router.get("/categories", postsController.getCategories);
+router.get("/categories", csrfProtection, postsController.getCategories);
 
 router.get("/category", postsController.getCategory)
 
-router.get("/archive", csrfProtection, (req, res, next) => {
-  res.render("blog/archive", {csrfToken: req.csrfToken(), pageTitle: "Архив", path: '/archive' });
-});
+router.get("/archive", csrfProtection, postsController.getArchive);
 
 router.get("/about", csrfProtection, (req, res, next) => {
   res.render("blog/about", {csrfToken: req.csrfToken(), pageTitle: "О блоге", path: '/about' });

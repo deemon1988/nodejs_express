@@ -8,7 +8,7 @@
     <div id="wrapper">
       <%- include('../includes/navigation.ejs') %>
         <!-- Main -->
-        <div id="main">
+        <div id="main" class="single-main">
           <h1>
             <% if (editing) { %> Редактировать категорию <% } else { %> Добавить новую категорию <% } %>
           </h1>
@@ -21,7 +21,8 @@
               <% } %>
 
                 <div>
-                  <label for="title">Псевдоним категории</label>
+                  <fieldset>
+                  <legend style="padding-bottom: 15px; font-size: 0.9em;"><strong>Псевдоним категории</strong></legend>
                   <% if (aliases.length> 0) { %>
                     <% for (let alias of aliases) { %>
                       <input type="radio" id="<%= alias.name %>" name="aliasId" value="<%= alias.id %>" <% if (editing)
@@ -33,7 +34,7 @@
                           <% } else { %>
                             <h1>No Alias Found!</h1>
                             <% } %>
-
+                  </fieldset>
                 </div>
 
                 <div>

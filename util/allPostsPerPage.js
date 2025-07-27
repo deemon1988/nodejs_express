@@ -1,11 +1,22 @@
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const Post = require("../models/post");
 const Category = require("../models/category");
+const Comment = require("../models/comment");
+const User = require("../models/user");
 
-async function getAllPosts(page = 1, limit = 10) {
+async function getAllPostsOnPage(userId, page = 1, limit = 10, postsIds) {
   try {
+     // Определяем базовое условие WHERE
+    const where = {};
+
+    // Если переданы postsIds — добавляем условие
+    if (postsIds && postsIds.length > 0) {
+      where.id = postsIds;
+    }
     // 3. Общее количество постов (для пагинации)
-    const total = await Post.count();
+    const total = await Post.count({
+       where: postsIds ? { id: postsIds } : {},
+    });
 
     if (total === 0) {
       return { posts: [], total, page, limit, totalPages: 0 };
@@ -19,11 +30,26 @@ async function getAllPosts(page = 1, limit = 10) {
 
     // 5. Получаем порцию постов в по дате
     const batchOfPosts = await Post.findAll({
+      where,
       include: [
         {
           model: Category,
           as: "category",
         },
+         {
+        model: Comment,
+        as: "comments",
+        attributes: [],
+        required: false,
+      },
+      {
+        model: User,
+        as: "likedUsers",
+        attributes: ["id"], // нужно, чтобы мы могли проверить id
+        through: { attributes: [] },
+        where: { id: userId }, //userId ? { id: userId } : undefined,
+        required: false,
+      },
       ],
       limit,
       offset,
@@ -44,4 +70,4 @@ async function getAllPosts(page = 1, limit = 10) {
   }
 }
 
-module.exports = { getAllPosts };
+module.exports = { getAllPostsOnPage };

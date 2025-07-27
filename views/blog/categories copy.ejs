@@ -65,8 +65,8 @@
                                                 <%= post.category.name %>
                                             </a></li>
                                         <li>
-                                            <a href="#" class="like-icon icon solid fa-heart <%= isAuthenticated ? '' : 'not-hover' %> <%=post.likedUsers &&
-                                                post.likedUsers.length> 0 ? 'active' : '' %>" data-id="<%= post.id %>">  
+                                            <a href="#" class="like-icon icon solid fa-heart" <%=post.likedUsers &&
+                                                post.likedUsers.length> 0 ? 'active' : '' %>" data-id="<%= post.id %>">
                                                     <%= post.likes %></a>
                                         </li>
                                         <li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment">
