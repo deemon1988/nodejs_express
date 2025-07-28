@@ -49,5 +49,7 @@ router.post("/create-category", isAuth, isAdmin, upload.single("image"), adminCo
 router.post("/create-alias", isAuth, isAdmin, adminController.postCreateAlias);
 router.post("/edit-alias", isAuth, isAdmin, adminController.postEditAlias);
 
+router.post("/delete-category", csrfProtection, isAuth, isAdmin, adminController.postDeleteCategory);
+
 
 module.exports = router;

@@ -3850,10 +3850,24 @@ body.is-menu-visible #menu {
 
 .actions.auth {
 	justify-content: center;
+	gap: 20px;
 }
 
 .auth-helper {
 	margin: 2em 0 0 0;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.auth-helper.reset, .auth-helper.register {
+	flex-direction: row;
+	gap: 20px;
+}
+
+.auth-signin-links {
+	display: flex;
+	gap: 10px;
 }
 
 .auth-link {
@@ -3876,6 +3890,7 @@ body.is-menu-visible #menu {
 	background: #f7f7f7;
 	border: 1px solid #ccc;
 	transition: all 0.3s ease;
+	z-index: 20;
 }
 
 .flash-message.success {

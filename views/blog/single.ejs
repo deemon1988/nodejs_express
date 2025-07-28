@@ -2,6 +2,18 @@
     </head>
 
     <body class="single is-preload">
+         <% if(errorMessage && errorMessage.length> 0) { %>
+            <div class="flash-message error" style="display: block">
+                <%= errorMessage %>
+                    <span class="close-button">&times;</span>
+            </div>
+            <% } %>
+                    <% if(successMessage && successMessage.length> 0) { %>
+			<div class="flash-message success" style="display: block">
+				<%= successMessage %>
+					<span class="close-button">&times;</span>
+			</div>
+			<% } %>
 
         <!-- Wrapper -->
         <div id="wrapper">
@@ -69,11 +81,7 @@
 																<%= post.likes %>
 															</a>
 														</li>
-														<!-- <li><a href="/single/<%= post.id %>#comments"
-																class="icon solid fa-comment">
-																<%= post.commentsCount || 0 %>
-															</a>
-														</li> -->
+													
 													</ul>
                                 </footer>
 
@@ -134,11 +142,14 @@
                                                 </p>
                                                 <% if (comment.userId===userId) { %>
                                                     <form action="/posts/<%= post.id %>/<%= comment.id %>"
-                                                        method="post">
-                                                        <button type="submit">Удалить комментарий</button>
+                                                        method="post" id="delete-comment">
+                                                        <button type="submit" id="delete-comment" name="action" value="delete" class="button default"
+                                                            onclick="return confirm('Комментарий будет удален')">
+                                                                Удалить комментарий
+                                                        </button>
                                                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                     </form>
-                                                    <% } %>
+                                                   <% } %>
                                             </article>
                                             <% } %>
                                                 <% } else { %>

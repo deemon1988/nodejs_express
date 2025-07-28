@@ -4,6 +4,19 @@
 
   <body class="single is-preload">
 
+     <% if(errorMessage && errorMessage.length> 0) { %>
+            <div class="flash-message error" style="display: block">
+                <%= errorMessage %>
+                    <span class="close-button">&times;</span>
+            </div>
+            <% } %>
+                    <% if(successMessage && successMessage.length> 0) { %>
+			<div class="flash-message success" style="display: block">
+				<%= successMessage %>
+					<span class="close-button">&times;</span>
+			</div>
+			<% } %>
+
     <!-- Wrapper -->
     <div id="wrapper">
       <%- include('../includes/navigation.ejs') %>
@@ -111,17 +124,28 @@
             </form>
 
             <% } %>
+              <% if (!editing) { %>
               <h3>Категории</h3>
               <ul class="exist-categories-list">
-                <% if (categories.length> 0) { %>
+                <% if (categories && categories.length> 0) { %>
                   <% for (let category of categories) { %>
                     <li>
                       <strong class="categories-list-item-name"><%= category.name %></strong>
                         <a href="/admin/edit-category/<%= category.id %>?edit=true" class="button default">Редактировать</a>
+                        <button type="submit" form="delete-category" name="action" value="delete" class="button default"
+                          onclick="return confirm(`Вы уверены, что хотите удалить категорию <%= category.name %> ?`)">
+                          Удалить
+                        </button>
+                        <form action="/admin/delete-category" method="post" id="delete-category">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <input type="hidden" name="categoryId" value="<%= category.id %>">
+                        </form>
+                        
                       </li>
                     <% } %>
                       <% } %>
               </ul>
+             <% } %>
         </div>
 
 
@@ -133,7 +157,8 @@
     <script src="/assets/js/breakpoints.min.js"></script>
     <script src="/assets/js/util.js"></script>
     <script src="/assets/js/main.js"></script>
-
+    <script src="/assets/js/close-message.js"></script>
+    
     <script>
   document.addEventListener('DOMContentLoaded', () => {
     const radioButtons = document.querySelectorAll('input[name="aliasId"]');

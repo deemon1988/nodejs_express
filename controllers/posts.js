@@ -14,7 +14,7 @@ const {
   getRandomPostsFromTop5Query,
   getTopPosts,
   getTopCreatedAtPosts,
-  getAllPostsByDate
+  getAllPostsByDate,
 } = require("../services/postService");
 const { getRandomPosts } = require("../util/shuffle");
 const Alias = require("../models/allowed-alias");
@@ -38,7 +38,7 @@ exports.getIndexPage = async (req, res, next) => {
 
   let allPostsData = await getAllPostsOnPage(userId, page, limit);
 
-  const mergedPosts = await getMergedPosts(userId, viewHistory, page, limit)
+  const mergedPosts = await getMergedPosts(userId, viewHistory, page, limit);
 
   getPostsWithLikedUsersQuery(userId)
     .then(({ rows: posts }) => {
@@ -69,6 +69,11 @@ exports.getIndexPage = async (req, res, next) => {
 };
 
 exports.getPostById = (req, res, next) => {
+  let success = req.flash("success");
+  let message = req.flash("error");
+  success = success.length > 0 ? success[0] : null;
+  message = message.length > 0 ? message[0] : null;
+
   const postId = req.params.postId;
   let loadedPost;
   const userId = req.user ? req.user.id : null;
@@ -112,6 +117,8 @@ exports.getPostById = (req, res, next) => {
         userId: userId,
         path: "/posts",
         csrfToken: req.csrfToken(),
+        errorMessage: message,
+        successMessage: success,
       });
     })
     .catch((err) => console.error(err));
@@ -124,9 +131,9 @@ exports.getAllPosts = async (req, res, next) => {
   const viewHistory = req.session.viewHistory || null;
   let page = parseInt(req.query.page) || 1;
   const limit = 5;
-  
+
   let topCreatedAtPosts;
-  let recomendetPosts
+  let recomendetPosts;
   // let recomendetData = await getRecommendedPosts(viewHistory, page, limit);
 
   getPostsWithLikedUsersQuery(userId)
@@ -134,9 +141,11 @@ exports.getAllPosts = async (req, res, next) => {
       allPosts = posts.map((p) => p.toJSON());
       allPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       randomPosts = getRandomPosts(allPosts, 6);
-      if(viewHistory) {
-        recomendetPosts = posts.filter(post => !viewHistory.includes(post.id))
-        recomendetPosts = getRandomPosts(recomendetPosts, 5)
+      if (viewHistory) {
+        recomendetPosts = posts.filter(
+          (post) => !viewHistory.includes(post.id)
+        );
+        recomendetPosts = getRandomPosts(recomendetPosts, 5);
       }
       return getTopCreatedAtPosts();
     })
@@ -217,13 +226,23 @@ exports.postDeleteComment = (req, res, next) => {
 
   Comment.findByPk(commentId)
     .then((comment) => {
-      console.log(comment);
+      if (!comment) {
+        throw new Error("Комментарий не найден");
+      }
+      if (comment.userId !== req.user.id) {
+        req.flash("error", "У вас нет прав для удаления этого комментария");
+        throw new Error("Комментарий не пренадлежит пользователю");
+      }
       return comment.destroy();
     })
     .then((result) => {
+      req.flash("success", "Комментарий был удален");
       res.redirect(`/posts/${postId}`);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.log("Ошибка при удалении комментария", err.message);
+       res.redirect(`/posts/${postId}`);
+    });
 };
 
 exports.postLike = (req, res, next) => {
@@ -306,13 +325,13 @@ exports.getCategory = (req, res, next) => {
 };
 
 exports.getCategories = (req, res, next) => {
-  const userId = req.user ? req.user.id : null
+  const userId = req.user ? req.user.id : null;
   let allPosts;
 
   getPostsWithLikedUsersQuery(userId)
     .then(({ rows: posts }) => {
       allPosts = posts;
-      return getAllCategoriesWithPosts()
+      return getAllCategoriesWithPosts();
     })
     .then((categories) => {
       const categoriesJson = categories.map((c) => c.toJSON());
@@ -323,7 +342,7 @@ exports.getCategories = (req, res, next) => {
         randomPosts: getRandomPosts(allPosts, 5),
         categories: categoriesJson,
         formatDate: formatDateOnly,
-        csrfToken: req.csrfToken()
+        csrfToken: req.csrfToken(),
       });
     })
     .catch((err) => console.log(err));
@@ -331,18 +350,20 @@ exports.getCategories = (req, res, next) => {
 
 exports.getArchive = async (req, res, next) => {
   try {
-      const categoriesWithPosts = await getAllCategoriesWithPosts()
-      const allPostsByDate = await getAllPostsByDate()
-      allPostsByDate.sort((a, b) => new Date(a.dataValues.date) - new Date(b.dataValues.date)),
-      console.log(allPostsByDate)
-      res.render("blog/archive", {
-        pageTitle: "Архив", 
-        path: '/archive',
-        csrfToken: req.csrfToken(), 
-        posts: allPostsByDate,
-        categories: categoriesWithPosts
-  });
+    const categoriesWithPosts = await getAllCategoriesWithPosts();
+    const allPostsByDate = await getAllPostsByDate();
+    allPostsByDate.sort(
+      (a, b) => new Date(a.dataValues.date) - new Date(b.dataValues.date)
+    ),
+      console.log(allPostsByDate);
+    res.render("blog/archive", {
+      pageTitle: "Архив",
+      path: "/archive",
+      csrfToken: req.csrfToken(),
+      posts: allPostsByDate,
+      categories: categoriesWithPosts,
+    });
   } catch (error) {
-    console.log("Ошибка рендеринга страницы:", error)
+    console.log("Ошибка рендеринга страницы:", error);
   }
-}
+};

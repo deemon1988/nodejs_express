@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   messages.forEach((msg) => {
     // Клик по кнопке закрытия
     const closeBtn = msg.querySelector(".close-button");
-    if (msg.classList.contains("success")) {
+    if (msg.classList.contains("success") || msg.classList.contains("error")) {
       setTimeout(() => {
         fadeAndRemove(msg);
       }, 4000);

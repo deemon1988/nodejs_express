@@ -2,8 +2,18 @@
     </head>
 
     <body class="auth">
-      
-
+        <% if(errorMessage && errorMessage.length> 0) { %>
+            <div class="flash-message error" style="display: block">
+                <%= errorMessage %>
+                    <span class="close-button">&times;</span>
+            </div>
+            <% } %>
+                    <% if(successMessage && successMessage.length> 0) { %>
+			<div class="flash-message success" style="display: block">
+				<%= successMessage %>
+					<span class="close-button">&times;</span>
+			</div>
+			<% } %>
                 <!-- Wrapper -->
                 <div id="wrapper" class="auth-wrapper">
 
@@ -32,8 +42,10 @@
                                 </div>
 
                                 <p class="auth-helper">
-                                    Нужен аккаунт ? <a class="auth-link" href="/register">Зарегистрироваться</a>
+                                    <span class="auth-signin-links"><span>Нужен аккаунт?</span> <a class="auth-link" href="/register">Зарегистрироваться</a></span>
+                                    <span class="auth-signin-links"><span>Забыли пароль?</span> <a class="auth-link" href="/reset">Сбросить пароль</a></span>
                                 </p>
+                             
 
                             </div>
                         </form>

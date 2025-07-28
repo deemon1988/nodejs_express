@@ -117,6 +117,9 @@ Post.belongsTo(Category, { as: "category" });
 Category.hasOne(Alias);
 Alias.belongsTo(Category);
 
+Alias.belongsTo(User);
+User.hasMany(Alias);
+
 sequelize
   // .sync({ force: true })
   .sync()

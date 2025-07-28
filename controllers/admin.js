@@ -13,10 +13,8 @@ exports.postAddImage = (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "Файл не загружен" });
   }
-
   // Путь, который вернётся в редактор
   const imageUrl = `/images/posts/${req.file.filename}`;
-
   // TinyMCE ожидает { location: '...' }
   res.json({ location: imageUrl });
 };
@@ -108,24 +106,42 @@ exports.postAddPost = (req, res, next) => {
 
 exports.postDeletePost = (req, res, next) => {
   const postId = req.body.postId;
-  Post.findByPk(postId)
+  Post.findOne({where: {id: postId, userId: req.user.id}})
     .then((post) => {
+       if (!post) {
+        req.flash('error', 'У вас не прав для удаления поста')
+        throw new Error("Пост не найден");
+       }
       return post.destroy();
     })
     .then((result) => {
+      req.flash('success', 'Пост был удален')
       res.redirect("/admin/posts");
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.log(err)
+      res.redirect("/admin/posts");
+    });
 };
 
 exports.getAllPosts = (req, res, next) => {
-  Post.findAll({ include: [{ model: Category, as: "category" }] })
+  let message = req.flash('error')
+  let success = req.flash('success')
+  message = message.length > 0 ? message[0] : null
+  success = success.length > 0 ? success[0] : null
+
+  Post.findAll({
+    where: { userId: req.user.id },
+    include: [{ model: Category, as: "category" }],
+  })
     .then((posts) => {
       res.render("admin/posts", {
         pageTitle: "Админ посты",
         posts: posts,
         path: "/admin/posts",
         csrfToken: req.csrfToken(),
+        errorMessage: message,
+        successMessage: success
       });
     })
     .catch((err) => console.log(err));
@@ -139,11 +155,11 @@ exports.getEditPost = (req, res, next) => {
   }
   const postId = req.params.postId;
 
-  Post.findByPk(postId)
+  Post.findOne({where: {id: postId, userId: req.user.id}})
     .then((post) => {
       if (!post) {
+        req.flash('error', 'Вы не можете редактировать этот пост')
         throw new Error("Пост не найден");
-        // return res.redirect("/admin/posts");
       }
       existPost = post;
       return Category.findAll();
@@ -156,7 +172,6 @@ exports.getEditPost = (req, res, next) => {
         post: existPost,
         categories: categories,
         csrfToken: req.csrfToken(),
-
       });
     })
     .catch((err) => {
@@ -173,6 +188,9 @@ exports.postEditPost = (req, res, next) => {
 
   Post.findByPk(postId)
     .then((post) => {
+      if(post.userId !== req.user.id) {
+        return res.redirect('/admin/posts')
+      }
       let imageUrl = post.image;
       post.title = updatedTitle;
       post.content = updatedContent;
@@ -193,7 +211,7 @@ exports.postCreateAlias = (req, res, next) => {
       if (result) {
         throw new Error("Alias all ready exist");
       }
-      return Alias.create({ name: name });
+      return Alias.create({ name: name, userId: req.user.id });
     })
     .then(async (alias) => {
       // Создавать страницу с именем алиаса
@@ -240,16 +258,66 @@ exports.postEditAlias = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
+exports.postDeleteCategory = (req, res, next) => {
+  const categoryId = Number(req.body.categoryId);
+
+  Category.findOne({
+    where: { id: categoryId },
+    include: [
+      {
+        model: Alias,
+        as: "alias",
+        where: {
+          userId: req.user.id,
+        },
+      },
+    ],
+  })
+    .then((category) => {
+      console.log(category)
+      if (!category) {
+        req.flash('error', 'У вас нет прав для удаления категории')
+        throw new Error("Категория не найдена или не принадлежит пользователю")
+      }
+      return category.destroy();
+    })
+    .then((result) => {
+      req.flash('success', 'Категория удалена')
+      res.redirect("/admin/create-category");
+    })
+    .catch((err) => {
+      console.log("Ошибка удаления категории: ", err)
+      res.redirect("/admin/create-category")
+    });
+};
+
 exports.getCreateCategory = (req, res, next) => {
+  let success = req.flash('success')
+  let message = req.flash('error')
+  success = success.length > 0 ? success[0] : null
+  message = message.length > 0 ? message[0] : null
+
   const editMode = req.query.edit;
   let existsAliases;
 
-  Alias.findAll()
+  Alias.findAll({
+    where: { userId: req.user.id },
+    include: [
+      {
+        model: Category,
+        required: false, // чтобы получить aliases даже без категорий
+      },
+    ],
+  })
     .then((aliases) => {
       existsAliases = aliases;
-      return Category.findAll();
+
+      return aliases
+        .map((alias) => (alias.category ? alias.category.dataValues : null))
+        .filter((category) => category !== null);
     })
     .then((categories) => {
+      console.log(categories);
       res.render("admin/create-category", {
         categories: categories,
         aliases: existsAliases,
@@ -257,6 +325,8 @@ exports.getCreateCategory = (req, res, next) => {
         path: "/admin/create-category",
         editing: editMode,
         csrfToken: req.csrfToken(),
+        errorMessage: message,
+        successMessage: success
       });
     })
     .catch((err) => console.log(err));
@@ -328,6 +398,11 @@ exports.postCreateCategory = (req, res, next) => {
 };
 
 exports.getEditCategory = (req, res, next) => {
+   let success = req.flash('success')
+  let message = req.flash('error')
+  success = success.length > 0 ? success[0] : null
+  message = message.length > 0 ? message[0] : null
+
   const editMode = req.query.edit;
   if (!editMode) {
     return res.redirect("/admin/create-category");
@@ -336,9 +411,21 @@ exports.getEditCategory = (req, res, next) => {
 
   let updatedCategory;
   let existsAliases;
-  Category.findByPk(categoryId)
+  Category.findOne({
+     where: { id: categoryId },
+    include: [
+      {
+        model: Alias,
+        as: "alias",
+        where: {
+          userId: req.user.id,
+        },
+      }
+    ]
+  })
     .then((category) => {
       if (!category) {
+         req.flash('error', 'Категория для редактирования не найдена')
         throw new Error("Категория не существует");
       }
       updatedCategory = category;
@@ -363,9 +450,14 @@ exports.getEditCategory = (req, res, next) => {
         category: updatedCategory,
         categories: categories,
         csrfToken: req.csrfToken(),
+         errorMessage: message,
+        successMessage: success
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.log(err)
+      res.redirect('/admin/create-category')
+    });
 };
 
 exports.postEditCategory = (req, res, next) => {
@@ -397,6 +489,9 @@ exports.postEditCategory = (req, res, next) => {
       category.image = logoUrl;
       return category.save();
     })
-    .then((result) => res.redirect("/admin/create-category"))
+    .then((result) => {
+      req.flash('success', 'Категория успешно отредактирована!')
+      res.redirect("/admin/create-category")
+    })
     .catch((err) => console.log(err));
 };
