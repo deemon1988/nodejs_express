@@ -6,17 +6,12 @@ const {
 } = require("../send-email");
 const path = require("path");
 require("dotenv").config();
-const { validationResult } = require('express-validator')
+const { validationResult } = require("express-validator");
 
 const crypto = require("crypto");
 const User = require("../models/user");
 
 exports.getLogin = (req, res, err) => {
-  const userDoc = {
-    comment: req.query.comment || null,
-    postId: req.query.postId || null,
-    email: req.query.email || null,
-  };
   // Функция для отрисовки страницы логина
   const renderLoginPage = () => {
     res.render("user/singin", {
@@ -24,23 +19,15 @@ exports.getLogin = (req, res, err) => {
       errorMessage: req.flash("error"),
       successMessage: req.flash("success"),
       csrfToken: req.csrfToken(),
-      userDoc: userDoc,
+      validationErrors: [],
+      oldInput: {
+        email: req.query.email || "",
+        password: "",
+        postId: req.query.postId || null,
+      },
     });
   };
-  if (userDoc.comment) {
-    User.findOne({ where: { email: userDoc.email } })
-      .then((user) => {
-        if (!user) {
-          return res.redirect(
-            `/register?useremail=${encodeURIComponent(userDoc.email)}`
-          );
-        }
-        return renderLoginPage();
-      })
-      .catch((err) => console.log(err));
-  } else {
-    renderLoginPage();
-  }
+  renderLoginPage();
 };
 
 exports.postLogin = (req, res, next) => {
@@ -48,12 +35,28 @@ exports.postLogin = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+
+    return res.status(422).render("user/singin", {
+      errorMessage: errors.array()[0].msg,
+      successMessage: req.flash("success"),
+      pageTitle: "Авторизация",
+      csrfToken: req.csrfToken(),
+      oldInput: {
+        email: email,
+        password: password,
+        postId: postId,
+      },
+      validationErrors: errors.array(),
+    });
+  }
+
   let currentUser;
 
   User.findOne({ where: { email: email } })
     .then((user) => {
       if (!user) {
-        req.flash("error", "Неверный адрес электронной почты или пароль!");
         throw new Error("Нет пользователя");
       }
       currentUser = user;
@@ -61,7 +64,7 @@ exports.postLogin = (req, res, next) => {
     })
     .then((doMatch) => {
       if (!doMatch) {
-        req.flash("error", "Неверный адрес электронной почты или пароль!");
+        // req.flash("error", "Введен не правильный пароль!");
         throw new Error("Неверный пароль");
       }
       req.session.isLoggedIn = true;
@@ -91,7 +94,7 @@ exports.postLogin = (req, res, next) => {
       }
       req.flash("success", "Вы успешно авторизовались!");
       if (postId) {
-        return res.redirect(`/posts/${postId}#comments`);
+        return res.redirect(`/posts/${postId}`);
       }
       res.redirect("/");
     })
@@ -104,29 +107,38 @@ exports.postLogin = (req, res, next) => {
 exports.postLogout = (req, res, err) => {
   req.session.destroy((err) => {
     console.log(err);
+    res.redirect("/");
   });
-  res.redirect("/");
 };
 
 const bcrypt = require("bcryptjs");
 const { where, Op } = require("sequelize");
 
 exports.postRegisterUser = async (req, res, err) => {
-  const username = req.body.username;
+  const username = req.body.username.trim();
   const email = req.body.email.trim();
-  const password = req.body.password;
-  // const repeatPass = req.body.repeatPass;
-  const templatePath = path.join(__dirname, "../views/email/email-template.ejs");
+  const password = req.body.password.trim();
+  const repeatPass = req.body.repeatPass.trim();
+  const templatePath = path.join(
+    __dirname,
+    "../views/email/email-template.ejs"
+  );
 
-  const errors = validationResult(req)
-  if(!errors.isEmpty()) {
-    console.log(errors.array())
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+
     return res.status(422).render("user/register", {
-    pageTitle: "Регистрация",
-    errorMessage: errors.array()[0].msg,
-    csrfToken: req.csrfToken(),
-    useremail: email,
-  })
+      pageTitle: "Регистрация",
+      errorMessage: errors.array()[0].msg,
+      csrfToken: req.csrfToken(),
+      oldInput: {
+        username: username,
+        email: email,
+        password: password,
+        repeatPass: repeatPass,
+      },
+      validationErrors: errors.array(),
+    });
   }
 
   try {
@@ -168,12 +180,19 @@ exports.postRegisterUser = async (req, res, err) => {
 };
 
 exports.getRegisterUser = (req, res, err) => {
-  const useremail = req.query.useremail || null;
+  const useremail = req.query.useremail || "";
   res.render("user/register", {
     pageTitle: "Регистрация",
     errorMessage: req.flash("error"),
     csrfToken: req.csrfToken(),
-    useremail: useremail,
+    validationErrors: [],
+
+    oldInput: {
+      username: "",
+      email: useremail,
+      password: "",
+      repeatPass: "",
+    },
   });
 };
 
@@ -185,13 +204,13 @@ exports.getReset = (req, res, err) => {
   } else {
     message = null;
   }
-  success = success.length > 0 ? success[0] : null
+  success = success.length > 0 ? success[0] : null;
 
   res.render("user/reset", {
     pageTitle: "Сброс пароля",
     csrfToken: req.csrfToken(),
     errorMessage: message,
-    successMessage: success
+    successMessage: success,
   });
 };
 
@@ -205,21 +224,29 @@ exports.postReset = async (req, res, next) => {
     });
 
     const token = buffer.toString("hex");
-    const user = await User.findOne({ where: { email: req.body.email.trim() } });
-    
+    const user = await User.findOne({
+      where: { email: req.body.email.trim() },
+    });
+
     if (!user) {
       req.flash("error", "Аккаунт с указанным Email не найден");
       return res.redirect("/reset");
     }
-    
+
     user.resetToken = token;
     user.resetTokenExpiration = Date.now() + 3600000;
     await user.save();
-    
-    req.flash('success', 'Письмо с инструкцией по сбросу пароля отправлено на ваш Email');
+
+    req.flash(
+      "success",
+      "Письмо с инструкцией по сбросу пароля отправлено на ваш Email"
+    );
     res.redirect("/");
-    
-    const templatePath = path.join(__dirname, "../views/email/reset-password.ejs");
+
+    const templatePath = path.join(
+      __dirname,
+      "../views/email/reset-password.ejs"
+    );
     const templateData = {
       username: user.username,
       resetLink: `http://localhost:3000/reset/${token}`,
@@ -229,11 +256,10 @@ exports.postReset = async (req, res, next) => {
       to: req.body.email.trim(),
       subject: "Сброс пароля",
     };
-    
+
     sendTemplateEmail(templatePath, templateData, mailOptions)
-      .then(info => console.log('Email sent:', info.messageId))
-      .catch(err => console.log('Email error:', err));
-      
+      .then((info) => console.log("Email sent:", info.messageId))
+      .catch((err) => console.log("Email error:", err));
   } catch (err) {
     console.log(err);
     res.redirect("/reset");
@@ -250,7 +276,7 @@ exports.getNewPassword = (req, res, err) => {
     },
   })
     .then((user) => {
-      console.log(user);
+
       // if(!user) {
       //   return res.redirect('/')
       // }
@@ -295,33 +321,29 @@ exports.postNewPassword = (req, res, err) => {
       resetUser.password = hashedPassword;
       resetUser.resetToken = null;
       resetUser.resetTokenExpiration = null;
-      return resetUser.save()
+      return resetUser.save();
     })
-    .then(result => {
-      req.flash('success', 'Пароль успешно обновлен!')
-      res.redirect('/singin')
+    .then((result) => {
+      req.flash("success", "Пароль успешно обновлен!");
+      res.redirect("/singin");
 
       const templatePath = path.join(
-          __dirname,
-          "../views/email/success-reset-password.ejs"
-        );
-       const templateData = {
-      username: resetUser.username,
-      password: newPassword,
-    };
+        __dirname,
+        "../views/email/success-reset-password.ejs"
+      );
+      const templateData = {
+        username: resetUser.username,
+        password: newPassword,
+      };
 
-    const mailOptions = {
-      to: resetUser.email,
-      subject: "Пароль был успешно изменен",
-    };
-    const info =  sendTemplateEmail(
-      templatePath,
-      templateData,
-      mailOptions
-    );
+      const mailOptions = {
+        to: resetUser.email,
+        subject: "Пароль был успешно изменен",
+      };
+      const info = sendTemplateEmail(templatePath, templateData, mailOptions);
     })
     .catch((err) => {
       console.log(err);
-      res.redirect('/new-password')
+      res.redirect("/new-password");
     });
 };

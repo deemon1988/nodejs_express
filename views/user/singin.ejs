@@ -19,14 +19,22 @@
 
                     <div id="main" class="auth single-main">
                         <h3>Авторизация</h3>
-                        <form method="post" action="/singin">
+                        <form method="post" action="/singin" id="signin-form" novalidate>
                             <div class="row gtr-uniform auth">
                              
                                 <div class="col-8 col-12-xsmall">
-                                    <input type="email" name="email" id="email" value="<%= userDoc.comment ? userDoc.email : '' %>" placeholder="Email" required>
+                                    <input 
+                                     class="<%= validationErrors.find(e => e.path === 'email') ? 'invalid' : '' %>"
+                                    type="email" name="email" id="email" value="<%= oldInput.email %>" placeholder="Email" required>
                                 </div>
                                 <div class="col-8 col-12-xsmall">
-                                    <input type="password" name="password" id="password" value="" placeholder="Password"
+                                    <input 
+                                    class="<%= validationErrors.find(e => e.path === 'password') ? 'invalid' : '' %>"
+                                    type="password" 
+                                    name="password" 
+                                    id="password" 
+                                    value="<%= oldInput.password %>" 
+                                    placeholder="Password"
                                         required>
                                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                 </div>
@@ -34,7 +42,7 @@
                                 <div class="col-12">
                                     <ul class="actions auth">
                                         <% if(!isAuthenticated) { %>
-                                    <input type="hidden" name="postId" value="<%= userDoc.postId %>">
+                                    <input type="hidden" name="postId" value="<%= oldInput.postId %>">
                                             <% } %>
                                         <li><input type="submit" value="Войти"></li>
                                         <li><input type="reset" value="Reset"></li>

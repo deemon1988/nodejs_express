@@ -9,7 +9,7 @@ const fileStorage = multer.diskStorage({
     let dir;
 
     // Определяем поддиректорию по URL или роуту
-    if (req.path === "/create-post" || req.path === "/update-post") {
+    if (req.path === "/create-post" || req.path === "/edit-post") {
       // Разные пути в зависимости от имени поля (name)
       if (file.fieldname === "image") {
         dir = path.join(__dirname, "../public/images/posts");
@@ -34,27 +34,6 @@ const fileStorage = multer.diskStorage({
     }
 
     ensureDirectoryExists(dir);
-
-    // // Определяем поддиректорию по URL или роуту
-    // if (req.path === "/create-post" || req.path === "/update-post") {
-    //   // Разные пути в зависимости от имени поля (name)
-    //   if (file.fieldname === "image") {
-    //     uploadPath = path.join(uploadPath, "posts");
-    //   } else if (file.fieldname === "cover") {
-    //     uploadPath = path.join(uploadPath, "cover");
-    //   } else {
-    //     uploadPath = path.join(uploadPath, "other");
-    //   }
-    // } else if (req.path === "/create-category" || req.path === "/update-category") {
-    //    uploadPath = path.join(uploadPath, "category");
-    // }
-
-    // else if (req.path === "/user/edit-profile") {
-    //   uploadPath = path.join(uploadPath, "user");
-    // }
-    //  else {
-    //   uploadPath = path.join(uploadPath, "other");
-    // }
 
     cb(null, dir); // Папка, куда будут сохраняться загруженные файлы
   },

@@ -1,0 +1,242 @@
+<%- include('../includes/head.ejs') %>
+	</head>
+
+	<body class="is-preload">
+		<% if(successMessage && successMessage.length> 0) { %>
+			<div class="flash-message success" style="display: block">
+				<%= successMessage %>
+					<span class="close-button">&times;</span>
+			</div>
+			<% } %>
+
+				<!-- Wrapper -->
+				<div id="wrapper">
+
+					<!-- Header -->
+					<!-- Menu -->
+					<%- include('../includes/navigation.ejs') %>
+
+						<!-- Main -->
+						<div id="main">
+							<!-- Post -->
+							 <p>Показывать посты упорядоченные по дате, а если есть рекомендуемые, то сначала их</p>
+
+							<% if (allPosts.posts.length > 0) { %>
+								<% for (let post of allPosts.posts) { %>
+									<article class="post">
+										<header>
+											<div class="title">
+												<h2><a href="/posts/<%= post.id %>">
+														<%- fixPrepositions(post.title) %>
+													</a></h2>
+												<p><%= post.content.substring(0, 100) %>...</p>
+											</div>
+											<div class="meta">
+												<time class="published" datetime="<%= post.createdAt %>">
+													<%= formatDateOnly(post.createdAt) %>
+												</time>
+												<a href="#" class="author category-post-logo"><span class="name">
+														<%= post.category.name %>
+													</span><img src="<%= post.category.image %>" alt="" /></a>
+											</div>
+
+										</header>
+										<a href="/posts/<%= post.id %>" class="image featured">
+											<img src="<%= post.image %>" alt="" />
+										</a>
+										<p>
+											<%- fixPrepositions(post.content) %>
+										</p>
+										<footer>
+											<ul class="actions">
+												<li><a href="/posts/<%= post.id %>" class="button large">Continue
+														Reading</a>
+												</li>
+											</ul>
+											<ul class="stats">
+												<li><a href="#">
+														<%= post.category.name %>
+													</a></li>
+												
+													<li>
+														<a href="#"
+															class="like-icon icon solid fa-heart <%= isAuthenticated ? '' : 'not-hover' %> <%= post.likedUsers && post.likedUsers.length > 0 ? 'active' : '' %>"
+															data-id="<%= post.id %>">
+															<%= post.likes %>
+														</a>
+													</li>
+												
+														<li>
+															<% if (isAuthenticated) { %>
+																<a href="/posts/<%= post.id %>#comments"
+																	class="icon solid fa-comment">
+																	<%= post.commentsCount || 0 %>
+																</a>
+																<% } else { %>
+															
+																		<a class="icon solid fa-comment not-active">
+																			<%= post.commentsCount || 0 %>
+																		</a>
+																		<% } %>
+
+														</li>
+											</ul>
+										</footer>
+									</article>
+									<% } %>
+										<% } else { %>
+											<h1>No Posts Found!</h1>
+											<% } %>
+
+												<!-- Pagination -->
+												<ul class="actions pagination">
+													 <% if (allPosts.page > 1) { %>
+														<li><a href="/?page=<%= allPosts.page - 1 %>" class="button large previous">Previous
+															Page</a></li>
+														<% } else { %>
+													<li><a href="" class="disabled button large previous">Previous
+															Page</a></li>
+														<% } %>
+													<% if (allPosts.page < allPosts.totalPages) { %>
+													<li><a href="/?page=<%= allPosts.page + 1 %>" class="button large next">Next Page</a></li>
+														<% } else { %>
+													<li><a href="" class="disabled button large next">Next Page</a></li>
+													<% } %>
+												</ul>
+
+						</div>
+
+						<!-- Sidebar -->
+						<section id="sidebar">
+
+							<!-- Intro -->
+							<section id="intro">
+								<a href="#" class="logo"><img src="images/logo.jpg" alt="" /></a>
+								<header>
+									<h2>Тема Дня — Каждый День</h2>
+									<p>Твой журнал обо всём важном и интересном</p>
+								</header>
+							</section>
+
+							<!-- Mini Posts -->
+							<section>
+								<h3>Всё, Что Важно</h3>
+								<p>3-5 случайных карточек</p>
+								<div class="mini-posts">
+									<% if (topPosts.length > 0) { %>
+									
+										<% for (let post of topPosts) { %>
+											<!-- Mini Post -->
+											<article class="mini-post">
+
+												<header>
+
+													<h3><a href="/posts/<%= post.id %>">
+															<%= post.title %>
+														</a></h3>
+													<div class="post-info">
+														<time class="published" datetime="<%= post.createdAt %>">
+															<%= formatDateOnly(post.createdAt) %>
+														</time>
+														<a href="#" class="published category-link">
+															<%= post.categoryName %>
+														</a>
+
+														<a href="#" class="author"><img src="" alt="" /></a>
+													</div>
+												</header>
+
+												<a href="single.html" class="image mini"><img class="img-mini"
+														src="<%= post.image %>" alt="" /></a>
+
+											</article>
+											<% } %>
+												<% } else { %>
+													<h1>No Posts Found!</h1>
+													<% } %>
+
+								</div>
+							</section>
+
+							<section>
+								<h3>Рекомендуемое вам</h3>
+								<p>ПОказывать 3-5 карточек из рекомендуемых постов с наивысших рейтингом</p>
+								<div class="mini-posts">
+									<% if (topPosts.length > 0) { %>
+									
+										<% for (let post of topPosts) { %>
+											<!-- Mini Post -->
+											<article class="mini-post">
+
+												<header>
+
+													<h3><a href="single.html">
+															<%= post.title %>
+														</a></h3>
+													<div class="post-info">
+														<time class="published" datetime="<%= post.createdAt %>">
+															<%= formatDateOnly(post.createdAt) %>
+														</time>
+														<a href="#" class="published category-link">
+															<%= post.categoryName %>
+														</a>
+
+														<a href="#" class="author"><img src="" alt="" /></a>
+													</div>
+												</header>
+
+												<a href="single.html" class="image mini"><img class="img-mini"
+														src="<%= post.image %>" alt="" /></a>
+
+											</article>
+											<% } %>
+												<% } else { %>
+													<h1>No Posts Found!</h1>
+													<% } %>
+
+								</div>
+							</section>
+
+							<!-- Posts List -->
+							<section>
+								<h3>Мир Вокруг Нас</h3>
+								<p>Самый новый пост в каждой категории</p>
+								<ul class="posts">
+									<% if (randomPosts.length> 0) { %>
+										<% for (let post of randomPosts) { %>
+											<li>
+												<article>
+													<header>
+														<h3><a href="single.html">
+																<%- fixPrepositions(post.title) %>
+															</a></h3>
+													</header>
+													<a href="single.html" class="image"><img
+															src="<%= post.categoryImage %>"
+															alt="<%= post.categoryName %>" /></a>
+
+												</article>
+											</li>
+											<% } %>
+												<% } else { %>
+													<h1>No Posts Found!</h1>
+													<% } %>
+								</ul>
+							</section>
+
+							<!-- About -->
+							<section class="blurb">
+								<h2>О блоге</h2>
+								<p> <%- fixPrepositions(`The Everything Journal — твой путеводитель по миру знаний, идей
+										и вдохновения.`) %></p>
+								<p> <%- fixPrepositions(` Здесь мы говорим обо всём: от кулинарии и путешествий до
+										технологий и программирования. `) %></p>
+
+								<p> <%- fixPrepositions(`Блог создан для тех, кто любит учиться, развиваться и
+										интересуется всем, что происходит вокруг. `) %></p>
+								<ul class="actions">
+									<li><a href="/about" class="button">Далее</a></li>
+								</ul>
+							</section>
+
+							<%- include('../includes/end.ejs') %>

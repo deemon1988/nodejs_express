@@ -12,8 +12,8 @@
                 <div id="main">
 
                     <!-- Post -->
-                    <% if (posts.length> 0) { %>
-                        <% for (let post of posts) { %>
+                  <% if (allPosts.posts.length > 0) { %>
+								<% for (let post of allPosts.posts) { %>
                             <article class="post">
                                 <header>
                                     <div class="title">
@@ -80,9 +80,9 @@
                         <h3>Всё, Что Важно</h3>
 
                         <div class="mini-posts">
-                            <% if (topPosts.length> 0) { %>
-                                <!-- <% posts.slice(0, 1) %> -->
-                                <% for (let post of topPosts) { %>
+                           	<% if (topPosts.length > 0) { %>
+									
+										<% for (let post of topPosts) { %>
                                     <!-- Mini Post -->
                                     <article class="mini-post">
 

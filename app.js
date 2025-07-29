@@ -53,9 +53,8 @@ app.use(
   })
 );
 
-
+// app.use(csrfProtection)
 app.use(flash());
-
 
 app.use((req, res, next) => {
   console.log(req.user)
@@ -83,6 +82,7 @@ app.use((req, res, next) => {
   res.locals.formatDateOnly = formatDateOnly;
   res.locals.fixPrepositions = fixPrepositions;
   app.locals.tinyApiKey = process.env.TINY_API_KEY;
+  // res.locals.csrfToken = req.csrfToken();
   next();
 });
 

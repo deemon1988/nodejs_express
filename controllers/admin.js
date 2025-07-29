@@ -8,6 +8,7 @@ const { cleanInput } = require("../util/sanitazeHtml");
 const path = require("path");
 const sanitizeHtml = require("sanitize-html");
 const createHtmlTemplate = require("../util/createHtml");
+const { validationResult } = require("express-validator");
 
 exports.postAddImage = (req, res) => {
   if (!req.file) {
@@ -27,12 +28,13 @@ exports.getAddPost = (req, res, next) => {
       editing: false,
       categories: categories,
       csrfToken: req.csrfToken(),
+      hasError: false
     });
   });
 };
 
 exports.postAddPost = (req, res, next) => {
-  const title = req.body.title;
+  const title = req.body.title.trim();
   const content = req.body.content;
   const categoryName = req.body.category;
   const user = req.user;
@@ -106,29 +108,29 @@ exports.postAddPost = (req, res, next) => {
 
 exports.postDeletePost = (req, res, next) => {
   const postId = req.body.postId;
-  Post.findOne({where: {id: postId, userId: req.user.id}})
+  Post.findOne({ where: { id: postId, userId: req.user.id } })
     .then((post) => {
-       if (!post) {
-        req.flash('error', 'У вас не прав для удаления поста')
+      if (!post) {
+        req.flash("error", "У вас не прав для удаления поста");
         throw new Error("Пост не найден");
-       }
+      }
       return post.destroy();
     })
     .then((result) => {
-      req.flash('success', 'Пост был удален')
+      req.flash("success", "Пост был удален");
       res.redirect("/admin/posts");
     })
     .catch((err) => {
-      console.log(err)
+      console.log(err);
       res.redirect("/admin/posts");
     });
 };
 
 exports.getAllPosts = (req, res, next) => {
-  let message = req.flash('error')
-  let success = req.flash('success')
-  message = message.length > 0 ? message[0] : null
-  success = success.length > 0 ? success[0] : null
+  let message = req.flash("error");
+  let success = req.flash("success");
+  message = message.length > 0 ? message[0] : null;
+  success = success.length > 0 ? success[0] : null;
 
   Post.findAll({
     where: { userId: req.user.id },
@@ -141,7 +143,7 @@ exports.getAllPosts = (req, res, next) => {
         path: "/admin/posts",
         csrfToken: req.csrfToken(),
         errorMessage: message,
-        successMessage: success
+        successMessage: success,
       });
     })
     .catch((err) => console.log(err));
@@ -150,28 +152,30 @@ exports.getAllPosts = (req, res, next) => {
 exports.getEditPost = (req, res, next) => {
   const editMode = req.query.edit;
   let existPost;
+
   if (!editMode) {
     return res.redirect("/admin/posts");
   }
   const postId = req.params.postId;
 
-  Post.findOne({where: {id: postId, userId: req.user.id}})
+  Post.findOne({ where: { id: postId, userId: req.user.id } })
     .then((post) => {
       if (!post) {
-        req.flash('error', 'Вы не можете редактировать этот пост')
+        req.flash("error", "Вы не можете редактировать этот пост");
         throw new Error("Пост не найден");
       }
       existPost = post;
       return Category.findAll();
     })
     .then((categories) => {
-      res.render("admin/edit-post-copy", {
+      res.render("admin/edit-post", {
         pageTitle: "Редактировать пост",
         path: "/admin/edit-post",
         editing: editMode,
         post: existPost,
         categories: categories,
         csrfToken: req.csrfToken(),
+        hasError: false
       });
     })
     .catch((err) => {
@@ -180,23 +184,69 @@ exports.getEditPost = (req, res, next) => {
     });
 };
 
-exports.postEditPost = (req, res, next) => {
+exports.postEditPost = async (req, res, next) => {
   const postId = req.body.postId;
-  const updatedTitle = req.body.title;
+  const updatedTitle = req.body.title.trim();
   const updatedContent = req.body.content;
   const categoryId = req.body.category;
+  const oldImage = req.body.oldImage;
+
+  if (!req.files) {
+    throw new Error("Ошибка создания поста");
+  }
+  const image = req.files["image"]
+    ? "/images/posts/" + req.files["image"][0].filename
+    : oldImage;
+  const cover = req.files["cover"]
+    ? "/images/posts/cover/" + req.files["cover"][0].filename
+    : null;
+
+  // Галерея — массив файлов
+  const gallery = req.files["gallery"]
+    ? req.files["gallery"].map(
+        (file) => "/images/posts/gallery/" + file.filename
+      )
+    : JSON.parse(req.body.oldGallery || '[]');
+
+  
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    console.log("Image", gallery);
+    return res.status(422).render("admin/edit-post", {
+      pageTitle: "Редактировать пост",
+      path: "/admin/edit-post",
+      editing: true,
+      hasError: true,
+      post: {
+        title: updatedTitle,
+        content: updatedContent,
+        image: image,
+        gallery: gallery
+      },
+      categories: [],
+      csrfToken: req.csrfToken(),
+    });
+  }
 
   Post.findByPk(postId)
     .then((post) => {
-      if(post.userId !== req.user.id) {
-        return res.redirect('/admin/posts')
+      if (post.userId !== req.user.id) {
+        return res.redirect("/admin/posts");
       }
-      let imageUrl = post.image;
       post.title = updatedTitle;
       post.content = updatedContent;
       post.categoryId = categoryId;
-      if (req.file) imageUrl = "/images/posts/" + req.file.filename;
-      post.image = imageUrl;
+      if (image) {
+        post.image = image;
+      }
+      if (cover) {
+        post.cover = cover;
+      }
+      if (gallery.length > 0) {
+        post.gallery = gallery;
+      }
+
       return post.save();
     })
     .then((result) => res.redirect("/admin/posts"))
@@ -274,28 +324,28 @@ exports.postDeleteCategory = (req, res, next) => {
     ],
   })
     .then((category) => {
-      console.log(category)
+      console.log(category);
       if (!category) {
-        req.flash('error', 'У вас нет прав для удаления категории')
-        throw new Error("Категория не найдена или не принадлежит пользователю")
+        req.flash("error", "У вас нет прав для удаления категории");
+        throw new Error("Категория не найдена или не принадлежит пользователю");
       }
       return category.destroy();
     })
     .then((result) => {
-      req.flash('success', 'Категория удалена')
+      req.flash("success", "Категория удалена");
       res.redirect("/admin/create-category");
     })
     .catch((err) => {
-      console.log("Ошибка удаления категории: ", err)
-      res.redirect("/admin/create-category")
+      console.log("Ошибка удаления категории: ", err);
+      res.redirect("/admin/create-category");
     });
 };
 
 exports.getCreateCategory = (req, res, next) => {
-  let success = req.flash('success')
-  let message = req.flash('error')
-  success = success.length > 0 ? success[0] : null
-  message = message.length > 0 ? message[0] : null
+  let success = req.flash("success");
+  let message = req.flash("error");
+  success = success.length > 0 ? success[0] : null;
+  message = message.length > 0 ? message[0] : null;
 
   const editMode = req.query.edit;
   let existsAliases;
@@ -326,7 +376,7 @@ exports.getCreateCategory = (req, res, next) => {
         editing: editMode,
         csrfToken: req.csrfToken(),
         errorMessage: message,
-        successMessage: success
+        successMessage: success,
       });
     })
     .catch((err) => console.log(err));
@@ -398,10 +448,10 @@ exports.postCreateCategory = (req, res, next) => {
 };
 
 exports.getEditCategory = (req, res, next) => {
-   let success = req.flash('success')
-  let message = req.flash('error')
-  success = success.length > 0 ? success[0] : null
-  message = message.length > 0 ? message[0] : null
+  let success = req.flash("success");
+  let message = req.flash("error");
+  success = success.length > 0 ? success[0] : null;
+  message = message.length > 0 ? message[0] : null;
 
   const editMode = req.query.edit;
   if (!editMode) {
@@ -412,7 +462,7 @@ exports.getEditCategory = (req, res, next) => {
   let updatedCategory;
   let existsAliases;
   Category.findOne({
-     where: { id: categoryId },
+    where: { id: categoryId },
     include: [
       {
         model: Alias,
@@ -420,12 +470,12 @@ exports.getEditCategory = (req, res, next) => {
         where: {
           userId: req.user.id,
         },
-      }
-    ]
+      },
+    ],
   })
     .then((category) => {
       if (!category) {
-         req.flash('error', 'Категория для редактирования не найдена')
+        req.flash("error", "Категория для редактирования не найдена");
         throw new Error("Категория не существует");
       }
       updatedCategory = category;
@@ -450,13 +500,13 @@ exports.getEditCategory = (req, res, next) => {
         category: updatedCategory,
         categories: categories,
         csrfToken: req.csrfToken(),
-         errorMessage: message,
-        successMessage: success
+        errorMessage: message,
+        successMessage: success,
       });
     })
     .catch((err) => {
-      console.log(err)
-      res.redirect('/admin/create-category')
+      console.log(err);
+      res.redirect("/admin/create-category");
     });
 };
 
@@ -490,8 +540,8 @@ exports.postEditCategory = (req, res, next) => {
       return category.save();
     })
     .then((result) => {
-      req.flash('success', 'Категория успешно отредактирована!')
-      res.redirect("/admin/create-category")
+      req.flash("success", "Категория успешно отредактирована!");
+      res.redirect("/admin/create-category");
     })
     .catch((err) => console.log(err));
 };

@@ -3860,7 +3860,8 @@ body.is-menu-visible #menu {
 	gap: 20px;
 }
 
-.auth-helper.reset, .auth-helper.register {
+.auth-helper.reset,
+.auth-helper.register {
 	flex-direction: row;
 	gap: 20px;
 }
@@ -4172,4 +4173,20 @@ body.is-menu-visible #menu {
 
 #main.single-main {
 	width: 100%;
+}
+
+#signin-form input.invalid,
+#register-form input.invalid {
+	border-color: #c62828;
+}
+
+.post-images-main {
+	display: flex;
+	gap: 20px;
+}
+
+.post-gallery {
+	display: flex;
+	gap: 20px;
+	flex-wrap: wrap;
 }
