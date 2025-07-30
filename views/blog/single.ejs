@@ -47,7 +47,7 @@
                                 alt="<%= post.title %>" /></span>
                         <div class="post-content">
                             <p>
-                                <% if (post.gallery) { %>
+                                <% if (post.gallery && post.gallery.length > 0) { %>
                                     <span class="image left">
                                         <img src="<%= post.gallery[0] %>" alt="">
                                     </span>
@@ -55,11 +55,11 @@
                                         <%- fixPrepositions(post.content) %>
                             </p>
                         </div>
-                        <% if (post.gallery) { %>
+                        <% if (post.gallery && post.gallery.length > 0) { %>
                             <div class="box alt">
                                 <div class="row gtr-uniform">
                                     <div class="col-12">
-                                        <span class="image fit"><img src="<%= post.gallery[0] %>" alt=""></span>
+                                        <span class="image fit"><img src="" alt=""></span>
                                     </div>
                                     <% for (let image of post.gallery) { %>
                                         <div class="col-4">

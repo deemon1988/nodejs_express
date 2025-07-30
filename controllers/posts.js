@@ -53,7 +53,7 @@ exports.getIndexPage = async (req, res, next) => {
       return getRandomPosts(posts, 5);
     })
     .then((randomPosts) => {
-      res.render("blog/index", {
+      res.render("blog/blog", {
         pageTitle: "Главная страница",
         topPosts: topPosts,
         allPosts: viewHistory ? mergedPosts : allPostsData,

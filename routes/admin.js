@@ -36,8 +36,11 @@ router.post(
   ]),
   csrfProtection,
   [
-    body("title", 'Минимальная длина 5 символов')
-    .isLength({ min: 5 })
+    body("title", "Минимальная длина заголовка 5 символов").isLength({
+      min: 5,
+    }),
+    body("content", "Описание не может быть пустым").notEmpty(),
+    body("category", "Категория не выбрана").notEmpty(),
   ],
   adminController.postEditPost
 );
@@ -56,8 +59,16 @@ router.post(
     { name: "cover", maxCount: 1 },
     { name: "gallery", maxCount: 5 },
   ]),
+  csrfProtection,
   isAuth,
   isAdmin,
+  [
+    body("title", "Минимальная длина заголовка 5 символов").isLength({
+      min: 5,
+    }),
+    body("content", "Описание не может быть пустым").notEmpty(),
+    body("category", "Категория не выбрана").notEmpty(),
+  ],
   adminController.postAddPost
 );
 

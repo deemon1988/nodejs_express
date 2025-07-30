@@ -3570,7 +3570,7 @@ body.auth {
 
 #sidebar {
 	margin-right: 3em;
-	min-width: 22em;
+	/* min-width: 22em; */
 	width: 22em;
 }
 
@@ -4176,7 +4176,10 @@ body.is-menu-visible #menu {
 }
 
 #signin-form input.invalid,
-#register-form input.invalid {
+#register-form input.invalid,
+#edit-create-post-form input.invalid,
+#edit-create-post-form textarea.invalid,
+#edit-create-post-form select.invalid {
 	border-color: #c62828;
 }
 

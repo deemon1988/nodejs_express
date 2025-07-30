@@ -9,6 +9,7 @@ const path = require("path");
 const sanitizeHtml = require("sanitize-html");
 const createHtmlTemplate = require("../util/createHtml");
 const { validationResult } = require("express-validator");
+const { deleteFile, deleteFiles } = require("../util/fileUtils");
 
 exports.postAddImage = (req, res) => {
   if (!req.file) {
@@ -28,82 +29,132 @@ exports.getAddPost = (req, res, next) => {
       editing: false,
       categories: categories,
       csrfToken: req.csrfToken(),
-      hasError: false
+      hasError: false,
+      errorMessage: req.flash("error") || null,
+      successMessage: req.flash("success") || null,
+      validationErrors: [],
     });
   });
 };
 
-exports.postAddPost = (req, res, next) => {
-  const title = req.body.title.trim();
-  const content = req.body.content;
-  const categoryName = req.body.category;
-  const user = req.user;
+exports.postAddPost = async (req, res, next) => {
+  try {
+    const title = req.body.title.trim();
+    const content = req.body.content;
+    const categoryId = req.body.category;
+    const user = req.user;
 
-  const cleanTitle = sanitizeHtml(title, {
-    allowedTags: [],
-    allowedAttributes: {},
-  });
-  const cleanContent = cleanInput(content);
-  const cleanCategoryName = sanitizeHtml(categoryName, {
-    allowedTags: [],
-    allowedAttributes: {},
-  });
-
-  let createdPost;
-  let category;
-  if (!req.files) {
-    throw new Error("Ошибка создания поста");
-  }
-  const image = req.files["image"]
-    ? "/images/posts/" + req.files["image"][0].filename
-    : null;
-  const cover = req.files["cover"]
-    ? "/images/posts/cover/" + req.files["cover"][0].filename
-    : null;
-
-  // Галерея — массив файлов
-  const gallery = req.files["gallery"]
-    ? req.files["gallery"].map(
-        (file) => "/images/posts/gallery/" + file.filename
-      )
-    : [];
-
-  Category.findOne({ where: { name: cleanCategoryName } })
-    .then((foundCategory) => {
-      category = foundCategory;
-
-      return user.createPost({
-        title: cleanTitle,
-        content: cleanContent,
-        image: image,
-        cover: cover,
-        gallery: gallery,
-        likes: 0,
-      });
-    })
-    .then((post) => {
-      createdPost = post;
-      return post.setCategory(category);
-    })
-    .then(() => {
-      return Profile.findOne({ where: { userId: user.id } });
-    })
-    .then((profile) => {
-      UserActivity.create({
-        profileId: profile.id,
-        actionType: "post_created",
-        targetType: "post",
-        targetId: createdPost.id,
-        description: `Добавлен пост "${createdPost.title}"`,
-      });
-    })
-    .then((result) => {
-      return res.redirect("/admin/posts");
-    })
-    .catch((err) => {
-      console.log(err.message);
-      res.redirect("/admin/create-post");
+    const cleanTitle = sanitizeHtml(title, {
+      allowedTags: [],
+      allowedAttributes: {},
     });
+    const cleanContent = cleanInput(content);
+
+    const category = await Category.findByPk(Number(categoryId));
+  
+    let image;
+    let cover;
+    let gallery;
+    // Изображение
+    if (req.files && req.files["image"]) {
+      // Приоритет 1: новый файл загружен
+      image = "/images/posts/" + req.files["image"][0].filename;
+    } else if (req.session.tempImage) {
+      // Приоритет 2: файл из сессии (был загружен ранее)
+      image = req.session.tempImage;
+    } else null;
+
+    // Обложка
+    if (req.files && req.files["cover"]) {
+      // Приоритет 1: новый файл загружен
+      cover = "/images/posts/cover/" + req.files["cover"][0].filename;
+    } else if (req.session.tempCover) {
+      // Приоритет 2: файл из сессии (был загружен ранее)
+      cover = req.session.tempCover;
+    } else null;
+
+    // Галерея
+    if(req.files && req.files['gallery']) {
+      gallery = req.files['gallery'].map(file => "/images/posts/gallery/" + file.filename)
+    } else if(req.session.tempGallery) {
+      gallery = req.session.tempGallery.map(file => file)
+    } else []
+
+    const errors = validationResult(req);
+    // Если есть ошибки валидации
+    if (!errors.isEmpty()) {
+      const categories = await Category.findAll();
+      // Если был загружен файл с формы, то проверяем session и удаляем если файл с диска
+      // Записываем в session новый путь к файлу
+      if (req.files["image"]) {
+        if(req.session.tempImage) deleteFile(req.session.tempImage)
+        req.session.tempImage = "/images/posts/" + req.files["image"][0].filename;
+      }
+      if (req.files["cover"]) {
+        if(req.session.tempCover) deleteFile(req.session.tempCover)
+        req.session.tempCover = "/images/posts/cover/" + req.files["cover"][0].filename;
+      }
+      if (req.files["gallery"]) {
+        if(req.session.tempGallery) deleteFiles(req.session.tempGallery)
+        req.session.tempGallery = req.files["gallery"].map(file => "/images/posts/gallery/" + file.filename);
+      }
+      console.log(cover)
+      return res.status(422).render("admin/edit-post", {
+        post: {
+          title: cleanTitle,
+          content: cleanContent,
+          categoryId: category ? category.id : null,
+          image: image,
+          cover: cover,
+          gallery: gallery,
+          likes: 0,
+        },
+        pageTitle: "Создать пост",
+        path: "/admin/create-post",
+        editing: false,
+        categories: categories,
+        csrfToken: req.csrfToken(),
+        hasError: true,
+        errorMessage: errors.array()[0].msg,
+        successMessage: null,
+        validationErrors: errors.array(),
+      });
+    }
+
+    const userProfile = await Profile.findOne({ where: { userId: user.id } });
+    if (!userProfile) {
+      throw new Error("Профиль пользователя не найден");
+    }
+
+    const createdPost = await user.createPost({
+      title: cleanTitle,
+      content: cleanContent,
+      image: image,
+      cover: cover,
+      gallery: gallery,
+      likes: 0,
+      categoryId: category.id,
+    });
+
+    const userActivity = await UserActivity.create({
+      profileId: userProfile.id,
+      actionType: "post_created",
+      targetType: "post",
+      targetId: createdPost.id,
+      description: `Добавлен пост "${createdPost.title}"`,
+    });
+    req.session.tempImage = null
+    req.session.tempCover = null
+    req.session.tempGallery = null
+    req.flash("success", "Пост успешно добавлен!");
+    return res.redirect("/admin/posts");
+
+  } catch (err) {
+    console.error("Ошибка при добавлении поста:", err);
+    req.flash("error", `Не удалось добавить пост - ${err.message}`);
+    req.session.tempImage = null
+    res.redirect("/admin/create-post");
+  }
 };
 
 exports.postDeletePost = (req, res, next) => {
@@ -114,6 +165,11 @@ exports.postDeletePost = (req, res, next) => {
         req.flash("error", "У вас не прав для удаления поста");
         throw new Error("Пост не найден");
       }
+      
+      if(post.image) deleteFile(post.image)
+      if(post.cover) deleteFile(post.cover)
+      if(post.gallery) deleteFiles(post.gallery)
+      
       return post.destroy();
     })
     .then((result) => {
@@ -175,7 +231,9 @@ exports.getEditPost = (req, res, next) => {
         post: existPost,
         categories: categories,
         csrfToken: req.csrfToken(),
-        hasError: false
+        errorMessage: null,
+        successMessage: null,
+        validationErrors: [],
       });
     })
     .catch((err) => {
@@ -185,72 +243,119 @@ exports.getEditPost = (req, res, next) => {
 };
 
 exports.postEditPost = async (req, res, next) => {
-  const postId = req.body.postId;
-  const updatedTitle = req.body.title.trim();
-  const updatedContent = req.body.content;
-  const categoryId = req.body.category;
-  const oldImage = req.body.oldImage;
+  try {
+    const postId = req.body.postId;
+    const updatedTitle = req.body.title.trim();
+    const updatedContent = req.body.content;
+    const categoryId = Number(req.body.category);
 
-  if (!req.files) {
-    throw new Error("Ошибка создания поста");
-  }
-  const image = req.files["image"]
-    ? "/images/posts/" + req.files["image"][0].filename
-    : oldImage;
-  const cover = req.files["cover"]
-    ? "/images/posts/cover/" + req.files["cover"][0].filename
-    : null;
+    const updatedPost = await Post.findByPk(postId);
+    if (!updatedPost || updatedPost.userId !== req.user.id) {
+      return res.redirect("/admin/posts");
+    }
 
-  // Галерея — массив файлов
-  const gallery = req.files["gallery"]
-    ? req.files["gallery"].map(
+    const oldImage = updatedPost.image;
+    const oldCover = updatedPost.cover;
+    const oldGallery = updatedPost.gallery;
+
+    let image = oldImage;
+    let cover = oldCover;
+    let gallery = oldGallery;
+
+    // Изображение
+    if (req.files && req.files["image"]) {
+      // Приоритет 1: новый файл загружен
+      image = "/images/posts/" + req.files["image"][0].filename;
+    } else if (req.session.tempImage) {
+      // Приоритет 2: файл из сессии (был загружен ранее)
+      image = req.session.tempImage;
+    }
+
+    // Обложка
+    if (req.files && req.files["cover"]) {
+      cover = "/images/posts/cover/" + req.files["cover"][0].filename;
+    } else if (req.session.tempCover) {
+      cover = req.session.tempCover;
+    }
+
+    // Галерея — массив файлов
+    if (req.files && req.files["gallery"]) {
+      gallery = req.files["gallery"].map(
         (file) => "/images/posts/gallery/" + file.filename
-      )
-    : JSON.parse(req.body.oldGallery || '[]');
+      );
+    } else if (req.session.tempGallery) {
+      gallery = req.session.tempGallery;
+    }
 
-  
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    console.log(errors.array());
-    console.log("Image", gallery);
-    return res.status(422).render("admin/edit-post", {
-      pageTitle: "Редактировать пост",
-      path: "/admin/edit-post",
-      editing: true,
-      hasError: true,
-      post: {
-        title: updatedTitle,
-        content: updatedContent,
-        image: image,
-        gallery: gallery
-      },
-      categories: [],
-      csrfToken: req.csrfToken(),
-    });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      if (req.files["image"]) {
+        if (req.session.tempImage) deleteFile(req.session.tempImage);
+        req.session.tempImage = "/images/posts/" + req.files["image"][0].filename;
+      }
+      if (req.files["cover"]) {
+         if (req.session.tempCover) deleteFile(req.session.tempImage);
+        req.session.tempCover ="/images/posts/cover/" + req.files["cover"][0].filename;
+      }
+      if (req.files["gallery"]) {
+        if(req.session.tempGallery) deleteFiles(req.session.tempGallery)
+        req.session.tempGallery = req.files["gallery"].map(
+          (file) => "/images/posts/gallery/" + file.filename
+        );
+      }
+
+      const categories = await Category.findAll();
+
+      return res.status(422).render("admin/edit-post", {
+        pageTitle: "Редактировать пост",
+        path: "/admin/edit-post",
+        editing: true,
+        hasError: true,
+        post: {
+          id: postId,
+          title: updatedTitle,
+          content: updatedContent,
+          image: req.session.tempImage || oldImage,
+          cover: req.session.tempCover || oldCover,
+          gallery: req.session.tempGallery || oldGallery,
+          categoryId: categoryId,
+        },
+        categories: categories,
+        csrfToken: req.csrfToken(),
+        errorMessage: errors.array()[0].msg,
+        validationErrors: errors.array(),
+        successMessage: null,
+      });
+    }
+
+    // Если был получен файл с формы и у поста есть старое изображение
+    // удаляем старое изображение с диска
+    if (req.files["image"] || req.session.tempImage && oldImage) {
+      deleteFile(oldImage);
+    }
+
+    // Если было загружено изображение с формы и есть ранее сохраненное изображение,
+    // то удаляем изображение с диска по пути сохраненному в сессии
+    if (req.files["image"] && req.session.tempImage) {
+      deleteFile(req.session.tempImage);
+    }
+
+    updatedPost.title = updatedTitle;
+    updatedPost.content = updatedContent;
+    updatedPost.categoryId = categoryId;
+    updatedPost.image = image;
+    updatedPost.cover = cover;
+    updatedPost.gallery = gallery;
+
+    await updatedPost.save();
+
+    req.session.tempImage = null;
+    req.session.tempCover = null;
+    req.session.tempGallery = null;
+    res.redirect("/admin/posts");
+  } catch (err) {
+    console.log(err);
   }
-
-  Post.findByPk(postId)
-    .then((post) => {
-      if (post.userId !== req.user.id) {
-        return res.redirect("/admin/posts");
-      }
-      post.title = updatedTitle;
-      post.content = updatedContent;
-      post.categoryId = categoryId;
-      if (image) {
-        post.image = image;
-      }
-      if (cover) {
-        post.cover = cover;
-      }
-      if (gallery.length > 0) {
-        post.gallery = gallery;
-      }
-
-      return post.save();
-    })
-    .then((result) => res.redirect("/admin/posts"))
-    .catch((err) => console.log(err));
 };
 
 exports.postCreateAlias = (req, res, next) => {

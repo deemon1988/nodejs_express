@@ -4,7 +4,18 @@
     </head>
 
     <body class="is-preload single">
-
+        <% if(errorMessage && errorMessage.length> 0) { %>
+            <div class="flash-message error" style="display: block">
+                <%= errorMessage %>
+                    <span class="close-button">&times;</span>
+            </div>
+        <% } %>
+        <% if(successMessage && successMessage.length> 0) { %>
+        <div class="flash-message success" style="display: block">
+            <%= successMessage %>
+                <span class="close-button">&times;</span>
+        </div>
+        <% } %>
         <!-- Wrapper -->
         <div id="wrapper">
             <%- include('../includes/navigation.ejs') %>
@@ -15,26 +26,36 @@
                     </h1>
 
                     <form action="/admin/<% if (editing) { %>edit-post<% } else {  %>create-post<% } %>" method="post"
-                        enctype="multipart/form-data">
+                        enctype="multipart/form-data" id="edit-create-post-form">
                         <% if (editing) { %>
                             <input type="hidden" name="postId" value="<%= post.id %>">
                             <% } %>
                                 <div>
                                     <label for="title">Заголовок</label>
-                                    <input type="text" id="title" name="title" required
-                                        value="<% if (editing || hasError) { %><%=post.title%><% } %>" />
+                                    <input class="<%= validationErrors.find(e => e.path === 'title') ? 'invalid' : '' %>"
+                                    type="text" 
+                                    id="title" 
+                                    name="title" 
+                                    required
+                                    value="<% if (editing || hasError) { %><%=post.title%><% } %>" />
                                 </div>
 
                                 <div>
                                     <label for="content">Содержание</label>
                                     <textarea id="content"
-                                        name="content"><% if (editing) { %><%=post.content%><% } %></textarea>
+                                        class="<%= validationErrors.find(e => e.path === 'content') ? 'invalid' : '' %>"
+                                        name="content"><% if (editing || hasError) { %><%=post.content%><% } %></textarea>
                                 </div>
 
                                 <div>
                                     <label for="category">Категория</label>
-                                    <select id="category" name="category">
-                                        <% if (editing) { %>
+                                    <select 
+                                        id="category" 
+                                        name="category"
+                                        class="<%= validationErrors.find(e => e.path === 'category') ? 'invalid' : '' %>"
+                                    >
+                                        <% if (editing || hasError) { %>
+                                              <option value="" selected>-- Выберите категорию --</option>
                                             <% for (let category of categories) { %>
                                                 <option value="<%= category.id %>" <%=post.categoryId===category.id
                                                     ? 'selected' : '' %> >
@@ -45,7 +66,7 @@
                                                     <% } else { %>
                                                         <option value="">-- Выберите категорию --</option>
                                                         <% for (let category of categories) { %>
-                                                            <option value="<%= category.name %>">
+                                                            <option value="<%= category.id %>">
                                                                 <%= category.name %>
                                                             </option>
                                                             <% } %>
@@ -61,9 +82,7 @@
                                                 <img src="<%= post.image %>" alt="<%= post.title %>"
                                                     style="max-width: 300px; max-height: 300px;">
                                             </div>
-                                            <input type="hidden" name="oldImage" value="<%= post.image %>" />
-                                            <input type="hidden" name="oldCover" value="<%= post.cover %>" />
-                                            <input type="hidden" name="oldGallery" value='<%= JSON.stringify(post.gallery) %>' />
+                                           
                                             <% } %>
                                             <input type="file" id="image" name="image" accept="image/*" />
                                                 
@@ -71,7 +90,7 @@
 
                                     <div class="post-image">
                                         <label for="cover">Обложка</label>
-                                        <% if (editing) { %>
+                                        <% if (editing || hasError) { %>
                                             <div>
                                                 <img src="<%= post.cover %>" alt=""
                                                     style="max-width: 300px; max-height: 300px;">
@@ -85,7 +104,7 @@
                                 
                                     <div class="post-image">
                                         <label for="gallery">Галерея</label>
-                                        <% if (editing) { %>
+                                        <% if (editing || hasError ) { %>
                                             <div class="post-gallery">
                                                 <% if (post.gallery && post.gallery.length> 0) { %>
                                                     <% for(let image of post.gallery) { %>

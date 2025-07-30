@@ -16,7 +16,7 @@ const sessionStore = new pgSession({
   createTableIfMissing: true,
   pruneSessionInterval: 60 * 60 * 24, // Чистка раз в день
 });
-const csrfProtection = csrf();
+// const csrfProtection = csrf();
 
 const adminRoutes = require("./routes/admin.js");
 const blogRoutes = require("./routes/blog.js");
@@ -57,8 +57,6 @@ app.use(
 app.use(flash());
 
 app.use((req, res, next) => {
-  console.log(req.user)
-  console.log(req.session.user)
   if (!req.session.user) {
     return next();
   }

@@ -2,6 +2,12 @@
     </head>
 
     <body class="is-preload">
+        <% if(successMessage && successMessage.length> 0) { %>
+			<div class="flash-message success" style="display: block">
+				<%= successMessage %>
+					<span class="close-button">&times;</span>
+			</div>
+			<% } %>
 
         <!-- Wrapper -->
         <div id="wrapper">
@@ -10,17 +16,17 @@
 
                 <!-- Main -->
                 <div id="main">
-
+                    <p>Показывать посты упорядоченные по дате, а если есть рекомендуемые, то сначала их</p>
                     <!-- Post -->
                   <% if (allPosts.posts.length > 0) { %>
-								<% for (let post of allPosts.posts) { %>
+						<% for (let post of allPosts.posts) { %>
                             <article class="post">
                                 <header>
                                     <div class="title">
                                         <h2><a href="/posts/<%= post.id %>">
                                                 <%- fixPrepositions(post.title) %>
                                             </a></h2>
-                                        <p>Lorem ipsum dolor amet nullam consequat etiam feugiat</p>
+                                        <p><%= post.content.substring(0, 50) %>...</p>
                                     </div>
                                     <div class="meta">
                                         <time class="published" datetime="<%= post.createdAt %>">
