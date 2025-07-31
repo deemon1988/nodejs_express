@@ -41,6 +41,7 @@ exports.postAddPost = async (req, res, next) => {
   try {
     const title = req.body.title.trim();
     const content = req.body.content;
+    const preview = req.body.preview;
     const categoryId = req.body.category;
     const user = req.user;
 
@@ -49,6 +50,7 @@ exports.postAddPost = async (req, res, next) => {
       allowedAttributes: {},
     });
     const cleanContent = cleanInput(content);
+    const cleanPreview = cleanInput(preview);
 
     const category = await Category.findByPk(Number(categoryId));
   
@@ -103,6 +105,7 @@ exports.postAddPost = async (req, res, next) => {
         post: {
           title: cleanTitle,
           content: cleanContent,
+          preview: cleanPreview,
           categoryId: category ? category.id : null,
           image: image,
           cover: cover,
@@ -129,6 +132,7 @@ exports.postAddPost = async (req, res, next) => {
     const createdPost = await user.createPost({
       title: cleanTitle,
       content: cleanContent,
+      preview: cleanPreview,
       image: image,
       cover: cover,
       gallery: gallery,
@@ -247,6 +251,7 @@ exports.postEditPost = async (req, res, next) => {
     const postId = req.body.postId;
     const updatedTitle = req.body.title.trim();
     const updatedContent = req.body.content;
+    const updatedPreview = req.body.preview;
     const categoryId = Number(req.body.category);
 
     const updatedPost = await Post.findByPk(postId);
@@ -315,6 +320,7 @@ exports.postEditPost = async (req, res, next) => {
           id: postId,
           title: updatedTitle,
           content: updatedContent,
+          preview: updatedPreview,
           image: req.session.tempImage || oldImage,
           cover: req.session.tempCover || oldCover,
           gallery: req.session.tempGallery || oldGallery,
@@ -330,7 +336,7 @@ exports.postEditPost = async (req, res, next) => {
 
     // Если был получен файл с формы и у поста есть старое изображение
     // удаляем старое изображение с диска
-    if (req.files["image"] || req.session.tempImage && oldImage) {
+    if ((req.files["image"] || req.session.tempImage) && oldImage) {
       deleteFile(oldImage);
     }
 
@@ -342,6 +348,7 @@ exports.postEditPost = async (req, res, next) => {
 
     updatedPost.title = updatedTitle;
     updatedPost.content = updatedContent;
+    updatedPost.preview = updatedPreview;
     updatedPost.categoryId = categoryId;
     updatedPost.image = image;
     updatedPost.cover = cover;

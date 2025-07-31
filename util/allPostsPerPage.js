@@ -1,4 +1,3 @@
-const { Op, where } = require("sequelize");
 const Post = require("../models/post");
 const Category = require("../models/category");
 const Comment = require("../models/comment");
@@ -6,7 +5,7 @@ const User = require("../models/user");
 
 async function getAllPostsOnPage(userId, page = 1, limit = 10, postsIds) {
   try {
-     // Определяем базовое условие WHERE
+    // Определяем базовое условие WHERE
     const where = {};
 
     // Если переданы postsIds — добавляем условие
@@ -15,7 +14,7 @@ async function getAllPostsOnPage(userId, page = 1, limit = 10, postsIds) {
     }
     // 3. Общее количество постов (для пагинации)
     const total = await Post.count({
-       where: postsIds ? { id: postsIds } : {},
+      where: postsIds ? { id: postsIds } : {},
     });
 
     if (total === 0) {
@@ -36,20 +35,20 @@ async function getAllPostsOnPage(userId, page = 1, limit = 10, postsIds) {
           model: Category,
           as: "category",
         },
-         {
-        model: Comment,
-        as: "comments",
-        attributes: [],
-        required: false,
-      },
-      {
-        model: User,
-        as: "likedUsers",
-        attributes: ["id"], // нужно, чтобы мы могли проверить id
-        through: { attributes: [] },
-        where: { id: userId }, //userId ? { id: userId } : undefined,
-        required: false,
-      },
+        {
+          model: Comment,
+          as: "comments",
+          // attributes: ['id', 'userId', 'postId'],
+          required: false,
+        },
+        {
+          model: User,
+          as: "likedUsers",
+          attributes: ["id"], // нужно, чтобы мы могли проверить id
+          through: { attributes: [] },
+          where: { id: userId }, //userId ? { id: userId } : undefined,
+          required: false,
+        },
       ],
       limit,
       offset,

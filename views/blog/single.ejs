@@ -23,7 +23,7 @@
             <%- include('../includes/navigation.ejs') %>
 
                 <!-- Main -->
-                <div id="main">
+                <div id="main" class="post-single">
 
                     <!-- Post -->
                     <article class="post">
@@ -43,18 +43,14 @@
                                     </span><img src="<%= post.category.image %>" alt="" /></a>
                             </div>
                         </header>
-                        <span class="image featured cover-single"><img src="<%= post.image %>"
+                        <span class="image featured cover-single <%= post.image ? '' : 'hidden' %>"><img src="<%= post.image %>"
                                 alt="<%= post.title %>" /></span>
-                        <div class="post-content">
+                        <!-- <div class="post-content"> -->
                             <p>
-                                <% if (post.gallery && post.gallery.length > 0) { %>
-                                    <span class="image left">
-                                        <img src="<%= post.gallery[0] %>" alt="">
-                                    </span>
-                                    <% } %>
-                                        <%- fixPrepositions(post.content) %>
+                                <%- fixPrepositions(post.content) %>
                             </p>
-                        </div>
+                        <!-- </div> -->
+                       
                         <% if (post.gallery && post.gallery.length > 0) { %>
                             <div class="box alt">
                                 <div class="row gtr-uniform">

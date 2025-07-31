@@ -29,7 +29,6 @@
 												<h2><a href="/posts/<%= post.id %>">
 														<%- fixPrepositions(post.title) %>
 													</a></h2>
-												<p><%= post.content.substring(0, 100) %>...</p>
 											</div>
 											<div class="meta">
 												<time class="published" datetime="<%= post.createdAt %>">
@@ -39,13 +38,12 @@
 														<%= post.category.name %>
 													</span><img src="<%= post.category.image %>" alt="" /></a>
 											</div>
-
 										</header>
 										<a href="/posts/<%= post.id %>" class="image featured">
 											<img src="<%= post.image %>" alt="" />
 										</a>
 										<p>
-											<%- fixPrepositions(post.content) %>
+											<%- fixPrepositions(post.preview) %>
 										</p>
 										<footer>
 											<ul class="actions">

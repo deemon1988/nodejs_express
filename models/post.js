@@ -13,6 +13,10 @@ const Post = sequelize.define("post", {
     type: Sequelize.STRING,
     allowNull: false,
   },
+  preview: {
+    type: Sequelize.TEXT,
+    allowNull: true,
+  },
   content: {
     type: Sequelize.TEXT,
     allowNull: false,
