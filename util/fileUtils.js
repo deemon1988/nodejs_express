@@ -26,7 +26,11 @@ function deleteFile(relativePath) {
  */
 function deleteFiles(filePaths) {
   if (!Array.isArray(filePaths)) return;
-  filePaths.forEach(deleteFile);
+  filePaths.forEach((filePath) => {
+    // Убираем протокол и домен, если есть
+    const parsedPath = filePath.replace(/^https?:\/\/[^\/]+/, "");
+    deleteFile(parsedPath);
+  });
 }
 
 module.exports = {

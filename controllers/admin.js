@@ -10,15 +10,36 @@ const sanitizeHtml = require("sanitize-html");
 const createHtmlTemplate = require("../util/createHtml");
 const { validationResult } = require("express-validator");
 const { deleteFile, deleteFiles } = require("../util/fileUtils");
+const Image = require("../models/image");
+const { getContentImages } = require("../util/contentImages");
+const { Op } = require("sequelize");
 
-exports.postAddImage = (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "Файл не загружен" });
+exports.postAddImage = async (req, res) => {
+  try {
+    const file = req.file;
+    if (!req.file) {
+      return res.status(400).json({ error: "Файл не загружен" });
+    }
+
+    // Сохраняем метаданные в БД
+    const image = new Image({
+      filename: file.filename,
+      path: `${req.protocol}://${req.get('host')}/images/posts/tinymce/${file.filename}`, // или req.path динамически
+      size: file.size,
+      mimetype: file.mimetype,
+      // postId пока null — неизвестен
+    });
+    await image.save()
+    // Возвращаем URL для TinyMCE
+    console.log("Путь до файла", image.path)
+    res.json({
+      location: image.path
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Upload failed' });
   }
-  // Путь, который вернётся в редактор
-  const imageUrl = `/images/posts/${req.file.filename}`;
-  // TinyMCE ожидает { location: '...' }
-  res.json({ location: imageUrl });
+
 };
 
 exports.getAddPost = (req, res, next) => {
@@ -53,7 +74,7 @@ exports.postAddPost = async (req, res, next) => {
     const cleanPreview = cleanInput(preview);
 
     const category = await Category.findByPk(Number(categoryId));
-  
+
     let image;
     let cover;
     let gallery;
@@ -76,11 +97,11 @@ exports.postAddPost = async (req, res, next) => {
     } else null;
 
     // Галерея
-    if(req.files && req.files['gallery']) {
+    if (req.files && req.files['gallery']) {
       gallery = req.files['gallery'].map(file => "/images/posts/gallery/" + file.filename)
-    } else if(req.session.tempGallery) {
+    } else if (req.session.tempGallery) {
       gallery = req.session.tempGallery.map(file => file)
-    } else []
+    } else[]
 
     const errors = validationResult(req);
     // Если есть ошибки валидации
@@ -89,15 +110,15 @@ exports.postAddPost = async (req, res, next) => {
       // Если был загружен файл с формы, то проверяем session и удаляем если файл с диска
       // Записываем в session новый путь к файлу
       if (req.files["image"]) {
-        if(req.session.tempImage) deleteFile(req.session.tempImage)
+        if (req.session.tempImage) deleteFile(req.session.tempImage)
         req.session.tempImage = "/images/posts/" + req.files["image"][0].filename;
       }
       if (req.files["cover"]) {
-        if(req.session.tempCover) deleteFile(req.session.tempCover)
+        if (req.session.tempCover) deleteFile(req.session.tempCover)
         req.session.tempCover = "/images/posts/cover/" + req.files["cover"][0].filename;
       }
       if (req.files["gallery"]) {
-        if(req.session.tempGallery) deleteFiles(req.session.tempGallery)
+        if (req.session.tempGallery) deleteFiles(req.session.tempGallery)
         req.session.tempGallery = req.files["gallery"].map(file => "/images/posts/gallery/" + file.filename);
       }
       console.log(cover)
@@ -140,6 +161,20 @@ exports.postAddPost = async (req, res, next) => {
       categoryId: category.id,
     });
 
+    const usedImages = getContentImages(cleanContent)
+    console.log(usedImages)
+    console.log(createdPost.id)
+    await Image.update({
+      postId: createdPost.id,
+    },
+      {
+        where: {
+          path: { [Op.in]: usedImages }
+        }
+      }
+    )
+
+
     const userActivity = await UserActivity.create({
       profileId: userProfile.id,
       actionType: "post_created",
@@ -156,34 +191,38 @@ exports.postAddPost = async (req, res, next) => {
   } catch (err) {
     console.error("Ошибка при добавлении поста:", err);
     req.flash("error", `Не удалось добавить пост - ${err.message}`);
+    // if(createdPost) {}
     req.session.tempImage = null
+    req.session.tempCover = null
+    req.session.tempGallery = null
     res.redirect("/admin/create-post");
   }
 };
 
-exports.postDeletePost = (req, res, next) => {
-  const postId = req.body.postId;
-  Post.findOne({ where: { id: postId, userId: req.user.id } })
-    .then((post) => {
-      if (!post) {
-        req.flash("error", "У вас не прав для удаления поста");
-        throw new Error("Пост не найден");
-      }
-      
-      if(post.image) deleteFile(post.image)
-      if(post.cover) deleteFile(post.cover)
-      if(post.gallery) deleteFiles(post.gallery)
-      
-      return post.destroy();
-    })
-    .then((result) => {
-      req.flash("success", "Пост был удален");
-      res.redirect("/admin/posts");
-    })
-    .catch((err) => {
-      console.log(err);
-      res.redirect("/admin/posts");
-    });
+exports.postDeletePost = async (req, res, next) => {
+  try {
+    const postId = req.body.postId;
+    const deleteablePost = await Post.findOne({ where: { id: postId, userId: req.user.id } })
+    if (!deleteablePost) {
+      req.flash("error", "У вас не прав для удаления поста");
+      throw new Error("Пост не найден");
+    }
+    const tinymce_images = await Image.findAll({ where: { postId: deleteablePost.id } })
+    if (tinymce_images.length > 0) {
+      const imagesPaths = tinymce_images.map(image => image.path)
+      deleteFiles(imagesPaths)
+    }
+    if (deleteablePost.image) deleteFile(deleteablePost.image)
+    if (deleteablePost.cover) deleteFile(deleteablePost.cover)
+    if (deleteablePost.gallery) deleteFiles(deleteablePost.gallery)
+    await deleteablePost.destroy()
+    req.flash("success", "Пост был удален");
+    res.redirect("/admin/posts");
+  } catch (err) {
+    console.log(err);
+    req.flash("error", `Не получилось удалить пост: ${err.message}`);
+    res.redirect("/admin/posts");
+  }
 };
 
 exports.getAllPosts = (req, res, next) => {
@@ -262,6 +301,7 @@ exports.postEditPost = async (req, res, next) => {
     const oldImage = updatedPost.image;
     const oldCover = updatedPost.cover;
     const oldGallery = updatedPost.gallery;
+    const oldTinymceImages = await Image.findAll({ where: { postId: postId } })
 
     let image = oldImage;
     let cover = oldCover;
@@ -299,11 +339,11 @@ exports.postEditPost = async (req, res, next) => {
         req.session.tempImage = "/images/posts/" + req.files["image"][0].filename;
       }
       if (req.files["cover"]) {
-         if (req.session.tempCover) deleteFile(req.session.tempImage);
-        req.session.tempCover ="/images/posts/cover/" + req.files["cover"][0].filename;
+        if (req.session.tempCover) deleteFile(req.session.tempImage);
+        req.session.tempCover = "/images/posts/cover/" + req.files["cover"][0].filename;
       }
       if (req.files["gallery"]) {
-        if(req.session.tempGallery) deleteFiles(req.session.tempGallery)
+        if (req.session.tempGallery) deleteFiles(req.session.tempGallery)
         req.session.tempGallery = req.files["gallery"].map(
           (file) => "/images/posts/gallery/" + file.filename
         );
@@ -355,6 +395,31 @@ exports.postEditPost = async (req, res, next) => {
     updatedPost.gallery = gallery;
 
     await updatedPost.save();
+
+    const usedImages = getContentImages(updatedContent)
+    await Image.update({
+      postId: updatedPost.id,
+    },
+      {
+        where: {
+          path: { [Op.in]: usedImages }
+        }
+      }
+    )
+
+    const deletedImages = oldTinymceImages
+      .filter(image => !usedImages.includes(image.path))
+      .map(image => image.path)
+    console.log("Images Удаленные из поста после обновления")
+    await Image.destroy({
+      where: {
+        [Op.or]: [
+          { path: deletedImages },         // условие 1
+          { postId: null }                 // условие 2
+        ]
+      }
+    })
+    deleteFiles(deletedImages)
 
     req.session.tempImage = null;
     req.session.tempCover = null;

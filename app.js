@@ -32,6 +32,7 @@ const Like = require("./models/like.js");
 const UserActivity = require("./models/user-activity.js");
 const Category = require("./models/category.js");
 const Alias = require("./models/allowed-alias.js");
+const Image = require("./models/image.js");
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -117,6 +118,9 @@ Alias.belongsTo(Category);
 
 Alias.belongsTo(User);
 User.hasMany(Alias);
+
+Image.belongsTo(Post, { constraints: true, onDelete: "CASCADE" })
+Post.hasMany(Image)
 
 sequelize
   // .sync({ force: true })

@@ -28,7 +28,7 @@ const fileStorage = multer.diskStorage({
     } else if (req.path === "/user/edit-profile") {
       dir = path.join(__dirname, "../public/images/user");
     } else if (req.path === "/upload-image") {
-      dir = path.join(__dirname, "../public/images/posts");
+      dir = path.join(__dirname, "../public/images/posts/tinymce");
     } else {
       dir = path.join(__dirname, "../public/images/other");
     }

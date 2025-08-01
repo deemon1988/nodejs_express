@@ -16,7 +16,7 @@ router.get(
   adminController.getAllPosts
 );
 
-router.post("/delete-post", isAuth, isAdmin, adminController.postDeletePost);
+router.post("/delete-post", csrfProtection, isAuth, isAdmin, adminController.postDeletePost);
 
 router.get(
   "/edit-post/:postId",

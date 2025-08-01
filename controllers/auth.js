@@ -1,8 +1,5 @@
 const {
-  renderTemplate,
-  sendEmail,
   sendTemplateEmail,
-  transporter,
 } = require("../send-email");
 const path = require("path");
 require("dotenv").config();
