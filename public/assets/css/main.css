@@ -4242,6 +4242,7 @@ span.image figure .image img {
 .image-input {
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 /* Light Box */
@@ -4258,4 +4259,41 @@ span.image figure .image img {
 
 .bi.bi-x-square.show {
   display: block;
+  position: absolute;
+  right: 5px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+.bi.bi-x-square.show:hover {
+  transform: scale(1.05);
+  opacity: 1;
+}
+
+.bi.bi-x-square.show:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.bi.bi-folder-x,
+.bi.bi-pencil-square {
+  font-size: x-large;
+}
+
+.edit-btn {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+
+input #cover:hover {
+  cursor: pointer;
 }

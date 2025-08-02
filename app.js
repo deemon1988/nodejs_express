@@ -57,22 +57,6 @@ app.use(
 // app.use(csrfProtection)
 app.use(flash());
 
-app.use((req, res, next) => {
-  if (!req.session.user) {
-    return next();
-  }
-  User.findByPk(req.session.user.id)
-  .then((user) => {
-    if (!user) {
-      req.session.destroy();
-      return res.redirect("/");
-    }
-    req.user = user;
-    next();
-  })
-    .catch((err) => console.log(err));
-});
-
 // Установка res.locals глобально
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn || false;
@@ -85,6 +69,30 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+  User.findByPk(req.session.user.id)
+  .then((user) => {
+      if (!user) {
+        req.session.destroy();
+        return res.redirect("/");
+      }
+      req.user = user;
+      next();
+    })
+    .catch((err) => {
+      console.log(err)
+      next(new Error(err))
+    });
+});
+
+
+app.use((req, res, next) => {
+  req.imageUploadAttempted = false;
+  next();
+});
 
 
 app.use("/admin", adminRoutes);
@@ -92,7 +100,15 @@ app.use(blogRoutes);
 app.use(userRoutes);
 app.use(authRoutes);
 
+// app.get('/500', errorController.get500);
 app.use(errorController.get404);
+// app.use(errorController.get500);
+app.use((error, req, res, next) => {
+  res.status(500).render("500", { pageTitle: "Ошибка!", path: '/500',
+   });
+});
+
+
 
 Comment.belongsTo(Post, { constraints: true, onDelete: "CASCADE" });
 Post.hasMany(Comment);

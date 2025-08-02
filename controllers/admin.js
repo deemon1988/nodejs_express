@@ -121,7 +121,7 @@ exports.postAddPost = async (req, res, next) => {
         if (req.session.tempGallery) deleteFiles(req.session.tempGallery)
         req.session.tempGallery = req.files["gallery"].map(file => "/images/posts/gallery/" + file.filename);
       }
-      console.log(cover)
+
       return res.status(422).render("admin/edit-post", {
         post: {
           title: cleanTitle,
@@ -162,8 +162,7 @@ exports.postAddPost = async (req, res, next) => {
     });
 
     const usedImages = getContentImages(cleanContent)
-    console.log(usedImages)
-    console.log(createdPost.id)
+
     await Image.update({
       postId: createdPost.id,
     },
@@ -174,8 +173,7 @@ exports.postAddPost = async (req, res, next) => {
       }
     )
 
-
-    const userActivity = await UserActivity.create({
+    await UserActivity.create({
       profileId: userProfile.id,
       actionType: "post_created",
       targetType: "post",
@@ -190,12 +188,15 @@ exports.postAddPost = async (req, res, next) => {
 
   } catch (err) {
     console.error("Ошибка при добавлении поста:", err);
-    req.flash("error", `Не удалось добавить пост - ${err.message}`);
-    // if(createdPost) {}
+    // req.flash("error", `Не удалось добавить пост - ${err.message}`);
+
     req.session.tempImage = null
     req.session.tempCover = null
     req.session.tempGallery = null
-    res.redirect("/admin/create-post");
+
+    const error = new Error(err)
+    error.httpStatusCode = 500
+    return next(error)
   }
 };
 
@@ -307,6 +308,7 @@ exports.postEditPost = async (req, res, next) => {
     let cover = oldCover;
     let gallery = oldGallery;
 
+
     // Изображение
     if (req.files && req.files["image"]) {
       // Приоритет 1: новый файл загружен
@@ -332,8 +334,19 @@ exports.postEditPost = async (req, res, next) => {
       gallery = req.session.tempGallery;
     }
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
+
+    const errors = validationResult(req).array();
+
+    if (req.imageUploadAttempted && !req.files?.image) {
+      errors.push({
+        msg: 'Не поддерживаемый формат изображения. Разрешены только JPG, JPEG, PNG',
+        param: 'image',
+        location: 'body'
+      });
+    }
+
+
+    if (errors.length > 0) {
       if (req.files["image"]) {
         if (req.session.tempImage) deleteFile(req.session.tempImage);
         req.session.tempImage = "/images/posts/" + req.files["image"][0].filename;
@@ -350,7 +363,6 @@ exports.postEditPost = async (req, res, next) => {
       }
 
       const categories = await Category.findAll();
-
       return res.status(422).render("admin/edit-post", {
         pageTitle: "Редактировать пост",
         path: "/admin/edit-post",
@@ -368,8 +380,8 @@ exports.postEditPost = async (req, res, next) => {
         },
         categories: categories,
         csrfToken: req.csrfToken(),
-        errorMessage: errors.array()[0].msg,
-        validationErrors: errors.array(),
+        errorMessage: errors[0].msg,
+        validationErrors: errors,
         successMessage: null,
       });
     }
@@ -427,6 +439,9 @@ exports.postEditPost = async (req, res, next) => {
     res.redirect("/admin/posts");
   } catch (err) {
     console.log(err);
+    const error = new Error(err)
+    error.httpStatusCode = 500
+    return next(error)
   }
 };
 
@@ -638,6 +653,7 @@ exports.getEditCategory = (req, res, next) => {
 
   let updatedCategory;
   let existsAliases;
+
   Category.findOne({
     where: { id: categoryId },
     include: [

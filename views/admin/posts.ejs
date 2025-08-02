@@ -1,13 +1,4 @@
-<!DOCTYPE HTML>
-<html>
-
-<head>
-    <title>
-        <%= pageTitle %>
-    </title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <link rel="stylesheet" href="/assets/css/main.css" />
+<%- include('../includes/head.ejs') %>
 </head>
 
 <body class="posts-list">
@@ -59,13 +50,13 @@
                             </p>
                             <footer>
                                 <ul class="actions">
-                                    <li><a href="/admin/edit-post/<%= post.id %>?edit=true" class="button large">Редактировать</a></li>
+                                    <li><a href="/admin/edit-post/<%= post.id %>?edit=true" class="button large edit-btn">
+                                        Редактировать <i class="bi bi-pencil-square"></i></a></li>
                                     <li>
-                                        <form action="/admin/delete-post" method="post" id="delete-post">
-                                            <!-- <button class="button large" type="submit">Удалить</button> -->
-                                             <button type="submit" form="delete-post" name="action" value="delete" class="button large"
+                                        <form action="/admin/delete-post" method="post">
+                                             <button type="submit" name="action" value="delete" class="button large delete-btn"
                                                 onclick="return confirm(`Вы уверены, что хотите удалить пост с id=<%= post.id %> Название: <%= post.title %> ?`)">
-                                                Удалить
+                                                Удалить <i class="bi bi-folder-x"></i>
                                             </button>
                                             <input type="hidden" value="<%= post.id %>" name="postId">
                                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
