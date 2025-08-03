@@ -39,6 +39,8 @@ app.set("views", "./views");
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use('/images', express.static(path.join(__dirname, "images")));
+app.use(express.json());
 app.use(
   session({
     secret: "my secret",
@@ -57,24 +59,21 @@ app.use(
 // app.use(csrfProtection)
 app.use(flash());
 
-// Установка res.locals глобально
+// Устанавливаем базовые locals — до получения user
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn || false;
-  res.locals.userRole = req.user ? req.user.role : "user";
-  res.locals.user = req.user || null;
   res.locals.formatDateOnly = formatDateOnly;
   res.locals.fixPrepositions = fixPrepositions;
-  app.locals.tinyApiKey = process.env.TINY_API_KEY;
-  // res.locals.csrfToken = req.csrfToken();
   next();
 });
+
 
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next();
   }
   User.findByPk(req.session.user.id)
-  .then((user) => {
+    .then((user) => {
       if (!user) {
         req.session.destroy();
         return res.redirect("/");
@@ -88,6 +87,14 @@ app.use((req, res, next) => {
     });
 });
 
+
+// Устанавливаем оставшиеся переменные после получения пользователя
+app.use((req, res, next) => {
+  res.locals.user = req.user || null;
+  res.locals.userRole = req.user ? req.user.role : "user";
+  app.locals.tinyApiKey = process.env.TINY_API_KEY;
+  next();
+});
 
 app.use((req, res, next) => {
   req.imageUploadAttempted = false;
@@ -104,8 +111,9 @@ app.use(authRoutes);
 app.use(errorController.get404);
 // app.use(errorController.get500);
 app.use((error, req, res, next) => {
-  res.status(500).render("500", { pageTitle: "Ошибка!", path: '/500',
-   });
+  res.status(500).render("500", {
+    pageTitle: "Ошибка!", path: '/500',
+  });
 });
 
 

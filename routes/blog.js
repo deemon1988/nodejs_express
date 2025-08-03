@@ -2,6 +2,7 @@ const express = require("express");
 const postsController = require("../controllers/posts");
 const router = express.Router();
 const csrf = require('csurf');
+const isAuth = require("../middleware/is-auth");
 const csrfProtection = csrf();
 
 router.get("/posts", csrfProtection, postsController.getAllPosts);
@@ -18,9 +19,18 @@ router.get("/about", csrfProtection, (req, res, next) => {
   res.render("blog/about", {csrfToken: req.csrfToken(), pageTitle: "О блоге", path: '/about' });
 });
 
+router.get("/library", csrfProtection, isAuth, postsController.getLibrary);
 
-router.post("/comment/:postId", postsController.postComment)
-router.post("/posts/:postId/:commentId", postsController.postDeleteComment)
+// Новый маршрут: проверка перед скачиванием
+router.get('/library/download/:guideId', csrfProtection, isAuth, postsController.checkBeforeDownload);
+// Маршрут для подписки
+router.post('/subscribe', csrfProtection, isAuth, postsController.subscribe);
+// Маршрут для скачивания файла
+router.get("/library/:guideId", isAuth, postsController.getGuide);
+
+
+router.post("/comment/:postId", isAuth, postsController.postComment)
+router.post("/posts/:postId/:commentId", isAuth, postsController.postDeleteComment)
 
 
 router.get("/", csrfProtection, postsController.getIndexPage);

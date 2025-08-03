@@ -7,8 +7,8 @@
             <li><a class="<%= path === '/posts' ? 'active' : '' %>" href="/posts">Посты</a></li>
             <li><a class="<%= path === '/categories' ? 'active' : '' %>" href="/categories">Категории</a></li>
             <li><a class="<%= path === '/about' ? 'active' : '' %>" href="/about">О блоге</a></li>
-            <li><a class="<%= path === '/archive' ? 'active' : '' %>" href="/archive">Архив</a></li>
-            <% if(isAuthenticated && userRole==='admin' ) { %>
+            <li><a class="<%= path === '/library' ? 'active' : '' %>" href="/library">Библиотека</a></li>
+            <% if(isAuthenticated && userRole === 'admin' ) { %>
                 <li><a class="<%= path === '/admin/create-post' ? 'active' : '' %>" href="/admin/create-post">Добавить
                         пост</a></li>
                 <li><a class="<%= path === '/admin/create-category' ? 'active' : '' %>"
@@ -70,7 +70,7 @@
 
         </ul>
     </section>
-     <% if(isAuthenticated) { %>
+     <% if(isAuthenticated && userRole === 'admin') { %>
         <h3>Администрирование</h3>
         <section>
             <ul class="links">

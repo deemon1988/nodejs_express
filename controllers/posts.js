@@ -5,8 +5,11 @@ const Profile = require("../models/profile");
 const User = require("../models/user");
 const UserActivity = require("../models/user-activity");
 const Like = require("../models/like");
-const { fn, col, literal, Op } = require("sequelize");
+// const { fn, col, literal, Op } = require("sequelize");
 const Category = require("../models/category");
+const path = require('path')
+const fs = require('fs')
+const PDFDocument = require('pdfkit');
 
 const {
   getPostsWithLikedUsersQuery,
@@ -23,6 +26,7 @@ const { getRecommendedPosts } = require("../util/recomendedPosts");
 const { getAllPostsOnPage } = require("../util/allPostsPerPage");
 const { getMergedPosts } = require("../util/mergedPosts");
 const { getAllCategoriesWithPosts } = require("../services/categoryService");
+const { where } = require("sequelize");
 
 exports.getIndexPage = async (req, res, next) => {
   let page = parseInt(req.query.page) || 1;
@@ -241,7 +245,7 @@ exports.postDeleteComment = (req, res, next) => {
     })
     .catch((err) => {
       console.log("Ошибка при удалении комментария", err.message);
-       res.redirect(`/posts/${postId}`);
+      res.redirect(`/posts/${postId}`);
     });
 };
 
@@ -367,3 +371,90 @@ exports.getArchive = async (req, res, next) => {
     console.log("Ошибка рендеринга страницы:", error);
   }
 };
+
+exports.getLibrary = async (req, res, next) => {
+  try {
+    // const categoriesWithPosts = await getAllCategoriesWithPosts();
+    // const allPostsByDate = await getAllPostsByDate();
+    // allPostsByDate.sort(
+    //   (a, b) => new Date(a.dataValues.date) - new Date(b.dataValues.date)
+    // ),
+
+    res.render("blog/library", {
+      pageTitle: "Полезные шпаргалки и чек-листы",
+      path: "/library",
+      csrfToken: req.csrfToken(),
+      guideId: '123412'
+      // posts: allPostsByDate,
+      // categories: categoriesWithPosts,
+    });
+  } catch (error) {
+    console.log("Ошибка рендеринга страницы:", error);
+  }
+};
+
+
+// Проверка перед скачиванием
+exports.checkBeforeDownload = (req, res) => {
+  const guideId = req.params.guideId;
+  // Пример: проверка по сессии или cookie
+  const isSubscribed = req.user?.isSubscribed || false;
+  res.json({ subscribed: isSubscribed, guideId });
+};
+
+// Подписка
+exports.subscribe = async (req, res, next) => {
+  try {
+    const email = req.body.email;
+    const userId = req.user.id
+    // Здесь сохраните email в базу, файл, Redis и т.д.
+
+    await User.update({ isSubscribed: true }, { where: { id: userId } })
+    console.log('Успешно Подписан:', email);
+
+    // Синхронизируем req.user после обновления
+    req.user.isSubscribed = true
+
+    res.json({ success: true });
+  } catch (err) {
+    console.log(err)
+    const error = new Error(err)
+    error.httpStatusCode = 500
+    return next(error)
+  }
+
+};
+
+exports.getGuide = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.redirect('/singin')
+    }
+    const guideId = req.params.guideId
+    const guideName = `Morning-Routine-Checklist-${guideId}.pdf`
+    const guidePath = path.join(__dirname, '..', 'data', 'guides', guideName)
+
+    const doc = new PDFDocument();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${guideName}"`);
+    // doc.pipe(fs.createWriteStream(guidePath));
+    doc.pipe(res)
+    doc
+    .text('Some text with an embedded font!', 100, 100)
+    .fontSize(25)
+    doc.image(path.join(__dirname, '..', 'images', 'health-and-sports.png'), {
+  fit: [450, 300],
+  align: 'right',
+  valign: 'bottom'
+});
+    doc.end();
+    // const file = fs.createReadStream(guidePath);
+    // res.setHeader('Content-Type', 'application/pdf');
+    // res.setHeader('Content-Disposition', `attachment; filename="${guideName}"`);
+    // file.pipe(res)
+  }
+  catch (err) {
+    next(err); // Передаём ошибку в обработчик
+  }
+
+}

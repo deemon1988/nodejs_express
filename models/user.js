@@ -35,6 +35,11 @@ const User = sequelize.define("user", {
     allowNull: false,
     defaultValue: "user", // значение по умолчанию
   },
+  isSubscribed: {
+    type: Sequelize.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  }
 });
 
 module.exports = User;
