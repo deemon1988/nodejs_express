@@ -6,6 +6,7 @@ const csrfProtection = csrf();
 const { check, body } = require("express-validator");
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
+const YandexAccount = require("../models/yandex-account");
 
 router.get("/singin", csrfProtection, authController.getLogin);
 router.post(
@@ -32,6 +33,10 @@ router.post(
       .withMessage("Введенный пароль слишком короткий")
       .matches(/^(?=.*[a-zа-яё])(?=.*[A-ZА-ЯЁ])(?=.*\d).*$/)
       .custom((value, { req }) => {
+        // Если пользователь не найден или у него нет пароля (null/undefined), отклоняем
+        if (!req.user || !req.user.password || typeof req.user.password !== 'string') {
+          return Promise.reject("Введен неверный пароль!");
+        }
         // Проверяем пароль только если email прошел валидацию
         if (req.user) {
           return bcrypt.compare(value, req.user.password).then((doMatch) => {
@@ -60,8 +65,8 @@ router.post(
         //   throw new Error("Это адрес электронной почты запрещен");
         // }
         // return true;
-        return User.findOne({ where: { email: value } }).then((userDoc) => {
-          if (userDoc) {
+        return User.findOne({ where: { email: value }, include: [{model: YandexAccount}] }).then((userDoc) => {
+          if (userDoc && !userDoc.yandexAccount) {
             return Promise.reject(
               "Пользователь с этим адресом электронной почты уже зарегистрирован!"
             );
@@ -110,5 +115,7 @@ router.get("/reset", csrfProtection, authController.getReset);
 router.post("/reset", authController.postReset);
 router.get("/reset/:token", csrfProtection, authController.getNewPassword);
 router.post("/new-password", csrfProtection, authController.postNewPassword);
+
+router.get("/oauth/yandex/callback", csrfProtection, authController.getAuthCallback)
 
 module.exports = router;

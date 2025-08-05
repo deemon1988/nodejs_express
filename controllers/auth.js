@@ -4,7 +4,8 @@ const {
 const path = require("path");
 require("dotenv").config();
 const { validationResult } = require("express-validator");
-
+const axios = require('axios')
+const qs = require('querystring');
 const crypto = require("crypto");
 const User = require("../models/user");
 
@@ -65,7 +66,7 @@ exports.postLogin = (req, res, next) => {
         throw new Error("Неверный пароль");
       }
       req.session.isLoggedIn = true;
-      req.session.user = currentUser;
+      req.session.userId = currentUser.id;
       return new Promise((resolve, reject) => {
         req.session.save((err) => {
           if (err) return reject(err);
@@ -110,6 +111,7 @@ exports.postLogout = (req, res, err) => {
 
 const bcrypt = require("bcryptjs");
 const { where, Op } = require("sequelize");
+const YandexAccount = require("../models/yandex-account");
 
 exports.postRegisterUser = async (req, res, err) => {
   const username = req.body.username.trim();
@@ -141,14 +143,27 @@ exports.postRegisterUser = async (req, res, err) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const user = new User({
-      username: username,
-      email: email,
-      password: hashedPassword,
-      role: "admin",
+    const [user, created] = await User.findOrCreate({
+      where: { email: email },
+      defaults: {
+        username: username,
+        email: email,
+        password: hashedPassword,
+        role: "admin",
+      }
     });
 
-    await user.save();
+    // Теперь user — это настоящий экземпляр модели!
+    // Если пользователь уже существовал, то created = false, и мы его обновляем ниже
+
+    if (!created) {
+      // Обновляем только если нужно
+      await user.update({
+        username: username,
+        password: hashedPassword,
+      });
+    }
+
 
     const templateData = {
       name: user.username,
@@ -166,7 +181,7 @@ exports.postRegisterUser = async (req, res, err) => {
       templateData,
       mailOptions
     );
-    console.log(info);
+
 
     req.flash("success", "Вы успешно зарегестрировались!");
     res.redirect("/singin");
@@ -344,3 +359,113 @@ exports.postNewPassword = (req, res, err) => {
       res.redirect("/new-password");
     });
 };
+
+exports.getAuthCallback = async (req, res, next) => {
+  const code = req.query.code;
+  if (!code) {
+    return res.status(400).send('Ошибка: не получен code');
+  }
+
+  try {
+    // Получение access_token
+    const tokenResponse = await axios.post('https://oauth.yandex.ru/token',
+      qs.stringify({
+        grant_type: 'authorization_code',
+        code,
+        client_id: 'ac49ae0a499f434c961365432f7503f3',
+        client_secret: '8733c1699f304ee99df949875cd60338',
+        redirect_uri: 'http://localhost:3000/oauth/yandex/callback'
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    // Получение информации о пользователе
+    const userInfoResponse = await axios.get('https://login.yandex.ru/info', {
+      headers: {
+        Authorization: `OAuth ${accessToken}`
+      }
+    });
+
+    const userInfo = userInfoResponse.data;
+    let yandexProfile;
+    // let currentUser;
+
+    const [currentUser, userCreated] = await User.findOrCreate({
+      where: { email: userInfo.default_email },
+      defaults: {
+        email: userInfo.default_email
+      }
+    })
+
+    // currentUser = await User.findOne({ where: { email: userInfo.default_email } })
+    // if (!currentUser) {
+    //   currentUser = await User.create({ email: userInfo.default_email })
+    // }
+
+    const [yandexAccount, accountCreated] = await YandexAccount.findOrCreate({
+      where: { yandexId: userInfo.id },
+      defaults: {
+        yandexId: userInfo.id,
+        login: userInfo.login,
+        client_id: userInfo.client_id,
+        display_name: userInfo.display_name,
+        real_name: userInfo.real_name,
+        first_name: userInfo.first_name,
+        last_name: userInfo.last_name,
+        default_email: userInfo.default_email,
+        birthday: userInfo.birthday,
+      }
+    })
+    // yandexProfile = await YandexAccount.findOne({ where: { yandexId: userInfo.id } })
+
+    // if (yandexProfile?.userId && currentUser) {
+    //   await YandexAccount.update({ userId: currentUser.id }, { where: { default_email: currentUser.email } })
+    // }
+    // if (!yandexProfile) {
+    //   yandexProfile = await YandexAccount.create({
+    //     yandexId: userInfo.id,
+    //     login: userInfo.login,
+    //     client_id: userInfo.client_id,
+    //     display_name: userInfo.display_name,
+    //     real_name: userInfo.real_name,
+    //     first_name: userInfo.first_name,
+    //     last_name: userInfo.last_name,
+    //     default_email: userInfo.default_email,
+    //     birthday: userInfo.birthday,
+    //     userId: currentUser?.id || null
+    //   })
+    // }
+
+    if (!yandexAccount.userId) {
+      await yandexAccount.update({ userId: currentUser.id });
+    } else if (yandexAccount.userId !== currentUser.id) {
+      // Аккаунт уже привязан к другому пользователю!
+      return res.status(409).json({
+        error: 'Этот аккаунт Яндекса уже привязан к другому пользователю.',
+      });
+    }
+
+    // Здесь можно сохранить пользователя в сессию или базу
+    req.session.isLoggedIn = true;
+    req.session.userId = currentUser.id;
+    // await req.session.save((err) => {
+    //   if (err) return next(err)
+    // })
+    await req.session.save()
+    req.flash("success", "Вы успешно авторизовались!");
+    return res.redirect('/')
+
+
+    // res.send(`Привет, ${userInfo.real_name || userInfo.display_name || 'пользователь'}!`);
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).send('Ошибка при авторизации');
+  }
+
+}

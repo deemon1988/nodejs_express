@@ -189,16 +189,6 @@ function showSubscriptionPrompt(guideId) {
             });
         }
     }).then((result) => {
-        if (result.dismiss === Swal.DismissReason.cancel) {
-            console.log('✅ Пропустить: guideId =', guideId); // ← Здесь должно быть то же значение
-            startDownload(guideId);
-        } else if (result.dismiss === Swal.DismissReason.backdrop) {
-            console.log('❌ Закрыто кликом мимо: guideId =', guideId);
-        } else if (result.dismiss === Swal.DismissReason.esc) {
-            console.log('❌ Закрыто Esc: guideId =', guideId);
-        } else if (result.dismiss === Swal.DismissReason.close) {
-            console.log('❌ Закрыто крестиком: guideId =', guideId);
-        }
         if (result.isConfirmed) {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             // Подписался — отправляем email

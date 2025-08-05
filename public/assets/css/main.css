@@ -4026,11 +4026,9 @@ body.is-menu-visible #menu {
   margin-right: 30px;
 }
 
-/* .image.featured.cover-single img,
-.image.featured.cover-index img {
-  width: 100%;
-  height: 300px;
-} */
+.post-preview {
+  max-width: 100%;
+}
 
 .post-content {
   display: flex;

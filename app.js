@@ -33,6 +33,7 @@ const UserActivity = require("./models/user-activity.js");
 const Category = require("./models/category.js");
 const Alias = require("./models/allowed-alias.js");
 const Image = require("./models/image.js");
+const YandexAccount = require('./models/yandex-account.js')
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -51,14 +52,13 @@ app.use(
       maxAge: 1000 * 60 * 60 * 24, // 1 день
       httpOnly: true, // ❗️ Защищает от XSS
       // secure: process.env.NODE_ENV === "production", // ❗️ Только по HTTPS
-      sameSite: "strict", // ❗️ Защита от CSRF
+      sameSite: "lax", // ❗️ (strict) Защита от CSRF
     },
   })
 );
 
 // app.use(csrfProtection)
 app.use(flash());
-
 // Устанавливаем базовые locals — до получения user
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn || false;
@@ -69,15 +69,16 @@ app.use((req, res, next) => {
 
 
 app.use((req, res, next) => {
-  if (!req.session.user) {
+  if (!req.session.userId) {
     return next();
   }
-  User.findByPk(req.session.user.id)
+  User.findByPk(req.session.userId)
     .then((user) => {
       if (!user) {
         req.session.destroy();
         return res.redirect("/");
       }
+
       req.user = user;
       next();
     })
@@ -86,6 +87,8 @@ app.use((req, res, next) => {
       next(new Error(err))
     });
 });
+
+
 
 
 // Устанавливаем оставшиеся переменные после получения пользователя
@@ -145,6 +148,9 @@ User.hasMany(Alias);
 
 Image.belongsTo(Post, { constraints: true, onDelete: "CASCADE" })
 Post.hasMany(Image)
+
+User.hasOne(YandexAccount)
+
 
 sequelize
   // .sync({ force: true })

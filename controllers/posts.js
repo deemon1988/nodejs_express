@@ -34,7 +34,6 @@ exports.getIndexPage = async (req, res, next) => {
 
   const viewHistory = req.session.viewHistory || null;
 
-  console.log("viewHistory:", viewHistory);
   const userId = req.user ? req.user.id : null;
 
   // let allPostsJson = {};
@@ -227,7 +226,12 @@ exports.postComment = (req, res, next) => {
 exports.postDeleteComment = (req, res, next) => {
   const postId = req.params.postId;
   const commentId = req.params.commentId;
-
+   Swal.fire({
+            icon: 'error',
+            title: 'Ошибка',
+            text: 'Введите корректный email',
+            confirmButtonText: 'Закрыть'
+        });
   Comment.findByPk(commentId)
     .then((comment) => {
       if (!comment) {
@@ -433,25 +437,80 @@ exports.getGuide = async (req, res, next) => {
     const guideId = req.params.guideId
     const guideName = `Morning-Routine-Checklist-${guideId}.pdf`
     const guidePath = path.join(__dirname, '..', 'data', 'guides', guideName)
+    const fontPath = path.join(__dirname, '..', 'fonts', 'Roboto-Regular.ttf');
 
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({
+      size: 'A4',           // или [595.28, 841.89] — размер A4
+      margins: { top: 50, bottom: 50, left: 70, right: 70 }
+    });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${guideName}"`);
+    res.setHeader('Content-Disposition', `inline; filename="${guideName}"`);
     // doc.pipe(fs.createWriteStream(guidePath));
     doc.pipe(res)
-    doc
-    .text('Some text with an embedded font!', 100, 100)
-    .fontSize(25)
-    doc.image(path.join(__dirname, '..', 'images', 'health-and-sports.png'), {
-  fit: [450, 300],
-  align: 'right',
-  valign: 'bottom'
-});
+    doc.
+      registerFont('Roboto-Regular', fontPath)
+      .font('Roboto-Regular')
+      .fontSize(24).text('Вторая страница с тем же фоном', 100, 150, {
+        underline: true
+      });
+    // Путь к фоновому изображению
+    // const imagePath = path.join(__dirname, '../images', 'health-and-sports.png'); // поддерживает PNG, JPG
+    // if (!fs.existsSync(imagePath)) {
+    //   throw new Error(`Фоновое изображение не найдено: ${imagePath}`);
+    // }
+    // const fontPath = path.join(__dirname, '..', 'fonts', 'Roboto-Regular.ttf');
+    // if (!fs.existsSync(fontPath)) {
+    //   throw new Error(`Шрифт не найден: ${fontPath}`);
+    // }
+    // // Размеры страницы
+    // const pageWidth = doc.page.width;
+    // const pageHeight = doc.page.height;
+
+    // // 1. Добавляем фоновое изображение (на всю страницу)
+    // doc.image(imagePath, 0, 0, {
+    //   width: pageWidth,
+    //   height: pageHeight,
+    //   align: 'center',
+    //   valign: 'center',
+    //   opacity: 1.0 // можно уменьшить, если фон должен быть полупрозрачным
+    // });
+
+    // // 2. Устанавливаем слой текста ПОВЕРХ фона
+    // doc
+    //   .fillColor('#ffffff')
+    //   .registerFont('Roboto-Regular', fontPath)
+    //   .font('Roboto-Regular')
+    //   .fontSize(32)
+    //   .text('Добро пожаловать!', 100, 150, {
+    //     width: pageWidth - 200,
+    //     align: 'center'
+    //   });
+
+    // // Если нужно несколько страниц — добавьте
+    // doc.addPage();
+
+    // doc.image(imagePath, 0, 0, {
+    //   width: pageWidth,
+    //   height: pageHeight
+    // });
+
+    // doc.fontSize(24).text('Вторая страница с тем же фоном', 100, 150);
     doc.end();
     // const file = fs.createReadStream(guidePath);
     // res.setHeader('Content-Type', 'application/pdf');
     // res.setHeader('Content-Disposition', `attachment; filename="${guideName}"`);
     // file.pipe(res)
+    // ДОБАВЬ: обработчик ошибок, чтобы не уйти в "висящий" запрос
+    doc.on('error', (err) => {
+      console.error('Ошибка генерации PDF:', err);
+      res.status(500).send('Ошибка генерации PDF');
+    });
+
+    // Также можно обработать ошибки потока res
+    res.on('error', (err) => {
+      console.error('Ошибка отправки PDF:', err);
+    });
+
   }
   catch (err) {
     next(err); // Передаём ошибку в обработчик
