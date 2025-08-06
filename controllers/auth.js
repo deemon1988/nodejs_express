@@ -62,7 +62,6 @@ exports.postLogin = (req, res, next) => {
     })
     .then((doMatch) => {
       if (!doMatch) {
-        // req.flash("error", "Введен не правильный пароль!");
         throw new Error("Неверный пароль");
       }
       req.session.isLoggedIn = true;
@@ -74,22 +73,11 @@ exports.postLogin = (req, res, next) => {
         });
       });
     })
-    .then(() => {
-      return currentUser.getProfile();
+    .then(async () => {
+      return await getOrUpdateProfile(currentUser)
     })
-    .then((profileData) => {
-      if (!profileData) {
-        return currentUser.createProfile({
-          firstname: currentUser.username,
-          avatar: "/images/profile-avatar.png",
-        });
-      }
-      return profileData;
-    })
+
     .then((profile) => {
-      if (!profile) {
-        throw new Error("Профиль не создан");
-      }
       req.flash("success", "Вы успешно авторизовались!");
       if (postId) {
         return res.redirect(`/posts/${postId}`);
@@ -102,6 +90,41 @@ exports.postLogin = (req, res, next) => {
     });
 };
 
+async function getOrUpdateProfile(user) {
+  try {
+    const yandexAccount = await YandexAccount.findOne({ where: { default_email: user.email } })
+    const avatarPath = '/images/profile-avatar.png'
+    const [profile, created] = await Profile.findOrCreate({
+      where: { userId: user.id },
+      defaults: {
+        firstname: user.username || 'User',
+        avatar: avatarPath,
+        userId: user.id
+      }
+    })
+    // Флаги для определения, нужно ли обновлять
+    let updateData = {};
+    // Обновляем firstname, если пришёл из Яндекса и отличается
+    if (yandexAccount?.first_name && profile.firstname !== yandexAccount.first_name) {
+      updateData.firstname = yandexAccount.first_name;
+    }
+    // Обновляем lastname, если пришёл из Яндекса и отличается
+    if (yandexAccount?.last_name && profile.lastname !== yandexAccount.last_name) {
+      updateData.lastname = yandexAccount.last_name;
+    }
+    // Если нужно обновить — делаем
+    if (Object.keys(updateData).length > 0) {
+      await profile.update(updateData);
+    } else {
+    }
+
+    return profile
+  } catch (error) {
+    console.error("Ошибка создания/обновления профиля:", error);
+    throw new Error("Не удалось создать профиль пользователя");
+  }
+}
+
 exports.postLogout = (req, res, err) => {
   req.session.destroy((err) => {
     console.log(err);
@@ -112,6 +135,7 @@ exports.postLogout = (req, res, err) => {
 const bcrypt = require("bcryptjs");
 const { where, Op } = require("sequelize");
 const YandexAccount = require("../models/yandex-account");
+const Profile = require("../models/profile");
 
 exports.postRegisterUser = async (req, res, err) => {
   const username = req.body.username.trim();
@@ -149,13 +173,12 @@ exports.postRegisterUser = async (req, res, err) => {
         username: username,
         email: email,
         password: hashedPassword,
-        role: "admin",
+        role: "user",
       }
     });
 
     // Теперь user — это настоящий экземпляр модели!
     // Если пользователь уже существовал, то created = false, и мы его обновляем ниже
-
     if (!created) {
       // Обновляем только если нужно
       await user.update({
@@ -360,6 +383,14 @@ exports.postNewPassword = (req, res, err) => {
     });
 };
 
+exports.getYandexAuthUrl = (req, res, next) => {
+  const clientId = process.env.CLIENT_ID;
+  const redirectUri = 'http://localhost:3000/oauth/yandex/callback'; // должен быть настроен в Яндексе
+  const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  res.json({ url: authUrl });
+}
+
+
 exports.getAuthCallback = async (req, res, next) => {
   const code = req.query.code;
   if (!code) {
@@ -372,8 +403,8 @@ exports.getAuthCallback = async (req, res, next) => {
       qs.stringify({
         grant_type: 'authorization_code',
         code,
-        client_id: 'ac49ae0a499f434c961365432f7503f3',
-        client_secret: '8733c1699f304ee99df949875cd60338',
+        client_id: process.env.CLIENT_ID,
+        client_secret: process.env.CLIENT_SECRET,
         redirect_uri: 'http://localhost:3000/oauth/yandex/callback'
       }),
       {
@@ -384,6 +415,11 @@ exports.getAuthCallback = async (req, res, next) => {
     );
 
     const accessToken = tokenResponse.data.access_token;
+    const expiresIn = tokenResponse.data.expires_in; // обычно 3600 секунд = 1 час
+    const expireTime = Date.now() + expiresIn * 1000;
+    
+    req.session.accessToken = accessToken;
+    req.session.tokenExpireTime = expireTime;
 
     // Получение информации о пользователе
     const userInfoResponse = await axios.get('https://login.yandex.ru/info', {
@@ -393,20 +429,13 @@ exports.getAuthCallback = async (req, res, next) => {
     });
 
     const userInfo = userInfoResponse.data;
-    let yandexProfile;
-    // let currentUser;
-
+    console.log(userInfo)
     const [currentUser, userCreated] = await User.findOrCreate({
       where: { email: userInfo.default_email },
       defaults: {
         email: userInfo.default_email
       }
     })
-
-    // currentUser = await User.findOne({ where: { email: userInfo.default_email } })
-    // if (!currentUser) {
-    //   currentUser = await User.create({ email: userInfo.default_email })
-    // }
 
     const [yandexAccount, accountCreated] = await YandexAccount.findOrCreate({
       where: { yandexId: userInfo.id },
@@ -420,52 +449,47 @@ exports.getAuthCallback = async (req, res, next) => {
         last_name: userInfo.last_name,
         default_email: userInfo.default_email,
         birthday: userInfo.birthday,
+        default_avatar_id: userInfo.default_avatar_id,
+        is_avatar_empty: userInfo.is_avatar_empty
       }
     })
-    // yandexProfile = await YandexAccount.findOne({ where: { yandexId: userInfo.id } })
-
-    // if (yandexProfile?.userId && currentUser) {
-    //   await YandexAccount.update({ userId: currentUser.id }, { where: { default_email: currentUser.email } })
-    // }
-    // if (!yandexProfile) {
-    //   yandexProfile = await YandexAccount.create({
-    //     yandexId: userInfo.id,
-    //     login: userInfo.login,
-    //     client_id: userInfo.client_id,
-    //     display_name: userInfo.display_name,
-    //     real_name: userInfo.real_name,
-    //     first_name: userInfo.first_name,
-    //     last_name: userInfo.last_name,
-    //     default_email: userInfo.default_email,
-    //     birthday: userInfo.birthday,
-    //     userId: currentUser?.id || null
-    //   })
-    // }
 
     if (!yandexAccount.userId) {
       await yandexAccount.update({ userId: currentUser.id });
     } else if (yandexAccount.userId !== currentUser.id) {
       // Аккаунт уже привязан к другому пользователю!
-      return res.status(409).json({
-        error: 'Этот аккаунт Яндекса уже привязан к другому пользователю.',
-      });
+      throw new Error('Этот аккаунт Яндекса уже привязан к другому пользователю.')
     }
 
+    let avatarUrl = '/images/profile-avatar.png'
+    const defaultAvatarId = yandexAccount?.default_avatar_id;
+    const isAvatarEmpty = yandexAccount?.is_avatar_empty;
+
+    if (defaultAvatarId && !isAvatarEmpty) {
+      avatarUrl = `https://avatars.yandex.net/get-yapic/${defaultAvatarId}/`;
+    }
+
+    const [profile, profileCreated] = await Profile.findOrCreate({
+      where: { userId: currentUser.id },
+      defaults: {
+        firstname: yandexAccount.first_name,
+        lastname: yandexAccount.last_name,
+        avatar: avatarUrl,
+        userId: currentUser.id
+      }
+    })
     // Здесь можно сохранить пользователя в сессию или базу
     req.session.isLoggedIn = true;
     req.session.userId = currentUser.id;
-    // await req.session.save((err) => {
-    //   if (err) return next(err)
-    // })
+
     await req.session.save()
     req.flash("success", "Вы успешно авторизовались!");
     return res.redirect('/')
 
-
-    // res.send(`Привет, ${userInfo.real_name || userInfo.display_name || 'пользователь'}!`);
   } catch (error) {
     console.error(error.response?.data || error.message);
-    res.status(500).send('Ошибка при авторизации');
+    next(error)
   }
 
 }
+

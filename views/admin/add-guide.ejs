@@ -1,0 +1,167 @@
+<%- include('../includes/head.ejs') %>
+    <link rel="stylesheet" href="/assets/css/create-post.css">
+    <script src="https://cdn.tiny.cloud/1/<%= tinyApiKey %>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    </head>
+
+    <body class="is-preload single">
+        <% if(errorMessage && errorMessage.length> 0) { %>
+            <div class="flash-message error" style="display: block">
+                <%= errorMessage %>
+                    <span class="close-button">&times;</span>
+            </div>
+            <% } %>
+                <% if(successMessage && successMessage.length> 0) { %>
+                    <div class="flash-message success" style="display: block">
+                        <%= successMessage %>
+                            <span class="close-button">&times;</span>
+                    </div>
+                    <% } %>
+                        <!-- Wrapper -->
+                        <div id="wrapper">
+                            <%- include('../includes/navigation.ejs') %>
+                                <!-- Main -->
+                                <div id="main" class="single-main">
+                                    <h1>
+                                        <% if (editing) { %> Редактировать гайд <% } else { %> Добавить новый гайд <% }
+                                                    %>
+                                    </h1>
+
+                                    <form action="/admin/<% if (editing) { %>edit-guide<% } else {  %>create-guide<% } %>"
+                                        method="post" enctype="multipart/form-data" id="edit-create-guide-form">
+                                        <% if (editing) { %>
+                                            <input type="hidden" name="guideId" value="<%= guide.id %>">
+                                            <% } %>
+                                                <div>
+                                                    <label for="title">Заголовок</label>
+                                                    <input
+                                                        class="<%= validationErrors.find(e => e.path === 'title') ? 'invalid' : '' %>"
+                                                        type="text" id="title" name="title" required
+                                                        value="<% if (editing || hasError) { %><%=guide.title%><% } %>" />
+                                                </div>
+
+                                                <div>
+                                                    <label for="preview">Превью</label>
+                                                    <textarea id="preview"
+                                                        class="<%= validationErrors.find(e => e.path === 'preview') ? 'invalid' : '' %>"
+                                                        name="preview"><% if (editing || hasError) { %><%=guide.preview%><% } %></textarea>
+                                                </div>
+
+                                                <div>
+                                                    <label for="content">Содержание</label>
+                                                    <textarea id="content"
+                                                        class="<%= validationErrors.find(e => e.path === 'content') ? 'invalid' : '' %>"
+                                                        name="content"><% if (editing || hasError) { %><%=guide.content%><% } %></textarea>
+                                                </div>
+
+                                                <div>
+                                                    <label for="category">Категория</label>
+                                                    <select id="category" name="category"
+                                                        class="<%= validationErrors.find(e => e.path === 'category') ? 'invalid' : '' %>">
+                                                        <% if (editing || hasError) { %>
+                                                            <option value="" selected>-- Выберите категорию --</option>
+                                                            <% for (let category of categories) { %>
+                                                                <option value="<%= category.id %>"
+                                                                    <%=guide.categoryId===category.id ? 'selected' : ''
+                                                                    %> >
+                                                                    <%= category.name %>
+                                                                </option>
+                                                                <% } %>
+
+                                                                    <% } else { %>
+                                                                        <option value="">-- Выберите категорию --
+                                                                        </option>
+                                                                        <% for (let category of categories) { %>
+                                                                            <option value="<%= category.id %>">
+                                                                                <%= category.name %>
+                                                                            </option>
+                                                                            <% } %>
+                                                                                <% } %>
+                                                    </select>
+                                                </div>
+
+                                                <div class="post-images-main">
+                                                    <div class="post-image">
+                                                        <label for="image">Изображение</label>
+                                                        <% if (editing || hasError) { %>
+                                                            <div class="image-img">
+                                                                <img src="<%= guide.image %>" alt="<%= guide.title %>">
+                                                            </div>
+
+                                                            <% } %>
+                                                            <div class="image-input">
+                                                                <input type="file" id="image" name="image"
+                                                                    accept="image/*" />
+                                                                <i class="bi bi-x-square"></i>
+                                                            </div>
+                                                    </div>
+
+                                                    <div class="post-image">
+                                                        <label for="cover">Обложка</label>
+                                                        <% if (editing || hasError) { %>
+                                                            <div class="image-img">
+                                                                <img src="<%= guide.cover %>" alt="">
+                                                            </div>
+                                                            <% } %>
+                                                                <div class="image-input">
+                                                                    <input type="file" id="cover" name="cover"
+                                                                        accept="image/*" />
+                                                                    <i class="bi bi-x-square"></i>
+                                                                </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="post-image">
+                                                        <label for="pdf-file">PDF Файл</label>
+                                                        <% if (editing || hasError) { %>
+                                                            <div class="image-img">
+                                                                <img src="<%= guide.pdfUrl %>" alt="">
+                                                            </div>
+                                                            <% } %>
+                                                                <div class="image-input">
+                                                                    <input type="file" id="pdf-file" name="pdf-file"
+                                                                        accept="image/*" />
+                                                                    <i class="bi bi-x-square"></i>
+                                                                </div>
+                                                    </div>
+
+                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                <button type="submit" class="button large">
+                                                    <% if (editing) { %> Обновить гайд <% } else { %> Опубликовать гайд
+                                                            <% } %>
+                                                </button>
+                                    </form>
+                                </div>
+                        </div>
+
+                        <!-- Scripts -->
+                        <script>
+                            tinymce.init({
+                                selector: 'textarea#content',
+                                plugins: 'image code lists table',
+                                toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | image | bullist numlist | code',
+                                relative_urls: false,         // <-- отключить относительные пути
+                                remove_script_host: false,    // <-- оставить host в URL
+                                convert_urls: true,           // <-- включить преобразование (но с учетом настроек выше)
+                                images_upload_url: '/admin/upload-image',
+                                automatic_uploads: true,
+                                file_picker_types: 'image',
+                                image_title: true,
+                                content_style: 'img { max-width: 100%; height: auto; }'
+                            });
+
+                            tinymce.init({
+                                selector: 'textarea#preview',
+                                plugins: 'code lists',
+                                toolbar: 'undo redo | bold italic | bullist numlist | code'
+                            });
+                        </script>
+                        <script src="/assets/js/jquery.min.js"></script>
+                        <script src="/assets/js/browser.min.js"></script>
+                        <script src="/assets/js/breakpoints.min.js"></script>
+                        <script src="/assets/js/util.js"></script>
+                        <script src="/assets/js/main.js"></script>
+                        <!-- <script src="/assets/js/close-message.js"></script> -->
+
+    </body>
+
+    </html>

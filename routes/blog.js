@@ -19,7 +19,7 @@ router.get("/about", csrfProtection, (req, res, next) => {
   res.render("blog/about", {csrfToken: req.csrfToken(), pageTitle: "О блоге", path: '/about' });
 });
 
-router.get("/library", csrfProtection, isAuth, postsController.getLibrary);
+router.get("/library", csrfProtection,  postsController.getLibrary);
 
 // Новый маршрут: проверка перед скачиванием
 router.get('/library/download/:guideId', csrfProtection, isAuth, postsController.checkBeforeDownload);

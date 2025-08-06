@@ -18,19 +18,19 @@ const YandexAccount = sequelize.define("yandexAccount", {
     },
     display_name: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     real_name: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     first_name: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     last_name: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     default_email: {
         type: Sequelize.STRING,
@@ -38,8 +38,17 @@ const YandexAccount = sequelize.define("yandexAccount", {
     },
     birthday: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
     },
+    default_avatar_id: {
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    is_avatar_empty: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
+    }
 })
 
 module.exports = YandexAccount

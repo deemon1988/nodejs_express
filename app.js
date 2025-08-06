@@ -34,6 +34,7 @@ const Category = require("./models/category.js");
 const Alias = require("./models/allowed-alias.js");
 const Image = require("./models/image.js");
 const YandexAccount = require('./models/yandex-account.js')
+const Guide = require('./models/guide.js')
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -96,6 +97,7 @@ app.use((req, res, next) => {
   res.locals.user = req.user || null;
   res.locals.userRole = req.user ? req.user.role : "user";
   app.locals.tinyApiKey = process.env.TINY_API_KEY;
+  res.locals.accessToken = req.session.accessToken ? req.session.accessToken : null
   next();
 });
 
@@ -151,6 +153,8 @@ Post.hasMany(Image)
 
 User.hasOne(YandexAccount)
 
+Category.belongsToMany(Guide, {through: 'Category_Guide'})
+Guide.belongsToMany(Category, {through: 'Category_Guide'})
 
 sequelize
   // .sync({ force: true })

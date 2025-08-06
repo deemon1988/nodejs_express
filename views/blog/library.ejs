@@ -42,6 +42,9 @@
                                 Подпишись, чтобы первым получать новые! </p>
                         </header>
                     </section>
+
+                        <p><button id="yandex-disk-btn" class="button fit">Яндекс Disk API</button></p>
+
                     <!-- Шпаргалки и Чек-листы -->
                     <article class="post">
                         <header>
@@ -71,6 +74,9 @@
                             <ul class="actions">
                                 <li><a href="/library/<%= guideId %>" class="button large download-btn" data-guide-id="<%= guideId %>">Скачать
                                         PDF <i class="bi bi-download"></i></a></li>
+                                <li><a href="/admin/add-guide/<%= guideId %>?edit=true" class="button large edit-btn">
+                                        Редактировать гайд</a></li>
+                                <li>
                             </ul>
                             <ul class="stats">
                                 <li><a href="#">Продуктивность</a></li>
@@ -211,4 +217,60 @@
                     </section>
 
 
-                    <%- include('../includes/end.ejs') %>
+<!-- Footer -->
+<section id="footer">
+    <!-- Меню в футере -->
+    <div class="footer-menu">
+        <section>
+            <h3>Навигация</h3>
+            <ul class="links">
+                <li><a class="<%= path === '/archive' ? 'active' : '' %>" href="/archive">Архив</a></li>
+                <li><a href="/faq">FAQ / ЧаВо</a></li>
+                <li><a class="<%= path === '/about' ? 'active' : '' %>" href="/about">О блоге</a></li>
+            </ul>
+        </section>
+        <section>
+            <h3>Дополнительно</h3>
+            <ul class="links">
+                <li><a href="/privacy">Политика конфиденциальности</a></li>
+                <li><a href="/contacts">Контакты</a></li>
+            </ul>
+        </section>
+      
+    </div>
+    
+    <!-- Социальные иконки -->
+    <ul class="icons">
+        <li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+        <li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+        <li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+        <li><a href="#" class="icon solid fa-rss"><span class="label">RSS</span></a></li>
+        <li><a href="#" class="icon solid fa-envelope"><span class="label">Email</span></a></li>
+    </ul>
+    
+    <p class="copyright">&copy; Untitled. Design: <a href="http://html5up.net">HTML5 UP</a>. Images: <a
+            href="http://unsplash.com">Unsplash</a>.</p>
+</section>
+
+</section>
+
+</div>
+
+<!-- Scripts -->
+<script src="/assets/js/jquery.min.js"></script>
+<script src="/assets/js/browser.min.js"></script>
+<script src="/assets/js/breakpoints.min.js"></script>
+<script src="/assets/js/util.js"></script>
+<script src="/assets/js/main.js"></script>
+<!-- JS Lightbox -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+<!-- Через CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script src="/assets/js/close-message.js"></script>
+<script src="/assets/js/downloadGuideHandler.js"></script>
+<script src="/assets/js/diskApiHandler.js"></script>
+</body>
+
+</html>

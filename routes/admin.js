@@ -72,6 +72,11 @@ router.post(
   adminController.postAddPost
 );
 
+router.get('/add-guide', csrfProtection, adminController.getAddGuide)
+router.get('/api/yandex-disk-start', csrfProtection, adminController.getYandexDiskUrl)
+router.get('/yandex/disk/download-pdf', csrfProtection, adminController.getDownloadPdf)
+
+
 router.post(
   "/upload-image",
   isAuth,

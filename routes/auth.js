@@ -117,5 +117,7 @@ router.get("/reset/:token", csrfProtection, authController.getNewPassword);
 router.post("/new-password", csrfProtection, authController.postNewPassword);
 
 router.get("/oauth/yandex/callback", csrfProtection, authController.getAuthCallback)
+router.get('/api/auth/yandex/start', csrfProtection, authController.getYandexAuthUrl)
+
 
 module.exports = router;

@@ -13,6 +13,9 @@ const { deleteFile, deleteFiles } = require("../util/fileUtils");
 const Image = require("../models/image");
 const { getContentImages } = require("../util/contentImages");
 const { Op } = require("sequelize");
+const axios = require('axios')
+const qs = require('querystring');
+const fs = require('fs')
 
 exports.postAddImage = async (req, res) => {
   try {
@@ -738,3 +741,112 @@ exports.postEditCategory = (req, res, next) => {
     })
     .catch((err) => console.log(err));
 };
+
+exports.getAddGuide = async (req, res, next) => {
+  try {
+    const categories = await Category.findAll()
+    res.render('admin/add-guide', {
+      pageTitle: "Добавить гайд",
+      path: "/admin/add-guide",
+      editing: false,
+      categories: categories,
+      csrfToken: req.csrfToken(),
+      hasError: false,
+      errorMessage: req.flash("error") || null,
+      successMessage: req.flash("success") || null,
+      validationErrors: [],
+    })
+  } catch (error) {
+    console.log("Ошибка: ", error)
+    throw new Error("Ошибка рендеринга страницы")
+  }
+}
+
+
+exports.getYandexDiskUrl = (req, res, next) => {
+  const clientId = process.env.CLIENT_ID_DISK_API;
+  const redirectUri = process.env.REDIRECT_URI_DISK_API; // должен быть настроен в Яндексе
+  const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  res.json({ url: authUrl });
+}
+
+exports.getDownloadPdf = async (req, res, next) => {
+  const code = req.query.code;
+  if (!code) {
+    return res.status(400).send('Ошибка: не получен code');
+  }
+
+  try {
+    // Получение access_token
+    const tokenResponse = await axios.post('https://oauth.yandex.ru/token',
+      qs.stringify({
+        grant_type: 'authorization_code',
+        code,
+        client_id: process.env.CLIENT_ID_DISK_API,
+        client_secret: process.env.CLIENT_SECRET_DISK_API,
+        redirect_uri: process.env.REDIRECT_URI_DISK_API
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+    const expiresIn = tokenResponse.data.expires_in; // обычно 3600 секунд = 1 час
+    const expireTime = Date.now() + expiresIn * 1000;
+
+    if (!accessToken || !expireTime) {
+      return res.status(401).json({ error: 'Токен не найден' });
+    }
+    if (Date.now() > expireTime) {
+      return res.status(401).json({ error: 'Токен истёк. Авторизуйтесь заново.' });
+    }
+    // ШАГ 2: Теперь можно загрузить PDF в Яндекс.Диск
+    const uploadUrl = 'https://cloud-api.yandex.net/v1/disk/resources/upload';
+    const folder = 'guides' ;
+    const fileName = `Checklist-123-${Date.now()}.pdf`;
+    const filePath = `${folder}/${fileName}`;
+
+    // Получаем URL для загрузки
+    const uploadMeta = await axios.get(uploadUrl, {
+      params: {
+        path: filePath,
+        overwrite: true
+      },
+      headers: {
+        Authorization: `OAuth ${accessToken}`
+      }
+    });
+
+    const uploadUrlFinal = uploadMeta.data.href;
+
+    // Загружаем файл (предположим, у тебя есть буфер PDF)
+    const pdfBuffer = fs.readFileSync(path.join(__dirname, '../data/guides', 'Checklist-123.pdf')); //или сгенерированный
+
+    await axios.put(uploadUrlFinal, pdfBuffer, {
+      headers: {
+        'Content-Type': 'application/pdf'
+      }
+    });
+
+    // ШАГ 3: Получаем публичную ссылку
+    const publicMeta = await axios.get(`https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(filePath)}`, {
+      headers: {
+        Authorization: `OAuth ${accessToken}`
+      }
+    });
+
+    const downloadUrl = publicMeta.data.file;
+    console.log(publicMeta.data)
+    // Отдаём клиенту
+    res.send(`
+      <h1>PDF успешно загружен!</h1>
+      <p><a href="${downloadUrl}" target="_blank">Скачать PDF</a></p>
+    `);
+  } catch (error) {
+    console.log("Ошибка: ", error)
+    throw new Error("Ошибка загрузки PDF")
+  }
+}
