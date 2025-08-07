@@ -44,6 +44,39 @@
                     </section>
 
                         <p><button id="yandex-disk-btn" class="button fit">Яндекс Disk API</button></p>
+                    <% if (guides && guides.length > 0) { %>
+                        <% for (let guide of guides) { %>
+                     <article class="post">
+                        <header>
+                            <div class="title">
+                                <h2><a href="/downloads/morning-checklist.pdf"><%= guide.title %></a></h2>
+                                <p>Полезные привычки для продуктивного начала дня. Удобен для печати.</p>
+                            </div>
+                            <div class="meta">
+                                <a href="#" class="author guides"><span class="name heading">Формат: <%= guide.fileType %> (<%= formatFileSize(guide.fileSize) %>)</span><span class="name info"><%= formatContentType(guide.contentType) %></span></a>
+                                <a href="#" class="author"><img src="/images/health-and-sports.png" alt="" /></a>
+                            </div>
+                        </header>
+                        <a href="/images/morning-checklist.jpg" class="image featured"><img
+                                src="/images/morning-checklist.jpg" alt="Превью чек-листа утренней рутины" /></a>
+                        <p><%= guide.preview %>
+                        </p>
+                        
+                        <footer>
+                            <ul class="actions">
+                                <li><a href="" class="button large download-btn" data-guide-id="<%= guide.id %>">Скачать
+                                        PDF <i class="bi bi-download"></i></a></li>
+                                <li><a href="/admin/add-guide/?edit=true" class="button large edit-btn">
+                                        Редактировать гайд</a></li>
+                                <li>
+                            </ul>
+                            <ul class="stats">
+                                <li><a href="#">Продуктивность</a></li>
+                            </ul>
+                        </footer>
+                    </article>
+                    <% } %>
+                    <% } %>
 
                     <!-- Шпаргалки и Чек-листы -->
                     <article class="post">
@@ -72,9 +105,9 @@
                         </ul>
                         <footer>
                             <ul class="actions">
-                                <li><a href="/library/<%= guideId %>" class="button large download-btn" data-guide-id="<%= guideId %>">Скачать
+                                <li><a href="/library/" class="button large download-btn" data-guide-id="">Скачать
                                         PDF <i class="bi bi-download"></i></a></li>
-                                <li><a href="/admin/add-guide/<%= guideId %>?edit=true" class="button large edit-btn">
+                                <li><a href="/admin/add-guide/?edit=true" class="button large edit-btn">
                                         Редактировать гайд</a></li>
                                 <li>
                             </ul>

@@ -27,6 +27,8 @@ const { getAllPostsOnPage } = require("../util/allPostsPerPage");
 const { getMergedPosts } = require("../util/mergedPosts");
 const { getAllCategoriesWithPosts } = require("../services/categoryService");
 const { where } = require("sequelize");
+const Guide = require("../models/guide");
+const { formatFileSize, formatContentType } = require("../util/fileFeatures");
 
 exports.getIndexPage = async (req, res, next) => {
   let page = parseInt(req.query.page) || 1;
@@ -383,12 +385,14 @@ exports.getLibrary = async (req, res, next) => {
     // allPostsByDate.sort(
     //   (a, b) => new Date(a.dataValues.date) - new Date(b.dataValues.date)
     // ),
-
+    const guides = await Guide.findAll()
     res.render("blog/library", {
       pageTitle: "Полезные шпаргалки и чек-листы",
       path: "/library",
       csrfToken: req.csrfToken(),
-      guideId: '123412'
+      guides: guides,
+      formatFileSize: formatFileSize,
+      formatContentType: formatContentType
       // posts: allPostsByDate,
       // categories: categoriesWithPosts,
     });
@@ -429,7 +433,7 @@ exports.subscribe = async (req, res, next) => {
 
 };
 
-exports.getGuide = async (req, res, next) => {
+exports.getRenderGuide = async (req, res, next) => {
   try {
     if (!req.user) {
       return res.redirect('/singin')
@@ -510,6 +514,28 @@ exports.getGuide = async (req, res, next) => {
     res.on('error', (err) => {
       console.error('Ошибка отправки PDF:', err);
     });
+
+  }
+  catch (err) {
+    next(err); // Передаём ошибку в обработчик
+  }
+
+}
+
+exports.getGuide = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.redirect('/singin')
+    }
+    const fileId = req.params.guideId
+    const downloadedFile = await Guide.findByPk(fileId)
+    if(!downloadedFile) throw new Error("Не удалось найти файл")
+
+    const fileUrl = downloadedFile.fileUrl
+
+    res.json({
+      downloadUrl: fileUrl
+    })
 
   }
   catch (err) {

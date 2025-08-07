@@ -22,37 +22,77 @@
                                 <!-- Main -->
                                 <div id="main" class="single-main">
                                     <h1>
-                                        <% if (editing) { %> Редактировать гайд <% } else { %> Добавить новый гайд <% }
-                                                    %>
+                                        <% if (editing) { %> Редактировать гайд <% } else { %> Добавить новый гайд <% } %>
                                     </h1>
+                                    
+                                    <form id="get-link-form" method="GET" action="">
+                                    <label for="fileName">Введите имя файла на Яндекс диске:</label>
+                                    <input type="text" id="fileName" name="fileName" placeholder="Введите имя файла на Яндекс диске" required>
+                                    <button class="large" type="submit">Получить ссылку</button>
+                                    </form>
 
-                                    <form action="/admin/<% if (editing) { %>edit-guide<% } else {  %>create-guide<% } %>"
+                                    <% if (!yandexDiskAccessToken) { %>
+                                    <p><button id="yandex-disk-btn" class="button fit">Авторизация Яндекс Disk API</button></p>
+                                    <% } %>
+                                    <div id="result"></div>
+
+                                    <form action="/admin/<% if (editing) { %>edit-guide<% } else {  %>add-guide<% } %>"
                                         method="post" enctype="multipart/form-data" id="edit-create-guide-form">
                                         <% if (editing) { %>
                                             <input type="hidden" name="guideId" value="<%= guide.id %>">
                                             <% } %>
+                                                <div>
+                                                    <label for="fileUrl">Ссылка для скачивания</label>
+                                                    <input
+                                                        class="<%= validationErrors.find(e => e.path === 'fileUrl') ? 'invalid' : '' %>"
+                                                        type="text" id="fileUrl" name="fileUrl" required
+                                                        value="<% if (editing || hasError) { %><%=guide.fileUrl%><% } %>" readonly/>
+                                                </div>
+                                                <div class="file-features">  
+                                                <div>
+                                                    <label for="fileSize">Размер файла</label>
+                                                    <input
+                                                        class="<%= validationErrors.find(e => e.path === 'fileSize') ? 'invalid' : '' %>"
+                                                        type="text" id="fileSize" name="fileSize" required
+                                                        value="<% if (editing || hasError) { %><%=guide.fileSize%><% } %>" readonly/>
+                                                </div>
+                                                 <div>
+                                                    <label for="fileType">Тип файла</label>
+                                                    <input
+                                                        class="<%= validationErrors.find(e => e.path === 'fileType') ? 'invalid' : '' %>"
+                                                        type="text" id="fileType" name="fileType" required
+                                                        value="<% if (editing || hasError) { %><%=guide.fileType%><% } %>" readonly/>
+                                                </div>
+                                                </div>
                                                 <div>
                                                     <label for="title">Заголовок</label>
                                                     <input
                                                         class="<%= validationErrors.find(e => e.path === 'title') ? 'invalid' : '' %>"
                                                         type="text" id="title" name="title" required
                                                         value="<% if (editing || hasError) { %><%=guide.title%><% } %>" />
-                                                </div>
-
+                                                </div> 
                                                 <div>
                                                     <label for="preview">Превью</label>
                                                     <textarea id="preview"
                                                         class="<%= validationErrors.find(e => e.path === 'preview') ? 'invalid' : '' %>"
                                                         name="preview"><% if (editing || hasError) { %><%=guide.preview%><% } %></textarea>
                                                 </div>
-
+                                                 
                                                 <div>
                                                     <label for="content">Содержание</label>
                                                     <textarea id="content"
                                                         class="<%= validationErrors.find(e => e.path === 'content') ? 'invalid' : '' %>"
                                                         name="content"><% if (editing || hasError) { %><%=guide.content%><% } %></textarea>
                                                 </div>
-
+                                                <div>
+                                                    <span>Доступ:</span>
+                                                    <input type="radio" id="free" name="contentType" value="free" checked required />
+                                                        <label for="free">Бесплатно</label>
+                                                    <input type="radio" id="paid" name="contentType" value="paid"  required />
+                                                        <label for="paid">Платный контент</label>
+                                                    <input type="radio" id="subscription" name="contentType" value="subscription"  required />
+                                                        <label for="subscription">По подписке</label>
+                                                </div>
                                                 <div>
                                                     <label for="category">Категория</label>
                                                     <select id="category" name="category"
@@ -110,19 +150,7 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="post-image">
-                                                        <label for="pdf-file">PDF Файл</label>
-                                                        <% if (editing || hasError) { %>
-                                                            <div class="image-img">
-                                                                <img src="<%= guide.pdfUrl %>" alt="">
-                                                            </div>
-                                                            <% } %>
-                                                                <div class="image-input">
-                                                                    <input type="file" id="pdf-file" name="pdf-file"
-                                                                        accept="image/*" />
-                                                                    <i class="bi bi-x-square"></i>
-                                                                </div>
-                                                    </div>
+                                                
 
                                                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                 <button type="submit" class="button large">
@@ -160,7 +188,10 @@
                         <script src="/assets/js/breakpoints.min.js"></script>
                         <script src="/assets/js/util.js"></script>
                         <script src="/assets/js/main.js"></script>
-                        <!-- <script src="/assets/js/close-message.js"></script> -->
+                        <script src="/assets/js/close-message.js"></script>
+                        <script src="/assets/js/diskApiHandler.js"></script>
+
+
 
     </body>
 

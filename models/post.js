@@ -37,6 +37,10 @@ const Post = sequelize.define("post", {
     type: Sequelize.JSON,
     allowNull: true,
   },
+  isPublished: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false,
+  },
 });
 
 module.exports = Post;

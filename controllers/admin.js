@@ -15,7 +15,9 @@ const { getContentImages } = require("../util/contentImages");
 const { Op } = require("sequelize");
 const axios = require('axios')
 const qs = require('querystring');
-const fs = require('fs')
+const fs = require('fs');
+const Guide = require("../models/guide");
+const { getFileType } = require("../util/fileFeatures");
 
 exports.postAddImage = async (req, res) => {
   try {
@@ -743,6 +745,7 @@ exports.postEditCategory = (req, res, next) => {
 };
 
 exports.getAddGuide = async (req, res, next) => {
+  console.log('Заполнение формы');
   try {
     const categories = await Category.findAll()
     res.render('admin/add-guide', {
@@ -751,9 +754,9 @@ exports.getAddGuide = async (req, res, next) => {
       editing: false,
       categories: categories,
       csrfToken: req.csrfToken(),
+      errorMessage: req.flash("error"),
+      successMessage: req.flash("success"),
       hasError: false,
-      errorMessage: req.flash("error") || null,
-      successMessage: req.flash("success") || null,
       validationErrors: [],
     })
   } catch (error) {
@@ -762,6 +765,122 @@ exports.getAddGuide = async (req, res, next) => {
   }
 }
 
+exports.postAddGuide = async (req, res, next) => {
+  try {
+    const { title, preview, content, fileUrl, fileType, fileSize, contentType } = req.body;
+
+    const cleanTitle = sanitizeHtml(title, {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
+    const cleanContent = cleanInput(content);
+    const cleanPreview = cleanInput(preview);
+
+    let image;
+    let cover;
+
+    // Изображение
+    if (req.files && req.files["image"]) {
+      // Приоритет 1: новый файл загружен
+      image = "/images/guides/" + req.files["image"][0].filename;
+    } else if (req.session.tempImage) {
+      // Приоритет 2: файл из сессии (был загружен ранее)
+      image = req.session.tempImage;
+    } else null;
+
+    // Обложка
+    if (req.files && req.files["cover"]) {
+      // Приоритет 1: новый файл загружен
+      cover = "/images/guides/cover/" + req.files["cover"][0].filename;
+    } else if (req.session.tempCover) {
+      // Приоритет 2: файл из сессии (был загружен ранее)
+      cover = req.session.tempCover;
+    } else null;
+
+    const errors = validationResult(req);
+    // Если есть ошибки валидации
+    if (!errors.isEmpty()) {
+      const categories = await Category.findAll();
+      // Если был загружен файл с формы, то проверяем session и удаляем если файл с диска
+      // Записываем в session новый путь к файлу
+      if (req.files["image"]) {
+        if (req.session.tempImage) deleteFile(req.session.tempImage)
+        req.session.tempImage = "/images/posts/" + req.files["image"][0].filename;
+      }
+      if (req.files["cover"]) {
+        if (req.session.tempCover) deleteFile(req.session.tempCover)
+        req.session.tempCover = "/images/posts/cover/" + req.files["cover"][0].filename;
+      }
+      if (req.files["gallery"]) {
+        if (req.session.tempGallery) deleteFiles(req.session.tempGallery)
+        req.session.tempGallery = req.files["gallery"].map(file => "/images/posts/gallery/" + file.filename);
+      }
+
+      return res.status(422).render("admin/add-guide", {
+        guide: {
+          title: cleanTitle,
+          content: cleanContent,
+          preview: cleanPreview,
+          image: image,
+          cover: cover,
+          fileUrl: fileUrl,
+          fileType: fileType,
+          fileSize: fileSize,
+          contentType: contentType
+        },
+
+        pageTitle: "Добавить гайд",
+        path: "/admin/add-guide",
+        editing: false,
+        categories: categories,
+        csrfToken: req.csrfToken(),
+        errorMessage: req.flash("error"),
+        successMessage: req.flash("success"),
+        hasError: false,
+        validationErrors: [],
+      });
+    }
+
+    const createdGuide = await Guide.create({
+      title,
+      preview,
+      content,
+      fileUrl,
+      fileType,
+      fileSize,
+      contentType: contentType
+    });
+
+    const usedImages = getContentImages(cleanContent)
+
+    await Image.update({
+      guideId: createdGuide.id,
+    },
+      {
+        where: {
+          path: { [Op.in]: usedImages }
+        }
+      }
+    )
+
+    req.session.tempImage = null
+    req.session.tempCover = null
+    req.session.tempGallery = null
+    req.flash('success', 'Успешно добавлено');
+    return res.redirect('/library');
+
+  } catch (err) {
+    console.error("Ошибка при добавлении гайда:", err); // ← должно выводиться
+    req.flash("error", `Не удалось добавить гайд - ${err.message}`);
+    req.session.tempImage = null
+    req.session.tempCover = null
+    req.session.tempGallery = null
+    const error = new Error(err.message);
+    error.httpStatusCode = 500;
+    return next(error); // ← передаём ошибку
+  }
+};
+
 
 exports.getYandexDiskUrl = (req, res, next) => {
   const clientId = process.env.CLIENT_ID_DISK_API;
@@ -769,6 +888,96 @@ exports.getYandexDiskUrl = (req, res, next) => {
   const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
   res.json({ url: authUrl });
 }
+
+exports.handleYandexCallback = async (req, res, next) => {
+  const code = req.query.code;
+  if (!code) {
+    return res.status(400).send('Ошибка: не получен code');
+  }
+
+  try {
+    // Получение access_token
+    const tokenResponse = await axios.post('https://oauth.yandex.ru/token',
+      qs.stringify({
+        grant_type: 'authorization_code',
+        code,
+        client_id: process.env.CLIENT_ID_DISK_API,
+        client_secret: process.env.CLIENT_SECRET_DISK_API,
+        redirect_uri: process.env.REDIRECT_URI_DISK_API
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+    const expiresIn = tokenResponse.data.expires_in; // обычно 3600 секунд = 1 час
+    const expireTime = Date.now() + expiresIn * 1000;
+
+    if (!accessToken || !expireTime) {
+      return res.status(401).json({ error: 'Токен не найден' });
+    }
+    if (Date.now() > expireTime) {
+      return res.status(401).json({ error: 'Токен истёк. Авторизуйтесь заново.' });
+    }
+
+    req.session.yandexDiskAccessToken = accessToken
+    await req.session.save()
+
+    req.flash("success", "Успешная авторизация, теперь можно получить ссылку");
+    res.redirect('/admin/add-guide')
+
+  } catch (error) {
+    console.log("Ошибка: ", error)
+    throw new Error("Ошибка получения и сохранения токена")
+  }
+}
+
+
+exports.getDownloadLink = async (req, res) => {
+  const fileName = req.query.fileName;
+
+  try {
+    const yandexDiskAccessToken = req.yandexDiskAccessToken;
+
+    if (!yandexDiskAccessToken) {
+      console.log("access token - ", yandexDiskAccessToken)
+      req.flash("error", "Требуется авторизация Яндекс ID!");
+      return res.status(403).json({
+        error: 'Требуется авторизация',
+        redirect: '/admin/add-guide'
+      });
+    }
+
+    const path = `guides/${fileName}`;
+
+    // Получаем метаданные
+    const response = await axios.get(`https://cloud-api.yandex.net/v1/disk/resources`, {
+      params: { path },
+      headers: { Authorization: `${yandexDiskAccessToken}` }
+    });
+
+    const publicUrl = response.data.file;
+    const fileSize = response.data.size;
+    const mimeType = response.data.mime_type
+
+    if (!publicUrl) {
+      return res.status(404).json({ error: 'Ссылка не доступна' });
+    }
+
+    res.json({
+      downloadLink: publicUrl,
+      fileSize: fileSize,
+      fileType: getFileType(mimeType)
+    });
+
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: 'Ошибка получения ссылки' });
+  }
+};
 
 exports.getDownloadPdf = async (req, res, next) => {
   const code = req.query.code;
@@ -805,7 +1014,7 @@ exports.getDownloadPdf = async (req, res, next) => {
     }
     // ШАГ 2: Теперь можно загрузить PDF в Яндекс.Диск
     const uploadUrl = 'https://cloud-api.yandex.net/v1/disk/resources/upload';
-    const folder = 'guides' ;
+    const folder = 'guides';
     const fileName = `Checklist-123-${Date.now()}.pdf`;
     const filePath = `${folder}/${fileName}`;
 

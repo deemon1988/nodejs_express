@@ -72,9 +72,25 @@ router.post(
   adminController.postAddPost
 );
 
-router.get('/add-guide', csrfProtection, adminController.getAddGuide)
-router.get('/api/yandex-disk-start', csrfProtection, adminController.getYandexDiskUrl)
-router.get('/yandex/disk/download-pdf', csrfProtection, adminController.getDownloadPdf)
+router.get('/add-guide',
+  csrfProtection,
+  isAuth,
+  isAdmin,
+  adminController.getAddGuide)
+
+router.post('/add-guide', upload.fields([
+  { name: "image", maxCount: 1 },
+  { name: "cover", maxCount: 1 },
+]),
+csrfProtection,
+  isAuth,
+  isAdmin,
+  adminController.postAddGuide)
+
+router.get('/api/yandex-disk-start', csrfProtection, isAuth, isAdmin, adminController.getYandexDiskUrl)
+router.get('/yandex/disk/callback', csrfProtection, isAuth, isAdmin, adminController.handleYandexCallback)
+router.get('/api/yandex-disk-get-link', csrfProtection, isAuth, isAdmin, adminController.getDownloadLink)
+router.get('/yandex/disk/download-pdf', csrfProtection, isAuth, isAdmin, adminController.getDownloadPdf)
 
 
 router.post(

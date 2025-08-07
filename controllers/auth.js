@@ -429,7 +429,7 @@ exports.getAuthCallback = async (req, res, next) => {
     });
 
     const userInfo = userInfoResponse.data;
-    console.log(userInfo)
+
     const [currentUser, userCreated] = await User.findOrCreate({
       where: { email: userInfo.default_email },
       defaults: {

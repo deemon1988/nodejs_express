@@ -26,7 +26,8 @@ router.get('/library/download/:guideId', csrfProtection, isAuth, postsController
 // Маршрут для подписки
 router.post('/subscribe', csrfProtection, isAuth, postsController.subscribe);
 // Маршрут для скачивания файла
-router.get("/library/:guideId", isAuth, postsController.getGuide);
+router.get("/library/:guideId", isAuth, postsController.getRenderGuide);
+router.get("/library/guide/:guideId", isAuth, postsController.getGuide);
 
 
 router.post("/comment/:postId", isAuth, postsController.postComment)

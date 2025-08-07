@@ -81,6 +81,7 @@ app.use((req, res, next) => {
       }
 
       req.user = user;
+      req.yandexDiskAccessToken = req.session?.yandexDiskAccessToken ? req.session.yandexDiskAccessToken : null
       next();
     })
     .catch((err) => {
@@ -97,7 +98,10 @@ app.use((req, res, next) => {
   res.locals.user = req.user || null;
   res.locals.userRole = req.user ? req.user.role : "user";
   app.locals.tinyApiKey = process.env.TINY_API_KEY;
-  res.locals.accessToken = req.session.accessToken ? req.session.accessToken : null
+  res.locals.yandexDiskAccessToken = req.session.yandexDiskAccessToken ? req.session.yandexDiskAccessToken : null
+  // res.locals.errorMessage = req.flash('error');
+  // res.locals.successMessage = req.flash('success');
+  console.log(req.session.yandexDiskAccessToken)
   next();
 });
 

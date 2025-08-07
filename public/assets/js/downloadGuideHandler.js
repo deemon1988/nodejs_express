@@ -1,4 +1,5 @@
 
+
 document.addEventListener('click', function (event) {
     // Находим ближайший элемент с классом .download-btn
     const button = event.target.closest('.download-btn');
@@ -43,94 +44,25 @@ function downloadGuide(guideId) {
         });
 }
 
-function startDownload(guideId) {
-    // Создаём скрытую ссылку и "кликаем" по ней
-    const a = document.createElement('a');
-    a.href = `/library/${guideId}`;
-    a.download = true;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
-
-function showSubscriptionModal(guideId) {
-    // Создаём простое модальное окно
-    const modal = document.createElement('div');
-    modal.id = 'subscription-modal';
-    modal.innerHTML = `
-      <div class="modal-container">
-        <h3>Подпишитесь на рассылку!</h3>
-        <p>Получайте полезные чек-листы и советы каждую неделю.</p>
-        <div id="email-error-message" class="error-message"></div>
-        <input id="subscriber-email" type="email" placeholder="Ваш email">
-        <br>
-        <button class="btn large modal-btn-subscribe" onclick="subscribeAndDownload('${guideId}')">
-          Подписаться и скачать
-        </button>
-        <button class="button large modal-btn-download" onclick="skipAndDownload('${guideId}')">
-          Пропустить и скачать
-        </button>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-}
-
-function closeSubscriptionModal() {
-    const modal = document.getElementById('subscription-modal');
-    if (modal) modal.remove();
-}
-
-function subscribeAndDownload(guideId) {
-    const emailInput = document.getElementById('subscriber-email');
-    const errorElement = document.getElementById('email-error-message');
-    // Убираем класс error при начале ввода
-    emailInput.addEventListener('input', function () {
-        this.classList.remove('error');
-        // errorElement.style.display = 'none';
-        errorElement.textContent = '';
-    });
-
-    const email = emailInput?.value.trim();
-    if (!email) {
-        alert('Введите email');
-        return;
-    }
-    if (email && !isValidEmail(email)) {
-        emailInput.classList.add('error')
-        // Показываем сообщение под полем
-        errorElement.textContent = 'Введите корректный email';
-        errorElement.style.display = 'block';
-        // Swal.fire({
-        //     icon: 'error',
-        //     title: 'Ошибка',
-        //     text: 'Введите корректный email',
-        //     confirmButtonText: 'Закрыть'
-        // });
-        return;
-    }
-    fetch('/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-    })
-        .then(() => {
-            closeSubscriptionModal();
-            startDownload(guideId);
+async function startDownload(guideId) {
+    try {
+        const result = await fetch(`/library/guide/${guideId}`, {
+            headers: {
+                "Content-Type": 'application/json'
+            }
         })
-        .catch(() => {
-            alert('Не удалось подписаться, но вы можете скачать файл.');
-
-            closeSubscriptionModal();
-            startDownload(guideId);
-        });
+        if (!result.ok) {
+            throw new Error("Не получилось скачать файл")
+        }
+        const data = await result.json()
+        window.location.href = data.downloadUrl;
+    } catch (err) {
+        console.error('Ошибка загрузки:', err);
+        alert('Не удалось начать загрузку файла');
+    }
 }
 
-function skipAndDownload(guideId) {
-    closeSubscriptionModal();
-    startDownload(guideId);
-}
+
 
 function isValidEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -138,8 +70,6 @@ function isValidEmail(email) {
 }
 
 function showSubscriptionPrompt(guideId) {
-    console.log('📥 Начало: guideId =', guideId, typeof guideId);
-
     Swal.fire({
         title: '<strong>Подпишитесь на рассылку!</strong>',
         html: `
@@ -190,17 +120,7 @@ function showSubscriptionPrompt(guideId) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            // Подписался — отправляем email
-            fetch('/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'CSRF-Token': csrfToken },
-                body: JSON.stringify({ email: result.value.email })
-            })
-                .catch(console.warn)
-                .finally(() => {
-                    // startDownload(guideId); // Скачиваем в любом случае
-                });
+            handleSubscription(result.value.email, guideId)
         }
         else if (result.dismiss === Swal.DismissReason.cancel) {
             // Кнопка "Пропустить и скачать"
@@ -208,4 +128,46 @@ function showSubscriptionPrompt(guideId) {
             startDownload(guideId);
         }
     });
+}
+
+async function handleSubscription(email, guideId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    try {
+        // Подписался — отправляем email
+        const response = await fetch('/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'CSRF-Token': csrfToken },
+            body: JSON.stringify({ email: email })
+        })
+
+        if (!response.ok) throw new Error('Не удалось оформить подписку')
+
+        const data = await response.json()
+        if (data.success) {
+            // Сообщение об успешной подписке
+            await Swal.fire({
+                title: 'Успешно!',
+                text: 'Вы успешно подписались на рассылку',
+                icon: 'success',
+                timer: 3000,
+                showConfirmButton: false
+            })
+        }
+
+    } catch (err) {
+        console.error('Ошибка подписки:', err);
+        await Swal.fire({
+            title: 'Ошибка',
+            text: 'Не удалось оформить подписку: ' + err.message,
+            icon: 'error',
+            timer: 3000,
+            showConfirmButton: false
+        })
+
+    } finally {
+        // ✅ Всегда скачиваем файл — в finally
+        startDownload(guideId);
+    }
+
+
 }
