@@ -1,13 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     const editForm = document.getElementById('edit-create-post-form')
     const postImageBlocks = editForm.querySelectorAll('.post-image');
-    const multiplePreviewContainer = editForm.querySelector('.image-preview');
     const galleryBlock = editForm.querySelector('.post-gallery');
+
+    if (galleryBlock.innerHTML !== '') {
+        const postImageBlocks = galleryBlock.closest('.post-image');
+        const icon = postImageBlocks.querySelector('i.bi-x-square');
+        icon.addEventListener('click', () => {
+            galleryBlock.innerHTML = ''
+            icon.classList.remove('show')
+        })
+    }
 
     postImageBlocks.forEach(block => {
         const img = block.querySelector('img');
         const icon = block.querySelector('i.bi-x-square');
         const input = block.querySelector('input[type="file"]')
+        const hiddenInput = block.querySelector('input[type="hidden"]')
 
         if (img && icon) {
             const src = img.getAttribute('src');
@@ -15,19 +24,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon.classList.add('show');
             }
             icon.addEventListener('click', () => {
-                img.src = ''
+                img.removeAttribute('src');
                 icon.classList.remove('show')
                 input.value = ''
-                console.log('imnput listener')
-
+                if (hiddenInput) {
+                    hiddenInput.value = 'true'
+                }
+                  console.log('Удаление image')
+            console.log('hiddenInput - ', hiddenInput.value)
+            console.log('hiddenName - ', hiddenInput.getAttribute('name'))
             })
         }
         let isGalleryIconBound = false;
+
         // 2. При выборе файла — показать иконку
         input.addEventListener('change', () => {
             if (input.files && input.files.length > 0) {
                 icon.classList.add('show');
+                hiddenInput.value = 'false'
+                console.log('Изменение в image')
+                console.log('hiddenInput - ', hiddenInput.value)
             }
+
             // Если multiple и есть контейнер для превью — отобразить все
             if (input.multiple) {
                 galleryBlock.innerHTML = ''; // очистка предыдущих превью
@@ -37,10 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     reader.onload = (e) => {
                         const previewImg = document.createElement('img');
                         previewImg.src = e.target.result;
-                        // previewImg.style.maxWidth = '300px';
-                        // previewImg.style.margin = '5px';
                         galleryBlock.appendChild(previewImg);
-
                     };
                     reader.readAsDataURL(file);
                     // Назначаем обработчик удаления только один раз
@@ -51,14 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             galleryBlock.innerHTML = '';
                             icon.classList.remove('show');
                             input.value = '';
-                            console.log('imnput multiple')
+                            // Отмечаем, что файл был удален
+                            if (hiddenInput) {
+                                hiddenInput.value = 'true'
+                            }
+                            console.log('Удаление image')
+                            console.log('hiddenInput - ', hiddenInput.value)
                         });
                     }
                 });
             } else {
                 const reader = new FileReader()
                 reader.onload = (e) => {
-                    img.src = e.target.result
+                    img.setAttribute('src', e.target.result);
                 }
                 reader.onerror = (err) => {
                     console.error(err)

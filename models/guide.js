@@ -48,4 +48,14 @@ const Guide = sequelize.define('guides', {
 
 });
 
+// Связь с изображениями
+Guide.prototype.getImages = function() {
+    return Image.findAll({
+        where: {
+            entityId: this.id,
+            entityType: 'guide'
+        }
+    })
+}
+
 module.exports = Guide

@@ -82,29 +82,34 @@
                                                 <div class="post-images-main">
                                                     <div class="post-image">
                                                         <label for="image">Изображение</label>
-                                                        <% if (editing || hasError) { %>
-                                                            <div class="image-img">
+                                                        <div class="image-img">
+                                                                <% if (editing || hasError) { %>
                                                                 <img src="<%= post.image %>" alt="<%= post.title %>">
+                                                                <% } else { %>
+                                                                <img src="" alt="">
+                                                                <% } %>
                                                             </div>
-
-                                                            <% } %>
                                                             <div class="image-input">
                                                                 <input type="file" id="image" name="image"
                                                                     accept="image/*" />
+                                                                <input type="hidden" name="imageDeleted" id="imageDeleted" value="false">
                                                                 <i class="bi bi-x-square"></i>
                                                             </div>
                                                     </div>
 
                                                     <div class="post-image">
                                                         <label for="cover">Обложка</label>
-                                                        <% if (editing || hasError) { %>
-                                                            <div class="image-img">
+                                                        <div class="image-img">
+                                                            <% if (editing || hasError) { %>
                                                                 <img src="<%= post.cover %>" alt="">
+                                                                <% } else { %>
+                                                                <img src="" alt="">
+                                                                <% } %>
                                                             </div>
-                                                            <% } %>
                                                                 <div class="image-input">
                                                                     <input type="file" id="cover" name="cover"
                                                                         accept="image/*" />
+                                                                    <input type="hidden" name="coverDeleted" id="coverDeleted" value="false">
                                                                     <i class="bi bi-x-square"></i>
                                                                 </div>
                                                     </div>
@@ -112,20 +117,21 @@
 
                                                 <div class="post-image">
                                                     <label for="gallery">Галерея</label>
+                                                    <div class="post-gallery">
                                                     <% if (editing || hasError ) { %>
-                                                        <div class="post-gallery">
                                                             <% if (post.gallery && post.gallery.length> 0) { %>
                                                                 <% for(let image of post.gallery) { %>
                                                                 <div class="image-img">
                                                                     <img src="<%= image %>" alt="">
                                                                 </div>
-                                                                    <% } %>
-                                                                        <% } %>
-                                                        </div>
-                                                        <% } %>
+                                                                <% } %>
+                                                            <% } %>
+                                                    <% } %>
+                                                    </div>
                                                             <div class="image-input">
                                                                 <input type="file" id="gallery" name="gallery"
                                                                     accept="image/*" multiple />
+                                                                <input type="hidden" name="galleryDeleted" id="galleryDeleted" value="false">
                                                                 <i class="bi bi-x-square"></i>
                                                             </div>
                                                 </div>
@@ -167,10 +173,7 @@
                         <script src="/assets/js/util.js"></script>
                         <script src="/assets/js/main.js"></script>
                         <script src="/assets/js/editFormHandler.js"></script>
-                     
-
-                        <!-- <script src="/assets/js/postHandler.js"></script> -->
-                        <!-- <script src="/assets/js/close-message.js"></script> -->
+                        <script src="/assets/js/close-message.js"></script>
 
     </body>
 

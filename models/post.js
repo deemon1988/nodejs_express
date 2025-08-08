@@ -43,5 +43,15 @@ const Post = sequelize.define("post", {
   },
 });
 
+// Связь с изображениями
+Post.prototype.getImages = function() {
+    return Image.findAll({
+        where: {
+            entityId: this.id,
+            entityType: 'post'
+        }
+    })
+}
+
 module.exports = Post;
 

@@ -20,6 +20,14 @@ const fileStorage = multer.diskStorage({
       } else {
         dir = path.join(__dirname, "../public/images/other");
       }
+    } else if (req.path === "/add-guide" || req.path === "/edit-guide") {
+      if (file.fieldname === "image") {
+        dir = path.join(__dirname, "../public/images/guides");
+      } else if (file.fieldname === "cover") {
+        dir = path.join(__dirname, "../public/images/guides/cover");
+      } else {
+        dir = path.join(__dirname, "../public/images/other");
+      }
     } else if (
       req.path === "/create-category" ||
       req.path === "/update-category"
@@ -43,17 +51,17 @@ const fileStorage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-     if (file.fieldname === 'image') {
+  if (file.fieldname === 'image') {
     req.imageUploadAttempted = true;
   }
-    if (file.mimetype === 'image/jpg' ||
-        file.mimetype === 'image/jpeg' ||
-        file.mimetype === 'image/png'
-    ) {
-        cb(null, true)
-    } else {
-        cb(null, false);
-    }
+  if (file.mimetype === 'image/jpg' ||
+    file.mimetype === 'image/jpeg' ||
+    file.mimetype === 'image/png'
+  ) {
+    cb(null, true)
+  } else {
+    cb(null, false);
+  }
 }
 
 const upload = multer({ storage: fileStorage, fileFilter: fileFilter });

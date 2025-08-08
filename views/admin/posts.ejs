@@ -29,7 +29,7 @@
                 <!-- Post -->
                 <% if (posts.length> 0) { %>
                     <% for (let post of posts) { %>
-                        <article class="post">
+                        <article class="post page-preview">
                            
                             <header>
                                 <div class="title">
@@ -48,12 +48,13 @@
                             <p class="post-preview">
                                 <%- fixPrepositions(post.content) %>
                             </p>
+                            
                             <footer>
                                 <ul class="actions">
                                     <li><a href="/admin/edit-post/<%= post.id %>?edit=true" class="button large edit-btn">
                                         Редактировать <i class="bi bi-pencil-square"></i></a></li>
                                     <li>
-                                        <form action="/admin/delete-post" method="post">
+                                        <form action="/admin/delete-post" method="post" class="post-delete-form">
                                              <button type="submit" name="action" value="delete" class="button large delete-btn"
                                                 onclick="return confirm(`Вы уверены, что хотите удалить пост с id=<%= post.id %> Название: <%= post.title %> ?`)">
                                                 Удалить <i class="bi bi-folder-x"></i>
@@ -71,6 +72,7 @@
                                     <li><a href="/single/<%= post.id %>#comments" class="icon solid fa-comment"> <%= post.comment ? post.comment.length : 0 %></a></li>
                                 </ul>
                             </footer>
+
                         </article>
                         <% } %>
                             <% } else { %>

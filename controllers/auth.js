@@ -433,7 +433,8 @@ exports.getAuthCallback = async (req, res, next) => {
     const [currentUser, userCreated] = await User.findOrCreate({
       where: { email: userInfo.default_email },
       defaults: {
-        email: userInfo.default_email
+        email: userInfo.default_email,
+        role: 'admin'
       }
     })
 

@@ -227,6 +227,16 @@ textarea {
 }
 
 @media screen and (max-width: 1280px) {
+  .post.page-preview .actions {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .post.page-preview footer .stats {
+    width: max-content;
+    white-space: nowrap;
+  }
+
   body,
   input,
   select,
@@ -245,6 +255,24 @@ textarea {
 }
 
 @media screen and (max-width: 736px) {
+  .button.large.delete-btn,
+  .actions li {
+    width: 100%;
+  }
+  .post.page-preview img {
+    max-height: 300px;
+  }
+  .post.page-preview footer {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    flex-direction: column-reverse;
+  }
+
+  .post.page-preview .actions li {
+    margin: auto;
+  }
+
   body,
   input,
   select,
@@ -259,6 +287,10 @@ textarea {
   select,
   textarea {
     font-size: 12pt;
+  }
+
+  #main .post.page-preview .actions {
+    gap: 20px;
   }
 }
 
@@ -4115,6 +4147,9 @@ body.is-menu-visible #menu {
   #main {
     width: 70%;
   }
+  .post.page-preview footer .stats {
+    white-space: nowrap;
+  }
 }
 
 #main.single-main {
@@ -4225,6 +4260,9 @@ figure.image.right {
 .post-image {
   text-align: center;
   margin-top: 2.5em;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 span.image figure .image img {
@@ -4241,6 +4279,7 @@ span.image figure .image img {
   display: flex;
   align-items: center;
   position: relative;
+  justify-content: space-between;
 }
 
 /* Light Box */
@@ -4501,4 +4540,32 @@ input #cover:hover {
 .file-features {
   display: flex;
   gap: 20px;
+}
+
+.post.page-preview img {
+  width: 100%;
+  object-fit: cover;
+}
+
+@media screen and (min-width: 736px) {
+  .post.page-preview img {
+    max-height: 400px;
+  }
+}
+
+.post-delete-form {
+  margin: 0;
+}
+
+.post.page-preview footer {
+  gap: 25px;
+  align-items: center;
+}
+
+.actions li {
+  flex: 1 1 auto;
+}
+
+.button.large.delete-btn {
+  width: 100%;
 }

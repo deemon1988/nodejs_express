@@ -152,8 +152,8 @@ Alias.belongsTo(Category);
 Alias.belongsTo(User);
 User.hasMany(Alias);
 
-Image.belongsTo(Post, { constraints: true, onDelete: "CASCADE" })
-Post.hasMany(Image)
+// Image.belongsTo(Post, { constraints: true, onDelete: "CASCADE" })
+// Post.hasMany(Image)
 
 User.hasOne(YandexAccount)
 

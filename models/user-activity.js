@@ -9,7 +9,7 @@ const UserActivity = sequelize.define("useractivity", {
     primaryKey: true,
   },
   actionType: {
-    type: Sequelize.ENUM("post_created", "profile_updated", "comment_added"),
+    type: Sequelize.ENUM("post_created", "profile_updated", "comment_added", "guide_created", "guide_updated"),
     allowNull: false,
   },
   targetId: {
@@ -17,7 +17,7 @@ const UserActivity = sequelize.define("useractivity", {
     allowNull: false,
   },
   targetType: {
-    type: Sequelize.ENUM("post", "profile", "comment"),
+    type: Sequelize.ENUM("post", "profile", "comment", "guide"),
     allowNull: false,
   },
   description: {

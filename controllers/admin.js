@@ -18,6 +18,8 @@ const qs = require('querystring');
 const fs = require('fs');
 const Guide = require("../models/guide");
 const { getFileType } = require("../util/fileFeatures");
+const { createUserActivity } = require("../util/userActivity");
+const { getFileFromRequest, checkAndSaveFileFromRequest, getFilesFromRequest } = require("../util/handleFileFromRequest");
 
 exports.postAddImage = async (req, res) => {
   try {
@@ -32,11 +34,11 @@ exports.postAddImage = async (req, res) => {
       path: `${req.protocol}://${req.get('host')}/images/posts/tinymce/${file.filename}`, // или req.path динамически
       size: file.size,
       mimetype: file.mimetype,
+      // entityType: 'post'
       // postId пока null — неизвестен
     });
     await image.save()
     // Возвращаем URL для TinyMCE
-    console.log("Путь до файла", image.path)
     res.json({
       location: image.path
     });
@@ -44,7 +46,6 @@ exports.postAddImage = async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Upload failed' });
   }
-
 };
 
 exports.getAddPost = (req, res, next) => {
@@ -83,30 +84,13 @@ exports.postAddPost = async (req, res, next) => {
     let image;
     let cover;
     let gallery;
-    // Изображение
-    if (req.files && req.files["image"]) {
-      // Приоритет 1: новый файл загружен
-      image = "/images/posts/" + req.files["image"][0].filename;
-    } else if (req.session.tempImage) {
-      // Приоритет 2: файл из сессии (был загружен ранее)
-      image = req.session.tempImage;
-    } else null;
 
-    // Обложка
-    if (req.files && req.files["cover"]) {
-      // Приоритет 1: новый файл загружен
-      cover = "/images/posts/cover/" + req.files["cover"][0].filename;
-    } else if (req.session.tempCover) {
-      // Приоритет 2: файл из сессии (был загружен ранее)
-      cover = req.session.tempCover;
-    } else null;
+    // Для постов
+    image = getFileFromRequest(req, 'image', '/images/posts');
+    cover = getFileFromRequest(req, 'cover', '/images/posts/cover');
 
     // Галерея
-    if (req.files && req.files['gallery']) {
-      gallery = req.files['gallery'].map(file => "/images/posts/gallery/" + file.filename)
-    } else if (req.session.tempGallery) {
-      gallery = req.session.tempGallery.map(file => file)
-    } else[]
+    gallery = getFilesFromRequest(req, 'gallery', '/images/posts/gallery')
 
     const errors = validationResult(req);
     // Если есть ошибки валидации
@@ -114,18 +98,7 @@ exports.postAddPost = async (req, res, next) => {
       const categories = await Category.findAll();
       // Если был загружен файл с формы, то проверяем session и удаляем если файл с диска
       // Записываем в session новый путь к файлу
-      if (req.files["image"]) {
-        if (req.session.tempImage) deleteFile(req.session.tempImage)
-        req.session.tempImage = "/images/posts/" + req.files["image"][0].filename;
-      }
-      if (req.files["cover"]) {
-        if (req.session.tempCover) deleteFile(req.session.tempCover)
-        req.session.tempCover = "/images/posts/cover/" + req.files["cover"][0].filename;
-      }
-      if (req.files["gallery"]) {
-        if (req.session.tempGallery) deleteFiles(req.session.tempGallery)
-        req.session.tempGallery = req.files["gallery"].map(file => "/images/posts/gallery/" + file.filename);
-      }
+      checkAndSaveFileFromRequest(req, '/images/posts')
 
       return res.status(422).render("admin/edit-post", {
         post: {
@@ -169,7 +142,8 @@ exports.postAddPost = async (req, res, next) => {
     const usedImages = getContentImages(cleanContent)
 
     await Image.update({
-      postId: createdPost.id,
+      entityId: createdPost.id,
+      entityType: 'post'
     },
       {
         where: {
@@ -178,13 +152,8 @@ exports.postAddPost = async (req, res, next) => {
       }
     )
 
-    await UserActivity.create({
-      profileId: userProfile.id,
-      actionType: "post_created",
-      targetType: "post",
-      targetId: createdPost.id,
-      description: `Добавлен пост "${createdPost.title}"`,
-    });
+    await createUserActivity(user.id, "post_created", "post", createdPost.id, `Добавлен пост "${createdPost.title}"`)
+
     req.session.tempImage = null
     req.session.tempCover = null
     req.session.tempGallery = null
@@ -193,7 +162,6 @@ exports.postAddPost = async (req, res, next) => {
 
   } catch (err) {
     console.error("Ошибка при добавлении поста:", err);
-    // req.flash("error", `Не удалось добавить пост - ${err.message}`);
 
     req.session.tempImage = null
     req.session.tempCover = null
@@ -213,7 +181,7 @@ exports.postDeletePost = async (req, res, next) => {
       req.flash("error", "У вас не прав для удаления поста");
       throw new Error("Пост не найден");
     }
-    const tinymce_images = await Image.findAll({ where: { postId: deleteablePost.id } })
+    const tinymce_images = await Image.findAll({ where: { entityId: deleteablePost.id, entityType: 'post' } })
     if (tinymce_images.length > 0) {
       const imagesPaths = tinymce_images.map(image => image.path)
       deleteFiles(imagesPaths)
@@ -221,7 +189,10 @@ exports.postDeletePost = async (req, res, next) => {
     if (deleteablePost.image) deleteFile(deleteablePost.image)
     if (deleteablePost.cover) deleteFile(deleteablePost.cover)
     if (deleteablePost.gallery) deleteFiles(deleteablePost.gallery)
+    
+    await Image.deleteByEntity(deleteablePost.id, 'post')
     await deleteablePost.destroy()
+
     req.flash("success", "Пост был удален");
     res.redirect("/admin/posts");
   } catch (err) {
@@ -270,6 +241,7 @@ exports.getEditPost = (req, res, next) => {
         throw new Error("Пост не найден");
       }
       existPost = post;
+
       return Category.findAll();
     })
     .then((categories) => {
@@ -307,28 +279,14 @@ exports.postEditPost = async (req, res, next) => {
     const oldImage = updatedPost.image;
     const oldCover = updatedPost.cover;
     const oldGallery = updatedPost.gallery;
-    const oldTinymceImages = await Image.findAll({ where: { postId: postId } })
+    const oldTinymceImages = await Image.findAll({ where: { entityId: postId, entityType: 'post' } })
 
     let image = oldImage;
     let cover = oldCover;
     let gallery = oldGallery;
 
-
-    // Изображение
-    if (req.files && req.files["image"]) {
-      // Приоритет 1: новый файл загружен
-      image = "/images/posts/" + req.files["image"][0].filename;
-    } else if (req.session.tempImage) {
-      // Приоритет 2: файл из сессии (был загружен ранее)
-      image = req.session.tempImage;
-    }
-
-    // Обложка
-    if (req.files && req.files["cover"]) {
-      cover = "/images/posts/cover/" + req.files["cover"][0].filename;
-    } else if (req.session.tempCover) {
-      cover = req.session.tempCover;
-    }
+    image = getFileFromRequest(req, 'image', '/images/posts')
+    cover = getFileFromRequest(req, 'cover', '/images/posts/cover')
 
     // Галерея — массив файлов
     if (req.files && req.files["gallery"]) {
@@ -338,7 +296,6 @@ exports.postEditPost = async (req, res, next) => {
     } else if (req.session.tempGallery) {
       gallery = req.session.tempGallery;
     }
-
 
     const errors = validationResult(req).array();
 
@@ -352,14 +309,8 @@ exports.postEditPost = async (req, res, next) => {
 
 
     if (errors.length > 0) {
-      if (req.files["image"]) {
-        if (req.session.tempImage) deleteFile(req.session.tempImage);
-        req.session.tempImage = "/images/posts/" + req.files["image"][0].filename;
-      }
-      if (req.files["cover"]) {
-        if (req.session.tempCover) deleteFile(req.session.tempImage);
-        req.session.tempCover = "/images/posts/cover/" + req.files["cover"][0].filename;
-      }
+      checkAndSaveFileFromRequest(req, '/images/posts')
+
       if (req.files["gallery"]) {
         if (req.session.tempGallery) deleteFiles(req.session.tempGallery)
         req.session.tempGallery = req.files["gallery"].map(
@@ -415,7 +366,7 @@ exports.postEditPost = async (req, res, next) => {
 
     const usedImages = getContentImages(updatedContent)
     await Image.update({
-      postId: updatedPost.id,
+      entityId: updatedPost.id,
     },
       {
         where: {
@@ -432,7 +383,7 @@ exports.postEditPost = async (req, res, next) => {
       where: {
         [Op.or]: [
           { path: deletedImages },         // условие 1
-          { postId: null }                 // условие 2
+          { entityId: null }                 // условие 2
         ]
       }
     })
@@ -745,7 +696,6 @@ exports.postEditCategory = (req, res, next) => {
 };
 
 exports.getAddGuide = async (req, res, next) => {
-  console.log('Заполнение формы');
   try {
     const categories = await Category.findAll()
     res.render('admin/add-guide', {
@@ -768,7 +718,7 @@ exports.getAddGuide = async (req, res, next) => {
 exports.postAddGuide = async (req, res, next) => {
   try {
     const { title, preview, content, fileUrl, fileType, fileSize, contentType } = req.body;
-
+    const userId = req.user.id
     const cleanTitle = sanitizeHtml(title, {
       allowedTags: [],
       allowedAttributes: {},
@@ -779,23 +729,9 @@ exports.postAddGuide = async (req, res, next) => {
     let image;
     let cover;
 
-    // Изображение
-    if (req.files && req.files["image"]) {
-      // Приоритет 1: новый файл загружен
-      image = "/images/guides/" + req.files["image"][0].filename;
-    } else if (req.session.tempImage) {
-      // Приоритет 2: файл из сессии (был загружен ранее)
-      image = req.session.tempImage;
-    } else null;
-
-    // Обложка
-    if (req.files && req.files["cover"]) {
-      // Приоритет 1: новый файл загружен
-      cover = "/images/guides/cover/" + req.files["cover"][0].filename;
-    } else if (req.session.tempCover) {
-      // Приоритет 2: файл из сессии (был загружен ранее)
-      cover = req.session.tempCover;
-    } else null;
+    // Для гайдов
+    image = getFileFromRequest(req, 'image', '/images/guides');
+    cover = getFileFromRequest(req, 'cover', '/images/guides/cover');
 
     const errors = validationResult(req);
     // Если есть ошибки валидации
@@ -803,18 +739,15 @@ exports.postAddGuide = async (req, res, next) => {
       const categories = await Category.findAll();
       // Если был загружен файл с формы, то проверяем session и удаляем если файл с диска
       // Записываем в session новый путь к файлу
-      if (req.files["image"]) {
-        if (req.session.tempImage) deleteFile(req.session.tempImage)
-        req.session.tempImage = "/images/posts/" + req.files["image"][0].filename;
-      }
-      if (req.files["cover"]) {
-        if (req.session.tempCover) deleteFile(req.session.tempCover)
-        req.session.tempCover = "/images/posts/cover/" + req.files["cover"][0].filename;
-      }
-      if (req.files["gallery"]) {
-        if (req.session.tempGallery) deleteFiles(req.session.tempGallery)
-        req.session.tempGallery = req.files["gallery"].map(file => "/images/posts/gallery/" + file.filename);
-      }
+      // if (req.files["image"]) {
+      //   if (req.session.tempImage) deleteFile(req.session.tempImage)
+      //   req.session.tempImage = "/images/guides/" + req.files["image"][0].filename;
+      // }
+      // if (req.files["cover"]) {
+      //   if (req.session.tempCover) deleteFile(req.session.tempCover)
+      //   req.session.tempCover = "/images/guides/cover/" + req.files["cover"][0].filename;
+      // }
+      checkAndSaveFileFromRequest(req, '/images/guides')
 
       return res.status(422).render("admin/add-guide", {
         guide: {
@@ -854,7 +787,8 @@ exports.postAddGuide = async (req, res, next) => {
     const usedImages = getContentImages(cleanContent)
 
     await Image.update({
-      guideId: createdGuide.id,
+      entityId: createdGuide.id,
+      entityType: 'guide'
     },
       {
         where: {
@@ -863,9 +797,12 @@ exports.postAddGuide = async (req, res, next) => {
       }
     )
 
+
+    await createUserActivity(userId, "guide_created", "guide", createdGuide.id, `Добавлен материал "${createdGuide.title}"`)
+
     req.session.tempImage = null
     req.session.tempCover = null
-    req.session.tempGallery = null
+
     req.flash('success', 'Успешно добавлено');
     return res.redirect('/library');
 
@@ -874,7 +811,6 @@ exports.postAddGuide = async (req, res, next) => {
     req.flash("error", `Не удалось добавить гайд - ${err.message}`);
     req.session.tempImage = null
     req.session.tempCover = null
-    req.session.tempGallery = null
     const error = new Error(err.message);
     error.httpStatusCode = 500;
     return next(error); // ← передаём ошибку
