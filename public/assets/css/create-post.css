@@ -1,36 +1,36 @@
-
-    h1 {
-      text-align: center;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    label {
-      font-weight: bold;
-    }
-    input[type="text"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-    }
-    textarea {
-      resize: vertical;
-      min-height: 200px;
-    }
-    input[type="file"] {
-      padding: 5px;
-    }
-    button {
-      padding: 12px;
-      font-size: 16px;
-      border: none;
-      cursor: pointer;
-      align-self: center;
-    }
+h1 {
+  text-align: center;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+label {
+  font-weight: bold;
+}
+input[type="text"],
+textarea,
+select {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+}
+textarea {
+  resize: vertical;
+  min-height: 200px;
+}
+input[type="file"] {
+  padding: 5px;
+  cursor: pointer;
+}
+button {
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  align-self: center;
+}
 
 form.category-form {
   margin-bottom: 5em;

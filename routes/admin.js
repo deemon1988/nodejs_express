@@ -141,4 +141,10 @@ router.post(
   adminController.postDeleteCategory
 );
 
+router.get(
+  "/cancel-post-create",
+  csrfProtection,
+  adminController.postCancelPostCreate
+)
+
 module.exports = router;

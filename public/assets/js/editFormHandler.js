@@ -30,9 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (hiddenInput) {
                     hiddenInput.value = 'true'
                 }
-                  console.log('Удаление image')
-            console.log('hiddenInput - ', hiddenInput.value)
-            console.log('hiddenName - ', hiddenInput.getAttribute('name'))
             })
         }
         let isGalleryIconBound = false;
@@ -42,8 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (input.files && input.files.length > 0) {
                 icon.classList.add('show');
                 hiddenInput.value = 'false'
-                console.log('Изменение в image')
-                console.log('hiddenInput - ', hiddenInput.value)
             }
 
             // Если multiple и есть контейнер для превью — отобразить все
@@ -70,8 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (hiddenInput) {
                                 hiddenInput.value = 'true'
                             }
-                            console.log('Удаление image')
-                            console.log('hiddenInput - ', hiddenInput.value)
                         });
                     }
                 });

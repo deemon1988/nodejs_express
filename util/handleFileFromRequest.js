@@ -25,7 +25,6 @@ function getFileFromRequest(req, fieldName, basePath) {
 function getFilesFromRequest(req, fieldName, basePath) {
   // Проверяем, не был ли файл помечен как удаленный
   const fieldDeleted = req.body[`${fieldName}Deleted`] === 'true';
-
   if (fieldDeleted) {
     return null;
   }
@@ -40,8 +39,6 @@ function getFilesFromRequest(req, fieldName, basePath) {
   if (req.session && req.session[sessionKey]) {
     return req.session[sessionKey];
   }
-
-  return [];
 }
 
 function checkAndSaveFileFromRequest(req, basePath) {

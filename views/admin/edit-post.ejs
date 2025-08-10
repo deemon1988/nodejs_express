@@ -1,6 +1,6 @@
 <%- include('../includes/head.ejs') %>
     <link rel="stylesheet" href="/assets/css/create-post.css">
-    <script src="https://cdn.tiny.cloud/1/<%= tinyApiKey %>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- <script src="https://cdn.tiny.cloud/1/<%= tinyApiKey %>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script> -->
     </head>
 
     <body class="is-preload single">
@@ -83,18 +83,19 @@
                                                     <div class="post-image">
                                                         <label for="image">Изображение</label>
                                                         <div class="image-img">
-                                                                <% if (editing || hasError) { %>
+                                                            <% if (editing || hasError) { %>
                                                                 <img src="<%= post.image %>" alt="<%= post.title %>">
                                                                 <% } else { %>
-                                                                <img src="" alt="">
-                                                                <% } %>
-                                                            </div>
-                                                            <div class="image-input">
-                                                                <input type="file" id="image" name="image"
-                                                                    accept="image/*" />
-                                                                <input type="hidden" name="imageDeleted" id="imageDeleted" value="false">
-                                                                <i class="bi bi-x-square"></i>
-                                                            </div>
+                                                                    <img src="" alt="">
+                                                                    <% } %>
+                                                        </div>
+                                                        <div class="image-input">
+                                                            <input type="file" id="image" name="image"
+                                                                accept="image/*" />
+                                                            <input type="hidden" name="imageDeleted" id="imageDeleted"
+                                                                value="false">
+                                                            <i class="bi bi-x-square" title="Удалить изображение"></i>
+                                                        </div>
                                                     </div>
 
                                                     <div class="post-image">
@@ -103,50 +104,63 @@
                                                             <% if (editing || hasError) { %>
                                                                 <img src="<%= post.cover %>" alt="">
                                                                 <% } else { %>
-                                                                <img src="" alt="">
-                                                                <% } %>
-                                                            </div>
-                                                                <div class="image-input">
-                                                                    <input type="file" id="cover" name="cover"
-                                                                        accept="image/*" />
-                                                                    <input type="hidden" name="coverDeleted" id="coverDeleted" value="false">
-                                                                    <i class="bi bi-x-square"></i>
-                                                                </div>
+                                                                    <img src="" alt="">
+                                                                    <% } %>
+                                                        </div>
+                                                        <div class="image-input">
+                                                            <input type="file" id="cover" name="cover"
+                                                                accept="image/*" />
+                                                            <input type="hidden" name="coverDeleted" id="coverDeleted"
+                                                                value="false">
+                                                            <i class="bi bi-x-square" title="Удалить изображение"></i>
+                                                        </div>
+
                                                     </div>
                                                 </div>
 
                                                 <div class="post-image">
                                                     <label for="gallery">Галерея</label>
                                                     <div class="post-gallery">
-                                                    <% if (editing || hasError ) { %>
+                                                        <% if (editing || hasError ) { %>
                                                             <% if (post.gallery && post.gallery.length> 0) { %>
                                                                 <% for(let image of post.gallery) { %>
-                                                                <div class="image-img">
-                                                                    <img src="<%= image %>" alt="">
-                                                                </div>
-                                                                <% } %>
-                                                            <% } %>
-                                                    <% } %>
+                                                                    <div class="image-img">
+                                                                        <img src="<%= image %>" alt="">
+                                                                    </div>
+                                                                    <% } %>
+                                                                        <% } %>
+                                                                            <% } %>
                                                     </div>
-                                                            <div class="image-input">
-                                                                <input type="file" id="gallery" name="gallery"
-                                                                    accept="image/*" multiple />
-                                                                <input type="hidden" name="galleryDeleted" id="galleryDeleted" value="false">
-                                                                <i class="bi bi-x-square"></i>
-                                                            </div>
+                                                    <div class="image-input">
+                                                        <input type="file" id="gallery" name="gallery" accept="image/*"
+                                                            multiple />
+                                                        <input type="hidden" name="galleryDeleted" id="galleryDeleted"
+                                                            value="false">
+                                                        <i class="bi bi-x-square" title="Удалить изображения"></i>
+                                                    </div>
                                                 </div>
 
                                                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                                <button type="submit" class="button large">
-                                                    <% if (editing) { %> Обновить пост <% } else { %> Опубликовать пост
-                                                            <% } %>
-                                                </button>
+                                                <ul class="actions edit-post">
+                                                    <li>
+                                                        <button type="submit" class="button large">
+                                                            <% if (editing) { %> Обновить пост <% } else { %>
+                                                                    Опубликовать пост
+                                                                    <% } %>
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <a href="/admin/cancel-post-create"
+                                                            class="button large">Отменить</a>
+
+                                                    </li>
+                                                </ul>
                                     </form>
                                 </div>
                         </div>
 
                         <!-- Scripts -->
-                        <script>
+                        <!-- <script>
                             tinymce.init({
                                 selector: 'textarea#content',
                                 plugins: 'image code lists table',
@@ -166,7 +180,7 @@
                                 plugins: 'code lists',
                                 toolbar: 'undo redo | bold italic | bullist numlist | code'
                             });
-                        </script>
+                        </script> -->
                         <script src="/assets/js/jquery.min.js"></script>
                         <script src="/assets/js/browser.min.js"></script>
                         <script src="/assets/js/breakpoints.min.js"></script>

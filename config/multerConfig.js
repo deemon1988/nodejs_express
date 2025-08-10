@@ -54,6 +54,17 @@ const fileFilter = (req, file, cb) => {
   if (file.fieldname === 'image') {
     req.imageUploadAttempted = true;
   }
+   if (file.fieldname === 'cover') {
+    req.coverUploadAttempted = true;
+  }
+   if (file.fieldname === 'gallery') {
+    req.galleryUploadAttempted = true;
+    // Отслеживаем индивидуальные файлы в галерее
+    if (!req.galleryFilesAttempted) {
+      req.galleryFilesAttempted = [];
+    }
+    req.galleryFilesAttempted.push(file.originalname);
+  }
   if (file.mimetype === 'image/jpg' ||
     file.mimetype === 'image/jpeg' ||
     file.mimetype === 'image/png'

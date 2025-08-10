@@ -20,6 +20,10 @@ const Guide = require("../models/guide");
 const { getFileType } = require("../util/fileFeatures");
 const { createUserActivity } = require("../util/userActivity");
 const { getFileFromRequest, checkAndSaveFileFromRequest, getFilesFromRequest } = require("../util/handleFileFromRequest");
+const { updateTinyMceImages, deleteUnusedTinyMceImages } = require("../util/post-utils/unusedTinyMceImages");
+const { clearSessionImages } = require("../util/post-utils/clearSessionTemp");
+const { deleteOldCover, deleteOldImage } = require("../util/post-utils/deleteOldImages");
+const { checkImageFormat } = require("../util/post-utils/checkUploadedImage");
 
 exports.postAddImage = async (req, res) => {
   try {
@@ -66,6 +70,7 @@ exports.getAddPost = (req, res, next) => {
 
 exports.postAddPost = async (req, res, next) => {
   try {
+    console.log("Временные файлы галлереи в сессии - ", req.session.tempGallery)
     const title = req.body.title.trim();
     const content = req.body.content;
     const preview = req.body.preview;
@@ -92,14 +97,19 @@ exports.postAddPost = async (req, res, next) => {
     // Галерея
     gallery = getFilesFromRequest(req, 'gallery', '/images/posts/gallery')
 
-    const errors = validationResult(req);
-    // Если есть ошибки валидации
-    if (!errors.isEmpty()) {
-      const categories = await Category.findAll();
-      // Если был загружен файл с формы, то проверяем session и удаляем если файл с диска
-      // Записываем в session новый путь к файлу
-      checkAndSaveFileFromRequest(req, '/images/posts')
 
+    // Проверяем есть ли ошибки валидации
+    const errors = validationResult(req).array();
+
+    checkImageFormat(req, errors)
+
+    // Если есть ошибки валидации
+    if (errors.length > 0) {
+      const categories = await Category.findAll();
+
+      // Удаляем изображения сохраненные в Temp или обновляем временное изображение и удаляем ранее сохраненное
+      checkAndSaveFileFromRequest(req, '/images/posts')
+      
       return res.status(422).render("admin/edit-post", {
         post: {
           title: cleanTitle,
@@ -117,9 +127,9 @@ exports.postAddPost = async (req, res, next) => {
         categories: categories,
         csrfToken: req.csrfToken(),
         hasError: true,
-        errorMessage: errors.array()[0].msg,
+        errorMessage: errors[0].msg,
+        validationErrors: errors,
         successMessage: null,
-        validationErrors: errors.array(),
       });
     }
 
@@ -139,39 +149,42 @@ exports.postAddPost = async (req, res, next) => {
       categoryId: category.id,
     });
 
-    const usedImages = getContentImages(cleanContent)
+    // Удаляем изображения сохраненные в Temp или обновляем временное изображение и удаляем ранее сохраненное
+    checkAndSaveFileFromRequest(req, '/images/posts')
 
-    await Image.update({
-      entityId: createdPost.id,
-      entityType: 'post'
-    },
-      {
-        where: {
-          path: { [Op.in]: usedImages }
-        }
-      }
-    )
+    // Обновляем entityId и entityType для использованных изображений
+    const usedImages = getContentImages(cleanContent)
+    await updateTinyMceImages(createdPost.id, usedImages)
+
+    // Удаляем неиспользованные изображения из БД
+    const oldTinymceImages = await Image.findAll({ where: { entityId: null, entityType: null } })
+    await deleteUnusedTinyMceImages(oldTinymceImages, usedImages)
 
     await createUserActivity(user.id, "post_created", "post", createdPost.id, `Добавлен пост "${createdPost.title}"`)
 
-    req.session.tempImage = null
-    req.session.tempCover = null
-    req.session.tempGallery = null
+    clearSessionImages(req)
+
     req.flash("success", "Пост успешно добавлен!");
     return res.redirect("/admin/posts");
 
   } catch (err) {
     console.error("Ошибка при добавлении поста:", err);
-
-    req.session.tempImage = null
-    req.session.tempCover = null
-    req.session.tempGallery = null
-
+    clearSessionImages(req)
     const error = new Error(err)
     error.httpStatusCode = 500
     return next(error)
   }
 };
+
+exports.postCancelPostCreate = (req, res, next) => {
+  if (req.session.tempGallery) {
+    deleteFiles(req.session.tempGallery)
+  }
+  if (req.session.tempImage) deleteFile(req.session.tempImage)
+  if (req.session.tempCover) deleteFile(req.session.tempCover)
+  clearSessionImages(req)
+  res.redirect('/admin/posts')
+}
 
 exports.postDeletePost = async (req, res, next) => {
   try {
@@ -189,7 +202,7 @@ exports.postDeletePost = async (req, res, next) => {
     if (deleteablePost.image) deleteFile(deleteablePost.image)
     if (deleteablePost.cover) deleteFile(deleteablePost.cover)
     if (deleteablePost.gallery) deleteFiles(deleteablePost.gallery)
-    
+
     await Image.deleteByEntity(deleteablePost.id, 'post')
     await deleteablePost.destroy()
 
@@ -241,7 +254,6 @@ exports.getEditPost = (req, res, next) => {
         throw new Error("Пост не найден");
       }
       existPost = post;
-
       return Category.findAll();
     })
     .then((categories) => {
@@ -276,47 +288,47 @@ exports.postEditPost = async (req, res, next) => {
       return res.redirect("/admin/posts");
     }
 
-    const oldImage = updatedPost.image;
-    const oldCover = updatedPost.cover;
-    const oldGallery = updatedPost.gallery;
-    const oldTinymceImages = await Image.findAll({ where: { entityId: postId, entityType: 'post' } })
+    let oldImage = updatedPost.image;
+    let oldCover = updatedPost.cover;
+    let oldGallery = updatedPost.gallery;
 
-    let image = oldImage;
-    let cover = oldCover;
-    let gallery = oldGallery;
+    const oldTinymceImages = await Image.findAll({
+      where: {
+        [Op.or]: [
+          { entityId: postId, entityType: 'post' },
+          { entityId: null, entityType: null },
+        ]
+      }
+    })
 
-    image = getFileFromRequest(req, 'image', '/images/posts')
-    cover = getFileFromRequest(req, 'cover', '/images/posts/cover')
+    let image = getFileFromRequest(req, 'image', '/images/posts')
+    let cover = getFileFromRequest(req, 'cover', '/images/posts/cover')
+    let gallery = getFilesFromRequest(req, 'gallery', '/images/posts/gallery')
 
-    // Галерея — массив файлов
-    if (req.files && req.files["gallery"]) {
-      gallery = req.files["gallery"].map(
-        (file) => "/images/posts/gallery/" + file.filename
-      );
-    } else if (req.session.tempGallery) {
-      gallery = req.session.tempGallery;
+    const imageDeleted = req.body.imageDeleted === 'true';
+    if (!image && imageDeleted) {
+      deleteFile(oldImage)
+      oldImage = null
+    }
+    const coverDeleted = req.body.coverDeleted === 'true';
+    if (!cover && coverDeleted) {
+      deleteFile(oldCover)
+      oldCover = null
+    }
+
+    const galleryDeleted = req.body.galleryDeleted === 'true';
+ 
+    if (!gallery && galleryDeleted) {
+      deleteFiles(oldGallery)
+      oldGallery = null
     }
 
     const errors = validationResult(req).array();
 
-    if (req.imageUploadAttempted && !req.files?.image) {
-      errors.push({
-        msg: 'Не поддерживаемый формат изображения. Разрешены только JPG, JPEG, PNG',
-        param: 'image',
-        location: 'body'
-      });
-    }
-
+    checkImageFormat(req, errors)
 
     if (errors.length > 0) {
       checkAndSaveFileFromRequest(req, '/images/posts')
-
-      if (req.files["gallery"]) {
-        if (req.session.tempGallery) deleteFiles(req.session.tempGallery)
-        req.session.tempGallery = req.files["gallery"].map(
-          (file) => "/images/posts/gallery/" + file.filename
-        );
-      }
 
       const categories = await Category.findAll();
       return res.status(422).render("admin/edit-post", {
@@ -342,59 +354,40 @@ exports.postEditPost = async (req, res, next) => {
       });
     }
 
-    // Если был получен файл с формы и у поста есть старое изображение
-    // удаляем старое изображение с диска
-    if ((req.files["image"] || req.session.tempImage) && oldImage) {
-      deleteFile(oldImage);
-    }
-
-    // Если было загружено изображение с формы и есть ранее сохраненное изображение,
-    // то удаляем изображение с диска по пути сохраненному в сессии
-    if (req.files["image"] && req.session.tempImage) {
-      deleteFile(req.session.tempImage);
-    }
 
     updatedPost.title = updatedTitle;
     updatedPost.content = updatedContent;
     updatedPost.preview = updatedPreview;
     updatedPost.categoryId = categoryId;
-    updatedPost.image = image;
-    updatedPost.cover = cover;
-    updatedPost.gallery = gallery;
+    updatedPost.image = image || oldImage;
+    updatedPost.cover = cover || oldCover;
+    updatedPost.gallery = gallery || oldGallery;
 
     await updatedPost.save();
 
+
+    // Удаляем изображения сохраненные в Temp или обновляем временное изображение и удаляем ранее сохраненное
+    checkAndSaveFileFromRequest(req, '/images/posts')
+
+    deleteOldImage(oldImage, updatedPost.image)
+    deleteOldCover(oldCover, updatedPost.cover)
+    // deleteOldGallery(oldGallery, updatedPost.gallery)
+
+    // Обновляем entityId и entityType для использованных изображений
     const usedImages = getContentImages(updatedContent)
-    await Image.update({
-      entityId: updatedPost.id,
-    },
-      {
-        where: {
-          path: { [Op.in]: usedImages }
-        }
-      }
-    )
+    await updateTinyMceImages(updatedPost.id, usedImages)
 
-    const deletedImages = oldTinymceImages
-      .filter(image => !usedImages.includes(image.path))
-      .map(image => image.path)
-    console.log("Images Удаленные из поста после обновления")
-    await Image.destroy({
-      where: {
-        [Op.or]: [
-          { path: deletedImages },         // условие 1
-          { entityId: null }                 // условие 2
-        ]
-      }
-    })
-    deleteFiles(deletedImages)
+    // Удаляем неиспользованные изображения из БД
+    await deleteUnusedTinyMceImages(oldTinymceImages, usedImages)
 
-    req.session.tempImage = null;
-    req.session.tempCover = null;
-    req.session.tempGallery = null;
+    clearSessionImages(req)
+
+    req.flash("success", "Пост успешно обновлен!");
+
     res.redirect("/admin/posts");
   } catch (err) {
-    console.log(err);
+    console.error("Ошибка при обновлении поста:", err);
+    clearSessionImages(req)
     const error = new Error(err)
     error.httpStatusCode = 500
     return next(error)

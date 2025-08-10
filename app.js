@@ -99,14 +99,14 @@ app.use((req, res, next) => {
   res.locals.userRole = req.user ? req.user.role : "user";
   app.locals.tinyApiKey = process.env.TINY_API_KEY;
   res.locals.yandexDiskAccessToken = req.session.yandexDiskAccessToken ? req.session.yandexDiskAccessToken : null
-  // res.locals.errorMessage = req.flash('error');
-  // res.locals.successMessage = req.flash('success');
-  console.log(req.session.yandexDiskAccessToken)
   next();
 });
 
 app.use((req, res, next) => {
   req.imageUploadAttempted = false;
+  req.coverUploadAttempted = false;
+  req.galleryUploadAttempted = false;
+   req.galleryFilesAttempted = []; // Массив для отслеживания отдельных файлов галереи
   next();
 });
 

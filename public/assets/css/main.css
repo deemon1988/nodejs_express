@@ -4263,6 +4263,7 @@ figure.image.right {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 10px;
 }
 
 span.image figure .image img {
@@ -4280,6 +4281,9 @@ span.image figure .image img {
   align-items: center;
   position: relative;
   justify-content: space-between;
+  padding: 5px;
+  background: rgba(160, 160, 160, 0.075);
+  border: solid 1px rgba(160, 160, 160, 0.3);
 }
 
 /* Light Box */
@@ -4289,15 +4293,16 @@ span.image figure .image img {
 
 /* Bootstrap */
 
-.bi.bi-x-square {
+.bi.bi-x-square, .bi.bi-x-square-fill {
   font-size: x-large;
   display: none;
 }
 
 .bi.bi-x-square.show {
   display: block;
-  position: absolute;
+  /* position: absolute; */
   right: 5px;
+  margin-left: 5px;
   cursor: pointer;
   opacity: 0.8;
 }
@@ -4568,4 +4573,68 @@ input #cover:hover {
 
 .button.large.delete-btn {
   width: 100%;
+}
+
+.actions.edit-post {
+  align-items: baseline;
+  margin: auto;
+  gap: 50px;
+}
+
+.tooltip {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: inline-block;
+}
+
+/* Tooltip текст */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%; /* Позиционируем над иконкой */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Стрелочка у tooltip */
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+
+/* Показываем tooltip при наведении */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Стилизация иконки */
+.tooltip i {
+    font-size: 16px;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.tooltip:hover i {
+    color: #000;
 }
