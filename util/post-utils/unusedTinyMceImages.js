@@ -2,11 +2,11 @@ const { Op } = require("sequelize")
 const Image = require("../../models/image")
 const { deleteFiles } = require("../fileUtils")
 
-async function updateTinyMceImages(postId, usedImages) {
+async function updateTinyMceImages(entityId, entityType, usedImages) {
     try {
         await Image.update({
-            entityId: postId,
-            entityType: 'post'
+            entityId: entityId,
+            entityType: entityType
         },
             {
                 where: {

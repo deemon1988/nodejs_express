@@ -85,6 +85,18 @@ router.post('/add-guide', upload.fields([
 csrfProtection,
   isAuth,
   isAdmin,
+  [
+    body("title", "Минимальная длина заголовка 5 символов").isLength({
+      min: 5,
+    }),
+    body("fileUrl", "Укажите ссылку для скачивания")
+    .notEmpty()
+    .isURL()
+    .withMessage('Введите корректный URL адрес ссылки для скачивания'),
+    body("preview", "Превью не может быть пустым").notEmpty(),
+    body("content", "Описание не может быть пустым").notEmpty(),
+    body("category", "Категория не выбрана").notEmpty(),
+  ],
   adminController.postAddGuide)
 
 router.get('/api/yandex-disk-start', csrfProtection, isAuth, isAdmin, adminController.getYandexDiskUrl)
@@ -124,9 +136,12 @@ router.post(
 );
 router.post(
   "/create-category",
+  upload.single("image"),
   isAuth,
   isAdmin,
-  upload.single("image"),
+  [
+    body
+  ],
   adminController.postCreateCategory
 );
 

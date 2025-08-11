@@ -2,11 +2,11 @@
   <link rel="stylesheet" href="/assets/css/create-post.css">
   </head>
 
-  <body class="single is-preload">
+  <body class="is-preload">
 
      <% if(errorMessage && errorMessage.length> 0) { %>
             <div class="flash-message error" style="display: block">
-                <%= errorMessage %>
+                <%- errorMessage %>
                     <span class="close-button">&times;</span>
             </div>
             <% } %>
@@ -22,9 +22,7 @@
       <%- include('../includes/navigation.ejs') %>
         <!-- Main -->
         <div id="main" class="single-main">
-          <h1>
-            <% if (editing) { %> Редактировать категорию <% } else { %> Добавить новую категорию <% } %>
-          </h1>
+       
 
           <form action="/admin/<% if (editing) { %>update-category<% } else {  %>create-category<% } %>" method="post"
             enctype="multipart/form-data" class="category-form">
@@ -32,7 +30,8 @@
             <% if (editing) { %>
               <input type="hidden" name="categoryId" value="<%=category.id%>">
               <% } %>
-
+            
+            <% if (!editing) { %>
                 <div>
                   <fieldset>
                   <legend style="padding-bottom: 15px; font-size: 0.9em;"><strong>Псевдоним категории</strong></legend>
@@ -49,6 +48,7 @@
                             <% } %>
                   </fieldset>
                 </div>
+              <% } %>
 
                 <div>
                   <label for="name">Название категории</label>
@@ -83,49 +83,32 @@
                 </div>
 
                 <button type="submit" class="button large">
-                  <% if (editing) { %> Обновить категорию <% } else { %> Добавить категорию <% } %>
+                  <% if (editing) { %> Обновить <% } else { %> Добавить категорию <% } %>
                 </button>
+                 <% if (editing) { %>
+                <a href="/admin/create-category" class="button large">
+                  Назад
+                </a>
+                <% } %>
           </form>
 
-          <% if (!editing) { %>
-            <h1>Добавить новый алиас категории</h1>
-            <small>Короткое название на английском языке</small>
-            <form action="/admin/create-alias" method="post" id="create-alias" class="category-form">
-              <input type="text" name="alias" id="alias" required minlength="2" placeholder="Добавить новый алиас">
-              <button type="submit" id="create-alias" class="button default">
-                Добавить
-              </button>
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            </form>
+   
 
-            <h1>Редактировать алиас</h1>
-            <form action="/admin/edit-alias" method="post" id="edit-alias" >
-              <div>
-              <% for (let alias of aliases) { %>
-                <input type="radio" name="aliasId" value="<%= alias.id %>" id="<%= alias.id %>-edit" data-name="<%= alias.name %>">
-                <label for="<%= alias.id %>-edit"><%= alias.name %></label>
-                <% } %>
-                </div>
+           
+        </div>
 
-            <div id="updatedNameContainer" style="display: none;">
-                  <label for="updatedName">Изменить навзвание алиаса</label>
-                  <input type="text" name="updatedName" id="updatedName" value="" required >
-                  <div>
-                  <button type="submit" id="edit-alias" name="action" value="edit" class="button default">
-                    Редактировать
-                  </button>
-                  <button type="submit" id="delete-alias" name="action" value="delete" class="button default"
-                  onclick="return confirm('Вы уверены, что хотите удалить этот алиас?')">
-                    Удалить
-                  </button>
-                  </div>
-                </div>
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            </form>
+        <section id="sidebar"><section id="intro">
+								<a href="#" class="logo"><img src="images/logo.jpg" alt=""></a>
+								<header>
+									<h2><% if (editing) { %>Изменить категорию<% } else { %> Добавить новую категорию <% } %></h2>
+								</header>
+							</section>
 
-            <% } %>
+							<!-- Mini Posts -->
               <% if (!editing) { %>
-              <h3>Категории</h3>
+							<section >
+								<div class="mini-posts">
+              	<h3>Все категории</h3>
               <ul class="exist-categories-list">
                 <% if (categories && categories.length> 0) { %>
                   <% for (let category of categories) { %>
@@ -145,36 +128,65 @@
                     <% } %>
                       <% } %>
               </ul>
-             <% } %>
-        </div>
+            </div>
+          </section>
+          <% } %>
+
+          <section >
+                <% if (!editing) { %>
+            <h1>Добавить новый алиас категории</h1>
+            <small>Короткое название на английском языке</small>
+            <form action="/admin/create-alias" method="post" id="create-alias" class="category-form">
+              <input type="text" name="alias" id="alias" required minlength="2" placeholder="Добавить новый алиас">
+              <button type="submit" id="create-alias" class="button default">
+                Добавить
+              </button>
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            </form>
+            <% } else { %>
+              <h2><%= category.name %><br>(<%= categoryAlias %>)</h2>
+              <% } %>
+          </section>
+
+							<!-- Posts List -->
+                 <% if (!editing) { %>
+							<section>
+							 <h1>Редактировать алиас</h1>
+            <form action="/admin/edit-alias" method="post" id="edit-alias" >
+              <div>
+              <% for (let alias of aliases) { %>
+                <input type="radio" name="aliasId" value="<%= alias.id %>" id="<%= alias.id %>-edit" data-name="<%= alias.name %>">
+                <label for="<%= alias.id %>-edit"><%= alias.name %></label>
+                <% } %>
+                </div>
+                <% } %>
+              
+            <div id="updatedNameContainer" style="display: none;">
+                  <label for="updatedName">Изменить навзвание алиаса</label>
+                  <input type="text" name="updatedName" id="updatedName" value="" required >
+                  <div>
+                  <button type="submit" id="edit-alias" name="action" value="edit" class="button default">
+                    Редактировать
+                  </button>
+                  <button type="submit" id="delete-alias" name="action" value="delete" class="button default"
+                  onclick="return confirm('Вы уверены, что хотите удалить этот алиас?')">
+                    Удалить
+                  </button>
+                  </div>
+                </div>
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            </form>
+							</section>
 
 
+</section>
     </div>
 
-    <!-- Scripts -->
-    <script src="/assets/js/jquery.min.js"></script>
-    <script src="/assets/js/browser.min.js"></script>
-    <script src="/assets/js/breakpoints.min.js"></script>
-    <script src="/assets/js/util.js"></script>
-    <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/close-message.js"></script>
-    
-    <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const radioButtons = document.querySelectorAll('input[name="aliasId"]');
-    const updatedNameContainer = document.getElementById('updatedNameContainer');
-    const updatedNameInput = document.getElementById('updatedName');
 
-    radioButtons.forEach(radio => {
-      radio.addEventListener('change', () => {
-        if (radio.checked) {
-          updatedNameContainer.style.display = 'block';
-          updatedNameInput.value = radio.dataset.name;
-        }
-      });
-    });
-  });
-</script>
-  </body>
 
-  </html>
+<%- include('../includes/main-scripts.ejs') %>
+
+<script src="/assets/js/aliasHandler.js"></script>
+
+<%- include('../includes/scripts.ejs') %>
+

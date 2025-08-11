@@ -29,6 +29,7 @@ const { getAllCategoriesWithPosts } = require("../services/categoryService");
 const { where } = require("sequelize");
 const Guide = require("../models/guide");
 const { formatFileSize, formatContentType } = require("../util/fileFeatures");
+const { title } = require("process");
 
 exports.getIndexPage = async (req, res, next) => {
   let page = parseInt(req.query.page) || 1;
@@ -228,12 +229,12 @@ exports.postComment = (req, res, next) => {
 exports.postDeleteComment = (req, res, next) => {
   const postId = req.params.postId;
   const commentId = req.params.commentId;
-   Swal.fire({
-            icon: 'error',
-            title: 'Ошибка',
-            text: 'Введите корректный email',
-            confirmButtonText: 'Закрыть'
-        });
+  Swal.fire({
+    icon: 'error',
+    title: 'Ошибка',
+    text: 'Введите корректный email',
+    confirmButtonText: 'Закрыть'
+  });
   Comment.findByPk(commentId)
     .then((comment) => {
       if (!comment) {
@@ -386,6 +387,7 @@ exports.getLibrary = async (req, res, next) => {
     //   (a, b) => new Date(a.dataValues.date) - new Date(b.dataValues.date)
     // ),
     const guides = await Guide.findAll()
+
     res.render("blog/library", {
       pageTitle: "Полезные шпаргалки и чек-листы",
       path: "/library",
@@ -433,6 +435,17 @@ exports.subscribe = async (req, res, next) => {
 
 };
 
+exports.getSubscribe = async (req, res, next) => {
+  try {
+    return res.render('blog/subscribe', {
+       pageTitle: "Оформление подписки",
+      path: "/subscribe-page",
+      csrfToken: req.csrfToken(),
+    })
+  } catch(error) {
+    console.log(error)
+  }
+  }
 exports.getRenderGuide = async (req, res, next) => {
   try {
     if (!req.user) {
@@ -529,7 +542,7 @@ exports.getGuide = async (req, res, next) => {
     }
     const fileId = req.params.guideId
     const downloadedFile = await Guide.findByPk(fileId)
-    if(!downloadedFile) throw new Error("Не удалось найти файл")
+    if (!downloadedFile) throw new Error("Не удалось найти файл")
 
     const fileUrl = downloadedFile.fileUrl
 

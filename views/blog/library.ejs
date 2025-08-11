@@ -1,5 +1,6 @@
 <%- include('../includes/head.ejs') %>
 <meta name="csrf-token" content="<%= csrfToken %>">
+<link rel="stylesheet" href="/assets/css/badges.css">
     </head>
 
     <body class="is-preload">
@@ -29,8 +30,28 @@
                             <li><a href="/materials/mixed" class="button fit">📚 Универсальные</a></li>
                         </ul>
                     </section>
+                    <% if (guides && guides.length > 0) { %>
+                    <% for (let guide of guides) { %>
+                    <div class="guide-header">
+                    <h1><%= guide.title %></h1>
+                    
+                    <% if (guide.accessType === 'free') { %>
+                        <span class="badge badge-success">Бесплатно</span>
+                    <% } else if (guide.accessType === 'paid') { %>
+                        <span class="badge badge-danger">Платно <%= guide.price %> руб.</span>
+                    <% } else if (guide.accessType === 'subscription') { %>
+                        <span class="badge badge-primary">По подписке</span>
+                    <% } %>
+                    </div>
 
-
+                    <button 
+                    onclick="checkGuideAccess(this.dataset.guideId)" 
+                    data-guide-id="<%= guide.id %>" 
+                    class="btn btn-primary">
+                    Скачать PDF
+                    </button>
+                    <% } %>
+                    <% } %>
                     <!-- Post -->
                     <!-- Section Header -->
                     <section class="box">
@@ -289,21 +310,10 @@
 
 </div>
 
-<!-- Scripts -->
-<script src="/assets/js/jquery.min.js"></script>
-<script src="/assets/js/browser.min.js"></script>
-<script src="/assets/js/breakpoints.min.js"></script>
-<script src="/assets/js/util.js"></script>
-<script src="/assets/js/main.js"></script>
-<!-- JS Lightbox -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
-<!-- Через CDN -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<%- include('../includes/footer.ejs') %>
+<%- include('../includes/main-scripts.ejs') %>
 
-
-<script src="/assets/js/close-message.js"></script>
 <script src="/assets/js/downloadGuideHandler.js"></script>
-<script src="/assets/js/diskApiHandler.js"></script>
-</body>
+<script src="/assets/js/guide/guideAccess.js"></script>
 
-</html>
+<%- include('../includes/scripts.ejs') %>

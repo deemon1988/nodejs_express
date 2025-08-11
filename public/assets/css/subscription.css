@@ -1,0 +1,356 @@
+/* Стили для страницы подписки */
+.subscription-hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.subscription-hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 3rem 0;
+}
+
+.plan-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-5px);
+}
+
+.plan-card.featured {
+  border: 2px solid #667eea;
+  transform: scale(1.05);
+}
+
+.plan-badge {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  background: #667eea;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.plan-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.plan-header h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.price {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.price span {
+  font-size: 1rem;
+  color: #666;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 1.2rem;
+}
+
+.saving {
+  color: #28a745;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+}
+
+.plan-features li {
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.plan-features li i {
+  margin-right: 0.5rem;
+}
+
+.plan-features li.disabled {
+  color: #999;
+}
+
+.plan-features li.disabled i.bi-check {
+  color: #999;
+}
+
+.plan-features li i.bi-check {
+  color: #28a745;
+}
+
+.plan-features li i.bi-x {
+  color: #dc3545;
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin: 3rem 0;
+}
+
+.benefit-item {
+  text-align: center;
+  padding: 2rem;
+}
+
+.benefit-icon {
+  font-size: 2.5rem;
+  color: #667eea;
+  margin-bottom: 1rem;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: none;
+}
+
+.modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  margin-top: 56px;
+  max-height: 100vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1001;
+  margin-top: 50px;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: auto;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #999;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.form-group input[readonly] {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
+.agreements {
+  margin: 2rem 0;
+}
+
+.agreement-item {
+  margin-bottom: 1rem;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.checkbox-container input {
+  width: auto;
+  margin-right: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.checkbox-container a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.checkbox-container a:hover {
+  text-decoration: underline;
+}
+
+.total-amount {
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.amount-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.amount-row.discount {
+  color: #28a745;
+}
+
+.amount-row.total {
+  font-size: 1.2rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+  .subscription-hero h1 {
+    font-size: 2rem;
+  }
+
+  .plans-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-card.featured {
+    transform: scale(1);
+  }
+}
+
+.checkbox-container {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  user-select: none;
+}
+
+/* Скрываем стандартный чекбокс */
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Создаем кастомный чекбокс */
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+/* При наведении */
+.checkbox-container:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+/* Когда чекбокс отмечен */
+.checkbox-container input:checked ~ .checkmark {
+  background-color: #667eea;
+}
+
+/* Создаем галочку */
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Показываем галочку когда чекбокс отмечен */
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Стиль галочки */
+.checkbox-container .checkmark:after {
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}

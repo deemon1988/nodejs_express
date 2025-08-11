@@ -2296,8 +2296,9 @@ select {
 }
 
 select option {
-  color: #3c3b3b;
-  background: #ffffff;
+  /* color: #3c3b3b;
+  background: #ffffff; */
+  
 }
 
 select:focus::-ms-value {
@@ -3669,6 +3670,9 @@ body.auth {
 }
 
 /* Footer */
+#footer {
+  margin-top: 6em;
+}
 
 #footer .icons {
   color: #aaaaaa;
@@ -3829,8 +3833,12 @@ body.is-menu-visible #menu {
 }
 
 .actions.auth {
-  justify-content: center;
-  gap: 20px;
+  display: flex;
+  margin-top: 40px;
+  gap: 30px;
+}
+.actions.auth input {
+  width: 100%;
 }
 
 .auth-helper {
@@ -4120,7 +4128,7 @@ body.is-menu-visible #menu {
 
 @media screen and (max-width: 736px) {
   .footer-menu {
-    flex-direction: column;
+    /* flex-direction: column; */
     gap: 1em;
   }
 
@@ -4160,7 +4168,8 @@ body.is-menu-visible #menu {
 #register-form input.invalid,
 #edit-create-post-form input.invalid,
 #edit-create-post-form textarea.invalid,
-#edit-create-post-form select.invalid {
+#edit-create-post-form select.invalid,
+#edit-create-guide-form .invalid {
   border-color: #c62828;
 }
 
@@ -4293,7 +4302,8 @@ span.image figure .image img {
 
 /* Bootstrap */
 
-.bi.bi-x-square, .bi.bi-x-square-fill {
+.bi.bi-x-square,
+.bi.bi-x-square-fill {
   font-size: x-large;
   display: none;
 }
@@ -4547,6 +4557,36 @@ input #cover:hover {
   gap: 20px;
 }
 
+.access-inputs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  align-items: center;
+  /* margin: 0; */
+}
+
+.access-input-item {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+}
+
+/* Create Guide Form */
+#result a {
+  word-break: break-word;
+}
+
+#edit-create-guide-form button[type="submit"] {
+  margin-top: 100px;
+}
+#edit-create-guide-form #price {
+  border: solid 1px rgba(160, 160, 160, 0.3);
+  padding-left: 5px;
+  background: rgba(160, 160, 160, 0.075);
+}
+
+
+
 .post.page-preview img {
   width: 100%;
   object-fit: cover;
@@ -4582,59 +4622,59 @@ input #cover:hover {
 }
 
 .tooltip {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    display: inline-block;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  display: inline-block;
 }
 
 /* Tooltip текст */
 .tooltip .tooltiptext {
-    visibility: hidden;
-    width: 120px;
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    border-radius: 4px;
-    padding: 5px;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%; /* Позиционируем над иконкой */
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-    transition: opacity 0.3s;
-    font-size: 12px;
-    white-space: nowrap;
+  visibility: hidden;
+  width: 120px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Позиционируем над иконкой */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 /* Стрелочка у tooltip */
 .tooltip .tooltiptext::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: #333 transparent transparent transparent;
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
 }
 
 /* Показываем tooltip при наведении */
 .tooltip:hover .tooltiptext {
-    visibility: visible;
-    opacity: 1;
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Стилизация иконки */
 .tooltip i {
-    font-size: 16px;
-    color: #666;
-    transition: color 0.2s;
+  font-size: 16px;
+  color: #666;
+  transition: color 0.2s;
 }
 
 .tooltip:hover i {
-    color: #000;
+  color: #000;
 }

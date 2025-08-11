@@ -267,6 +267,10 @@ exports.postReset = async (req, res, next) => {
       req.flash("error", "Аккаунт с указанным Email не найден");
       return res.redirect("/reset");
     }
+    if (user && !user.username) {
+      req.flash("error", "Пользователь с указанным Email не зарегестрирован");
+      return res.redirect("/reset");
+    }
 
     user.resetToken = token;
     user.resetTokenExpiration = Date.now() + 3600000;
@@ -417,7 +421,7 @@ exports.getAuthCallback = async (req, res, next) => {
     const accessToken = tokenResponse.data.access_token;
     const expiresIn = tokenResponse.data.expires_in; // обычно 3600 секунд = 1 час
     const expireTime = Date.now() + expiresIn * 1000;
-    
+
     req.session.accessToken = accessToken;
     req.session.tokenExpireTime = expireTime;
 

@@ -70,7 +70,6 @@ exports.getAddPost = (req, res, next) => {
 
 exports.postAddPost = async (req, res, next) => {
   try {
-    console.log("Временные файлы галлереи в сессии - ", req.session.tempGallery)
     const title = req.body.title.trim();
     const content = req.body.content;
     const preview = req.body.preview;
@@ -109,7 +108,7 @@ exports.postAddPost = async (req, res, next) => {
 
       // Удаляем изображения сохраненные в Temp или обновляем временное изображение и удаляем ранее сохраненное
       checkAndSaveFileFromRequest(req, '/images/posts')
-      
+
       return res.status(422).render("admin/edit-post", {
         post: {
           title: cleanTitle,
@@ -154,7 +153,7 @@ exports.postAddPost = async (req, res, next) => {
 
     // Обновляем entityId и entityType для использованных изображений
     const usedImages = getContentImages(cleanContent)
-    await updateTinyMceImages(createdPost.id, usedImages)
+    await updateTinyMceImages(createdPost.id, 'post', usedImages)
 
     // Удаляем неиспользованные изображения из БД
     const oldTinymceImages = await Image.findAll({ where: { entityId: null, entityType: null } })
@@ -317,7 +316,7 @@ exports.postEditPost = async (req, res, next) => {
     }
 
     const galleryDeleted = req.body.galleryDeleted === 'true';
- 
+
     if (!gallery && galleryDeleted) {
       deleteFiles(oldGallery)
       oldGallery = null
@@ -483,16 +482,16 @@ exports.postDeleteCategory = (req, res, next) => {
 };
 
 exports.getCreateCategory = (req, res, next) => {
-  let success = req.flash("success");
-  let message = req.flash("error");
-  success = success.length > 0 ? success[0] : null;
-  message = message.length > 0 ? message[0] : null;
+  // let success = req.flash("success");
+  // let message = req.flash("error");
+  // success = success.length > 0 ? success[0] : null;
+  // message = message.length > 0 ? message[0] : null;
 
   const editMode = req.query.edit;
   let existsAliases;
 
   Alias.findAll({
-    where: { userId: req.user.id },
+    // where: { userId: req.user.id },
     include: [
       {
         model: Category,
@@ -508,7 +507,6 @@ exports.getCreateCategory = (req, res, next) => {
         .filter((category) => category !== null);
     })
     .then((categories) => {
-      console.log(categories);
       res.render("admin/create-category", {
         categories: categories,
         aliases: existsAliases,
@@ -516,30 +514,65 @@ exports.getCreateCategory = (req, res, next) => {
         path: "/admin/create-category",
         editing: editMode,
         csrfToken: req.csrfToken(),
-        errorMessage: message,
-        successMessage: success,
+        errorMessage: req.flash("error"),
+        successMessage: req.flash("success"),
       });
     })
     .catch((err) => console.log(err));
 };
 
-exports.postCreateCategory = (req, res, next) => {
-  const aliasId = req.body.aliasId;
-  const name = req.body.name.trim();
-  const tagline = req.body.tagline.trim();
-  const description = req.body.description.trim();
-  const logo = req.file ? "/images/category/" + req.file.filename : null;
+exports.postCreateCategory = async (req, res, next) => {
+  try {
+    const aliasId = req.body.aliasId;
+    const name = req.body.name.trim();
+    const tagline = req.body.tagline.trim();
+    const description = req.body.description.trim();
+    const logo = req.file ? "/images/category/" + req.file.filename : null;
 
-  const cleanName = sanitizeHtml(name, {
-    allowedTags: [],
-    allowedAttributes: {},
-  });
-  const cleanTagline = cleanInput(tagline);
+    const cleanName = sanitizeHtml(name, {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
+    const cleanTagline = cleanInput(tagline);
 
-  let cleanDescription;
-  if (description) {
-    cleanDescription = cleanInput(description);
+    let cleanDescription;
+    if (description) {
+      cleanDescription = cleanInput(description);
+    }
+
+    const alias = await Alias.findByPk(aliasId)
+    if (!alias) {
+      throw new Error("Alias не найден");
+    }
+    if (alias.categoryId) {
+      throw new Error(`Категория с алиасом '${alias.name}' уже существует. <br>
+          Создайте другую категорию`);
+    }
+    // existAlias = alias;
+    const existCategory = await Category.findOne({ where: { name: cleanName } });
+
+    if (existCategory) {
+      throw new Error(`Категория '${cleanName}' уже существует.<br>
+          Введите другое название категории`);
+    }
+    const createdCategory = await Category.create({
+      name: cleanName,
+      tagline: cleanTagline,
+      description: cleanDescription,
+      image: logo,
+    });
+
+    await alias.setCategory(createdCategory);
+
+    req.flash('success', `Категория ${cleanName} успешно добавлена`)
+    res.redirect("/admin/create-category");
+
+  } catch (err) {
+    console.log("Ошибка создания категории:", err.message);
+    req.flash('error', err.message)
+    res.redirect("/admin/create-category");
   }
+
   // if (!req.file) {
   //   // Вместо throw — возвращаем Promise.reject()
   //   return Promise.reject(new Error("Ошибка создания категории")).catch(
@@ -550,42 +583,8 @@ exports.postCreateCategory = (req, res, next) => {
   //   );
   // }
 
-  let existAlias;
-  let createdCategory;
 
-  Alias.findByPk(aliasId)
-    .then((alias) => {
-      if (!alias) {
-        throw new Error("Alias не найден");
-      }
-      if (alias.categoryId) {
-        throw new Error("Категория уже существует");
-      }
-      existAlias = alias;
-      return Category.findOne({ where: { name: cleanName } });
-    })
-    .then((findedCategory) => {
-      if (findedCategory) {
-        throw new Error("Категория уже существует");
-      }
-      return Category.create({
-        name: cleanName,
-        tagline: cleanTagline,
-        description: cleanDescription,
-        image: logo,
-      });
-    })
-    .then((category) => {
-      createdCategory = category;
-      return existAlias.setCategory(createdCategory);
-    })
-    .then((result) => {
-      res.redirect("/admin/create-category");
-    })
-    .catch((err) => {
-      console.log("Ошибка создания категории:", err.message);
-      res.redirect("/admin/create-category");
-    });
+
 };
 
 exports.getEditCategory = (req, res, next) => {
@@ -640,6 +639,7 @@ exports.getEditCategory = (req, res, next) => {
         editing: editMode,
         aliases: existsAliases,
         category: updatedCategory,
+        categoryAlias: existsAliases.filter(alias => alias.categoryId === updatedCategory.id).map(alias => alias.name),
         categories: categories,
         csrfToken: req.csrfToken(),
         errorMessage: message,
@@ -698,7 +698,7 @@ exports.getAddGuide = async (req, res, next) => {
       categories: categories,
       csrfToken: req.csrfToken(),
       errorMessage: req.flash("error"),
-      successMessage: req.flash("success"),
+      successMessage: null,
       hasError: false,
       validationErrors: [],
     })
@@ -710,7 +710,7 @@ exports.getAddGuide = async (req, res, next) => {
 
 exports.postAddGuide = async (req, res, next) => {
   try {
-    const { title, preview, content, fileUrl, fileType, fileSize, contentType } = req.body;
+    const { title, preview, content, fileUrl, fileType, fileSize, accessType, price } = req.body;
     const userId = req.user.id
     const cleanTitle = sanitizeHtml(title, {
       allowedTags: [],
@@ -726,21 +726,14 @@ exports.postAddGuide = async (req, res, next) => {
     image = getFileFromRequest(req, 'image', '/images/guides');
     cover = getFileFromRequest(req, 'cover', '/images/guides/cover');
 
-    const errors = validationResult(req);
+    const errors = validationResult(req).array();
+    checkImageFormat(req, errors)
     // Если есть ошибки валидации
-    if (!errors.isEmpty()) {
+    if (errors.length > 0) {
       const categories = await Category.findAll();
-      // Если был загружен файл с формы, то проверяем session и удаляем если файл с диска
-      // Записываем в session новый путь к файлу
-      // if (req.files["image"]) {
-      //   if (req.session.tempImage) deleteFile(req.session.tempImage)
-      //   req.session.tempImage = "/images/guides/" + req.files["image"][0].filename;
-      // }
-      // if (req.files["cover"]) {
-      //   if (req.session.tempCover) deleteFile(req.session.tempCover)
-      //   req.session.tempCover = "/images/guides/cover/" + req.files["cover"][0].filename;
-      // }
+
       checkAndSaveFileFromRequest(req, '/images/guides')
+      console.log(req.session.tempImage)
 
       return res.status(422).render("admin/add-guide", {
         guide: {
@@ -752,7 +745,8 @@ exports.postAddGuide = async (req, res, next) => {
           fileUrl: fileUrl,
           fileType: fileType,
           fileSize: fileSize,
-          contentType: contentType
+          accessType: accessType,
+          price: price
         },
 
         pageTitle: "Добавить гайд",
@@ -760,10 +754,10 @@ exports.postAddGuide = async (req, res, next) => {
         editing: false,
         categories: categories,
         csrfToken: req.csrfToken(),
-        errorMessage: req.flash("error"),
-        successMessage: req.flash("success"),
-        hasError: false,
-        validationErrors: [],
+        hasError: true,
+        errorMessage: errors[0].msg,
+        validationErrors: errors,
+        successMessage: null,
       });
     }
 
@@ -771,30 +765,28 @@ exports.postAddGuide = async (req, res, next) => {
       title,
       preview,
       content,
+      image,
+      cover,
       fileUrl,
       fileType,
       fileSize,
-      contentType: contentType
+      accessType: accessType,
+      price: price
     });
 
+    // Удаляем изображения сохраненные в Temp или обновляем временное изображение и удаляем ранее сохраненное
+    checkAndSaveFileFromRequest(req, '/images/posts')
+
     const usedImages = getContentImages(cleanContent)
+    await updateTinyMceImages(createdGuide.id, 'guide', usedImages)
 
-    await Image.update({
-      entityId: createdGuide.id,
-      entityType: 'guide'
-    },
-      {
-        where: {
-          path: { [Op.in]: usedImages }
-        }
-      }
-    )
-
+    // Удаляем неиспользованные изображения из БД
+    const oldTinymceImages = await Image.findAll({ where: { entityId: null, entityType: null } })
+    await deleteUnusedTinyMceImages(oldTinymceImages, usedImages)
 
     await createUserActivity(userId, "guide_created", "guide", createdGuide.id, `Добавлен материал "${createdGuide.title}"`)
 
-    req.session.tempImage = null
-    req.session.tempCover = null
+    clearSessionImages(req)
 
     req.flash('success', 'Успешно добавлено');
     return res.redirect('/library');
@@ -802,8 +794,7 @@ exports.postAddGuide = async (req, res, next) => {
   } catch (err) {
     console.error("Ошибка при добавлении гайда:", err); // ← должно выводиться
     req.flash("error", `Не удалось добавить гайд - ${err.message}`);
-    req.session.tempImage = null
-    req.session.tempCover = null
+    clearSessionImages(req)
     const error = new Error(err.message);
     error.httpStatusCode = 500;
     return next(error); // ← передаём ошибку

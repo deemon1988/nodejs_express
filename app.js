@@ -22,6 +22,7 @@ const adminRoutes = require("./routes/admin.js");
 const blogRoutes = require("./routes/blog.js");
 const userRoutes = require("./routes/user.js");
 const authRoutes = require("./routes/auth.js");
+const accessRoutes = require("./routes/access.js");
 
 const errorController = require("./controllers/404.js");
 const Post = require("./models/post.js");
@@ -34,7 +35,9 @@ const Category = require("./models/category.js");
 const Alias = require("./models/allowed-alias.js");
 const Image = require("./models/image.js");
 const YandexAccount = require('./models/yandex-account.js')
-const Guide = require('./models/guide.js')
+const Guide = require('./models/guide.js');
+const Payment = require("./models/payment.js");
+const Subscription = require("./models/subscription.js");
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -115,6 +118,7 @@ app.use("/admin", adminRoutes);
 app.use(blogRoutes);
 app.use(userRoutes);
 app.use(authRoutes);
+app.use("/access", accessRoutes);
 
 // app.get('/500', errorController.get500);
 app.use(errorController.get404);
@@ -152,13 +156,15 @@ Alias.belongsTo(Category);
 Alias.belongsTo(User);
 User.hasMany(Alias);
 
-// Image.belongsTo(Post, { constraints: true, onDelete: "CASCADE" })
-// Post.hasMany(Image)
-
 User.hasOne(YandexAccount)
 
 Category.belongsToMany(Guide, {through: 'Category_Guide'})
 Guide.belongsToMany(Category, {through: 'Category_Guide'})
+
+Payment.belongsTo(User);
+Payment.belongsTo(Guide);
+
+Subscription.belongsTo(User);
 
 sequelize
   // .sync({ force: true })

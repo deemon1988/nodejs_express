@@ -1,0 +1,201 @@
+<%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/assets/css/subscription.css">
+    </head>
+
+     <body class="single is-preload">
+
+        <!-- Wrapper -->
+        <div id="wrapper">
+
+        <!-- Header -->
+        <!-- Menu -->
+        <%- include('../includes/navigation.ejs') %>
+
+         <main>
+    <section class="subscription-hero">
+      <div class="container">
+        <h1>Премиум подписка</h1>
+        <p class="subtitle">Получайте эксклюзивные материалы, ранний доступ и персональные рекомендации</p>
+      </div>
+    </section>
+
+    <section class="subscription-plans">
+      <div class="container">
+        <div class="plans-grid">
+          <!-- Бесплатный тариф -->
+          <div class="plan-card">
+            <div class="plan-header">
+              <h3>Бесплатно</h3>
+              <div class="price">0 ₽<span>/месяц</span></div>
+            </div>
+            <ul class="plan-features">
+              <li><i class="bi bi-check"></i> Базовые гайды</li>
+              <li><i class="bi bi-check"></i> Еженедельная рассылка</li>
+              <li class="disabled"><i class="bi bi-x"></i> Эксклюзивные материалы</li>
+              <li class="disabled"><i class="bi bi-x"></i> Персональные рекомендации</li>
+              <li class="disabled"><i class="bi bi-x"></i> Ранний доступ</li>
+            </ul>
+            <button class="btn btn-outline" disabled>Текущий тариф</button>
+          </div>
+
+          <!-- Премиум тариф (выбранный) -->
+          <div class="plan-card featured">
+            <div class="plan-badge">Популярный</div>
+            <div class="plan-header">
+              <h3>Премиум</h3>
+              <div class="price">299 ₽<span>/месяц</span></div>
+              <div class="old-price">499 ₽</div>
+            </div>
+            <ul class="plan-features">
+              <li><i class="bi bi-check"></i> Все бесплатные материалы</li>
+              <li><i class="bi bi-check"></i> Эксклюзивные гайды</li>
+              <li><i class="bi bi-check"></i> Персональные рекомендации</li>
+              <li><i class="bi bi-check"></i> Ранний доступ к новым материалам</li>
+              <li><i class="bi bi-check"></i> Приоритетная поддержка</li>
+            </ul>
+            <button class="btn btn-primary" onclick="showSubscriptionForm()">Оформить подписку</button>
+          </div>
+
+          <!-- Годовой тариф -->
+          <div class="plan-card">
+            <div class="plan-header">
+              <h3>Годовой</h3>
+              <div class="price">2990 ₽<span>/год</span></div>
+              <div class="saving">Экономия 20%</div>
+            </div>
+            <ul class="plan-features">
+              <li><i class="bi bi-check"></i> Все премиум функции</li>
+              <li><i class="bi bi-check"></i> 12 месяцев подписки</li>
+              <li><i class="bi bi-check"></i> 2 бонусных гайда</li>
+              <li><i class="bi bi-check"></i> Персональная консультация</li>
+              <li class="disabled"><i class="bi bi-x"></i> Корпоративный доступ</li>
+            </ul>
+            <button class="btn btn-outline" onclick="showAnnualForm()">Выбрать годовой план</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="subscription-benefits">
+      <div class="container">
+        <h2>Что вы получаете</h2>
+        <div class="benefits-grid">
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <h3>Эксклюзивные материалы</h3>
+            <p>Доступ к уникальным гайдам и чек-листам, которых нет в открытом доступе</p>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <i class="bi bi-lightning"></i>
+            </div>
+            <h3>Ранний доступ</h3>
+            <p>Получайте новые материалы за 1 неделю до всех остальных</p>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <i class="bi bi-person"></i>
+            </div>
+            <h3>Персональные рекомендации</h3>
+            <p>Индивидуальные подборки материалов под ваши цели</p>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <i class="bi bi-headset"></i>
+            </div>
+            <h3>Приоритетная поддержка</h3>
+            <p>Быстрые ответы на вопросы и персональная помощь</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Модальное окно оформления подписки -->
+    <div class="modal" id="subscriptionModal">
+      <div class="modal-overlay" onclick="closeModal()"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Оформление подписки</h3>
+          <!-- <button class="modal-close" onclick="closeModal()"></button> -->
+           <i class="bi bi-x-circle modal-close" onclick="closeModal()"></i>
+        </div>
+        <div class="modal-body">
+          <form id="subscriptionForm" onsubmit="submitSubscription(event)">
+            <input type="hidden" id="subscriptionPlan" value="monthly">
+            
+            <div class="form-group">
+              <label for="email">Email для уведомлений</label>
+              <input type="email" id="email" name="email" value="<%= user.email %>" required readonly>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentMethod">Способ оплаты</label>
+              <select id="paymentMethod" name="paymentMethod" required>
+                <option value="">Выберите способ оплаты</option>
+                <option value="card">Банковская карта</option>
+                <option value="sbp">СБП (Система быстрых платежей)</option>
+                <option value="qiwi">Qiwi кошелек</option>
+                <option value="yoomoney">ЮMoney</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="promoCode">Промокод (если есть)</label>
+              <input type="text" id="promoCode" name="promoCode" placeholder="Введите промокод">
+            </div>
+
+            <div class="agreements">
+              <div class="agreement-item">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="termsAgreement" required>
+                  <span class="checkmark"></span> Я согласен с
+                 <a href="/terms" target="_blank"> условиями использования</a> и <a href="/privacy" target="_blank">политикой конфиденциальности</a>
+                </label>
+              </div>
+              <div class="agreement-item">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="refundAgreement" required>
+                  <span class="checkmark"></span>
+                  Я ознакомлен с <a href="/refund" target="_blank"> условиями возврата</a>
+                </label>
+              </div>
+              <div class="agreement-item">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="emailAgreement">
+                  <span class="checkmark"></span>
+                  Я хочу получать персональные рекомендации и специальные предложения
+                </label>
+              </div>
+            </div>
+
+            <div class="total-amount">
+              <div class="amount-row">
+                <span>Стоимость подписки:</span>
+                <span id="baseAmount">299 ₽</span>
+              </div>
+              <div class="amount-row discount" id="discountRow" style="display: none;">
+                <span>Скидка:</span>
+                <span id="discountAmount">0 ₽</span>
+              </div>
+              <div class="amount-row total">
+                <span><strong>Итого к оплате:</strong></span>
+                <span id="totalAmount"><strong>299 ₽</strong></span>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+              Оплатить 299 ₽
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<%- include('../includes/footer.ejs') %>
+ <%- include('../includes/main-scripts.ejs') %>
+
+<script src="/assets/js/subscription/subscriptionHandler.js"></script>
+<%- include('../includes/scripts.ejs') %>

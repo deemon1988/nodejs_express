@@ -24,6 +24,7 @@ router.get("/library", csrfProtection,  postsController.getLibrary);
 // Новый маршрут: проверка перед скачиванием
 router.get('/library/download/:guideId', csrfProtection, isAuth, postsController.checkBeforeDownload);
 // Маршрут для подписки
+router.get('/subscribe-page', csrfProtection, isAuth, postsController.getSubscribe);
 router.post('/subscribe', csrfProtection, isAuth, postsController.subscribe);
 // Маршрут для скачивания файла
 router.get("/library/:guideId", isAuth, postsController.getRenderGuide);

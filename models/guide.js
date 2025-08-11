@@ -40,11 +40,15 @@ const Guide = sequelize.define('guides', {
     type: Sequelize.STRING,
     allowNull: true,
   },
-  contentType: {
+  accessType: {
     type: Sequelize.ENUM("free", "paid", "subscription"),
     allowNull: false,
     defaultValue: "free", // значение по умолчанию
   },
+  price: {
+    type: Sequelize.DECIMAL(10, 2),
+    allowNull: true,
+  }
 
 });
 

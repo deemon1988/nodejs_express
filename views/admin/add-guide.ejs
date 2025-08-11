@@ -85,14 +85,27 @@
                                                         name="content"><% if (editing || hasError) { %><%=guide.content%><% } %></textarea>
                                                 </div>
                                                 <div>
-                                                    <span>Доступ:</span>
-                                                    <input type="radio" id="free" name="contentType" value="free" checked required />
+                                                <fieldset>
+                                                <legend style="padding-bottom: 15px; font-size: 0.9em;"><strong>Доступ</strong></legend>
+                                                    <ul class="access-inputs-list">
+                                                    <li class="access-input-item">
+                                                        <input type="radio" hidden id="free" name="accessType" value="free" checked required />
                                                         <label for="free">Бесплатно</label>
-                                                    <input type="radio" id="paid" name="contentType" value="paid"  required />
+                                                    </li>
+                                                    <li class="access-input-item">
+                                                    <input type="radio" id="paid" name="accessType" value="paid" />
                                                         <label for="paid">Платный контент</label>
-                                                    <input type="radio" id="subscription" name="contentType" value="subscription"  required />
+                                                    <input type="number" name="price" id="price" step="0.1" min="0" value="0.0">
+                                                    </li>
+                                                    <li class="access-input-item">
+                                                    <input type="radio" id="subscription" name="accessType" value="subscription"  required />
                                                         <label for="subscription">По подписке</label>
+                                                    </li>
+                                                    </ul>
+                                                </fieldset>
+                                                 
                                                 </div>
+
                                                 <div>
                                                     <label for="category">Категория</label>
                                                     <select id="category" name="category"
@@ -122,35 +135,41 @@
                                                 <div class="post-images-main">
                                                     <div class="post-image">
                                                         <label for="image">Изображение</label>
-                                                        <% if (editing || hasError) { %>
-                                                            <div class="image-img">
+                                                        <div class="image-img">
+                                                            <% if (editing || hasError) { %>
                                                                 <img src="<%= guide.image %>" alt="<%= guide.title %>">
-                                                            </div>
-
-                                                            <% } %>
-                                                            <div class="image-input">
-                                                                <input type="file" id="image" name="image"
-                                                                    accept="image/*" />
-                                                                <i class="bi bi-x-square"></i>
-                                                            </div>
+                                                                <% } else { %>
+                                                                    <img src="" alt="">
+                                                                    <% } %>
+                                                        </div>
+                                                        <div class="image-input">
+                                                            <input type="file" id="image" name="image"
+                                                                accept="image/*" />
+                                                            <input type="hidden" name="imageDeleted" id="imageDeleted"
+                                                                value="false">
+                                                            <i class="bi bi-x-square" title="Удалить изображение"></i>
+                                                        </div>
                                                     </div>
 
                                                     <div class="post-image">
                                                         <label for="cover">Обложка</label>
-                                                        <% if (editing || hasError) { %>
-                                                            <div class="image-img">
+                                                        <div class="image-img">
+                                                            <% if (editing || hasError) { %>
                                                                 <img src="<%= guide.cover %>" alt="">
-                                                            </div>
-                                                            <% } %>
-                                                                <div class="image-input">
-                                                                    <input type="file" id="cover" name="cover"
-                                                                        accept="image/*" />
-                                                                    <i class="bi bi-x-square"></i>
-                                                                </div>
+                                                                <% } else { %>
+                                                                    <img src="" alt="">
+                                                                    <% } %>
+                                                        </div>
+                                                        <div class="image-input">
+                                                            <input type="file" id="cover" name="cover"
+                                                                accept="image/*" />
+                                                            <input type="hidden" name="coverDeleted" id="coverDeleted"
+                                                                value="false">
+                                                            <i class="bi bi-x-square" title="Удалить изображение"></i>
+                                                        </div>
+
                                                     </div>
                                                 </div>
-
-                                                
 
                                                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                 <button type="submit" class="button large">
@@ -161,38 +180,8 @@
                                 </div>
                         </div>
 
-                        <!-- Scripts -->
-                        <script>
-                            tinymce.init({
-                                selector: 'textarea#content',
-                                plugins: 'image code lists table',
-                                toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | image | bullist numlist | code',
-                                relative_urls: false,         // <-- отключить относительные пути
-                                remove_script_host: false,    // <-- оставить host в URL
-                                convert_urls: true,           // <-- включить преобразование (но с учетом настроек выше)
-                                images_upload_url: '/admin/upload-image',
-                                automatic_uploads: true,
-                                file_picker_types: 'image',
-                                image_title: true,
-                                content_style: 'img { max-width: 100%; height: auto; }'
-                            });
+<%- include('../includes/main-scripts.ejs') %>
+<script src="/assets/js/guide/guideFormHandler.js"></script>
+<script src="/assets/js/diskApiHandler.js"></script>
 
-                            tinymce.init({
-                                selector: 'textarea#preview',
-                                plugins: 'code lists',
-                                toolbar: 'undo redo | bold italic | bullist numlist | code'
-                            });
-                        </script>
-                        <script src="/assets/js/jquery.min.js"></script>
-                        <script src="/assets/js/browser.min.js"></script>
-                        <script src="/assets/js/breakpoints.min.js"></script>
-                        <script src="/assets/js/util.js"></script>
-                        <script src="/assets/js/main.js"></script>
-                        <script src="/assets/js/close-message.js"></script>
-                        <script src="/assets/js/diskApiHandler.js"></script>
-
-
-
-    </body>
-
-    </html>
+<%- include('../includes/scripts.ejs') %>
