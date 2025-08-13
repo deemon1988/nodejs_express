@@ -1,5 +1,6 @@
 <%- include('../includes/head.ejs') %>
   <link rel="stylesheet" href="/assets/css/create-post.css">
+  <meta name="csrf-token" content="<%= csrfToken %>">
   </head>
 
   <body class="is-preload">
@@ -22,11 +23,11 @@
       <%- include('../includes/navigation.ejs') %>
         <!-- Main -->
         <div id="main" class="single-main">
-       
 
           <form action="/admin/<% if (editing) { %>update-category<% } else {  %>create-category<% } %>" method="post"
-            enctype="multipart/form-data" class="category-form">
-             <!-- <input type="hidden" name="_csrf" value="<%= csrfToken %>"> -->
+            enctype="multipart/form-data" class="category-form" id="create-category-form">
+             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
             <% if (editing) { %>
               <input type="hidden" name="categoryId" value="<%=category.id%>">
               <% } %>
@@ -66,39 +67,45 @@
                   <label for="description">Описание категории</label>
                   <textarea id="description" name="description"
                     required><% if (editing) { %><%= category.description %><% } %></textarea>
-
                 </div>
-
-                <div>
-                  <label for="image">Логотип</label>
-                  <% if (editing) { %>
-                    <div>
-                      <img src="<%= category.image %>" alt="<%= category.title %>"
-                        style="max-width: 300px; max-height: 300px;">
-                    </div>
-                    <% } %>
-                      <div>
-                        <input type="file" id="image" name="image" accept="image/*" />
-                      </div>
-                </div>
-
-                <button type="submit" class="button large">
-                  <% if (editing) { %> Обновить <% } else { %> Добавить категорию <% } %>
-                </button>
-                 <% if (editing) { %>
-                <a href="/admin/create-category" class="button large">
-                  Назад
-                </a>
-                <% } %>
+                <div class="category-image">
+                  <label for="image">Изображение</label>
+                  <div class="image-img">
+                      <% if (editing ) { %>
+                        <img src="<%= category.image %>" alt="<%= category.title %>">
+                      <% } else { %>
+                        <img src="" alt="">
+                      <% } %>
+                  </div>
+                  <div class="image-input">
+                      <input type="file" id="image" name="image"
+                          accept="image/*" />
+                      <input type="hidden" name="imageDeleted" id="imageDeleted"
+                          value="false">
+                      <i class="bi bi-x-square" title="Удалить изображение"></i>
+                  </div>
+              </div>
+                
           </form>
-
-   
-
+          <div class="edit-category-btns">
            
+              <button type="submit" class="button large create-category-btn" form="create-category-form">
+                  <% if (editing) { %> Обновить <% } else { %> Добавить категорию <% } %>
+            </button>
+           
+               <% if (editing) { %>
+              <button onclick="deleteCategory('<%= category.id %>')" class="button large delete-category-btn">
+               Удалить <i class="bi bi-folder-x"></i>
+              </button>
+            <% } %>
+
+          </div>
+
         </div>
 
-        <section id="sidebar"><section id="intro">
-								<a href="#" class="logo"><img src="images/logo.jpg" alt=""></a>
+        <section id="sidebar" class="create-category-sidebar">
+          <section id="intro">
+								<a href="#" class="logo"><img src="/images/logo.jpg" alt=""></a>
 								<header>
 									<h2><% if (editing) { %>Изменить категорию<% } else { %> Добавить новую категорию <% } %></h2>
 								</header>
@@ -107,26 +114,19 @@
 							<!-- Mini Posts -->
               <% if (!editing) { %>
 							<section >
-								<div class="mini-posts">
+								<div class="mini-posts categories">
               	<h3>Все категории</h3>
               <ul class="exist-categories-list">
                 <% if (categories && categories.length> 0) { %>
                   <% for (let category of categories) { %>
                     <li>
-                      <strong class="categories-list-item-name"><%= category.name %></strong>
-                        <a href="/admin/edit-category/<%= category.id %>?edit=true" class="button default">Редактировать</a>
-                        <button type="submit" form="delete-category" name="action" value="delete" class="button default"
-                          onclick="return confirm(`Вы уверены, что хотите удалить категорию <%= category.name %> ?`)">
-                          Удалить
-                        </button>
-                        <form action="/admin/delete-category" method="post" id="delete-category">
-                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <input type="hidden" name="categoryId" value="<%= category.id %>">
-                        </form>
-                        
-                      </li>
-                    <% } %>
-                      <% } %>
+                       <a href="/admin/edit-category/<%= category.id %>?edit=true">
+                      <span class="categories-list-item-name"><%= category.name %></span>
+                      <i class="bi bi-pencil-square"></i>
+                      </a>
+                    </li>
+                  <% } %>
+                <% } %>
               </ul>
             </div>
           </section>
@@ -138,7 +138,7 @@
             <small>Короткое название на английском языке</small>
             <form action="/admin/create-alias" method="post" id="create-alias" class="category-form">
               <input type="text" name="alias" id="alias" required minlength="2" placeholder="Добавить новый алиас">
-              <button type="submit" id="create-alias" class="button default">
+              <button type="submit" form="create-alias" class="button default create-alias-btn">
                 Добавить
               </button>
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -148,7 +148,7 @@
               <% } %>
           </section>
 
-							<!-- Posts List -->
+							<!-- Alias Redact -->
                  <% if (!editing) { %>
 							<section>
 							 <h1>Редактировать алиас</h1>
@@ -161,7 +161,7 @@
                 </div>
                 <% } %>
               
-            <div id="updatedNameContainer" style="display: none;">
+                <div id="updatedNameContainer" style="display: none;">
                   <label for="updatedName">Изменить навзвание алиаса</label>
                   <input type="text" name="updatedName" id="updatedName" value="" required >
                   <div>
@@ -176,7 +176,7 @@
                 </div>
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             </form>
-							</section>
+						</section>
 
 
 </section>
@@ -187,6 +187,7 @@
 <%- include('../includes/main-scripts.ejs') %>
 
 <script src="/assets/js/aliasHandler.js"></script>
-
+<script src="/assets/js/category/categoryFormHandler.js"></script>
+<script src="/assets/js/category/deleteCategoryHandler.js"></script>
 <%- include('../includes/scripts.ejs') %>
 

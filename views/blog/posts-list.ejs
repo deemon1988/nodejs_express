@@ -14,7 +14,7 @@
                 <div id="main">
                     <h1>Посты упорядоченные по дате добавления</h1>
                     <!-- Post -->
-                    <% if (posts.length> 0) { %>
+                    <% if (posts && posts.length> 0) { %>
                         <% for (let post of posts) { %>
                             <article class="post page-preview">
                                 <header>
@@ -93,7 +93,7 @@
                         <div class="mini-posts">
                             <h1>Факты и Мысли</h1>
                             <p>Карточки рекомендуемых постов или самых популярных, если нет просмотренных</p>
-                            <% if(topOrRecomendetPosts.length> 0) { %>
+                            <% if(topOrRecomendetPosts && topOrRecomendetPosts.length> 0) { %>
                                 <% for(let post of topOrRecomendetPosts) { %>
                                     <!-- Mini Post -->
                                     <article class="mini-post">
@@ -117,7 +117,7 @@
                     <section>
                         <h1>Интересное В Контексте</h1>
                         <ul class="posts">
-                            <% if (randomPosts.length> 0) { %>
+                            <% if (randomPosts && randomPosts.length> 0) { %>
                                 <% for (let post of randomPosts) { %>
                                     <li>
                                         <article>

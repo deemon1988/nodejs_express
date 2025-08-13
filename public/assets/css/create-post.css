@@ -32,5 +32,69 @@ button {
   align-self: center;
 }
 
+/* Create Category */
+.category-image {
+  width: fit-content;
+}
 
+.image-img {
+  display: flex;
+  justify-content: center;
+}
 
+.create-category-sidebar h1 {
+  text-align: left;
+}
+.edit-category-btns {
+  display: flex;
+  margin-top: 100px;
+  gap: 50px;
+}
+
+.categories-list-item-name {
+  display: contents;
+  word-wrap: break-word;
+  font-size: larger;
+}
+.exist-categories-list .bi-pencil-square {
+  margin-left: 20px;
+}
+.exist-categories-list {
+  width: 100%;
+}
+.edit-category-btns button {
+  width: 100%;
+}
+.mini-posts.categories {
+  width: 100%;
+}
+.edit-category-btn,
+.delete-category-btn {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+}
+  .create-alias-btn {
+    margin-top: 30px;
+    width: 100%;
+  }
+
+@media screen and (max-width: 1280px) {
+  .mini-posts.categories {
+    flex-direction: column;
+  }
+
+  .mini-posts.categories h3 {
+    margin-bottom: 40px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .edit-category-btns {
+    flex-direction: column;
+  }
+  .edit-category-btns button,
+  .create-alias-btn {
+    width: 100%;
+  }
+}

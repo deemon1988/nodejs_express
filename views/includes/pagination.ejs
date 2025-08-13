@@ -1,0 +1,40 @@
+<!-- Pagination -->
+<section class="second-pagination">
+<% if (hasPreviousPage) { %>
+    <a href="?page=1">&laquo;&laquo;</a>
+    <a href="?page=<%= previousPage %>">&laquo;</a>
+<% } %>
+
+<% 
+    const delta = 2; // количество страниц до и после текущей
+    let startPage = Math.max(1, currentPage - delta);
+    let endPage = Math.min(totalPages, currentPage + delta);
+%>
+
+<% if (startPage > 1) { %>
+    <a href="?page=1">1</a>
+    <% if (startPage > 2) { %>
+    <span>...</span>
+    <% } %>
+<% } %>
+
+<% for (let i = startPage; i <= endPage; i++) { %>
+    <% if (i === currentPage) { %>
+    <a href="?page=<%= i %>" class="active"><%= i %></a>
+    <% } else { %>
+    <a href="?page=<%= i %>"><%= i %></a>
+    <% } %>
+<% } %>
+
+<% if (endPage < totalPages) { %>
+    <% if (endPage < totalPages - 1) { %>
+    <span>...</span>
+    <% } %>
+    <a href="?page=<%= totalPages %>"><%= totalPages %></a>
+<% } %>
+
+<% if (hasNextPage) { %>
+    <a href="?page=<%= nextPage %>">&raquo;</a>
+    <a href="?page=<%= lastPage %>">&raquo;&raquo;</a>
+<% } %>
+</section>

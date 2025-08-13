@@ -123,11 +123,11 @@ app.use("/access", accessRoutes);
 // app.get('/500', errorController.get500);
 app.use(errorController.get404);
 // app.use(errorController.get500);
-app.use((error, req, res, next) => {
-  res.status(500).render("500", {
-    pageTitle: "Ошибка!", path: '/500',
-  });
-});
+// app.use((error, req, res, next) => {
+//   res.status(500).render("500", {
+//     pageTitle: "Ошибка!", path: '/500',
+//   });
+// });
 
 
 

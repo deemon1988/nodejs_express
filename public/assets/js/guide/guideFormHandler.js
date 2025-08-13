@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('edit-create-guide-form'); // или укажите конкретную форму
 
     paidRadio.addEventListener('change', () => {
-        console.log('paid radio')
         priceInput.focus()
     })
 

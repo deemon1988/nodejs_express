@@ -448,77 +448,71 @@ exports.postEditAlias = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
-exports.postDeleteCategory = (req, res, next) => {
-  const categoryId = Number(req.body.categoryId);
+exports.postDeleteCategory = async (req, res, next) => {
+  try {
+    const categoryId = req.params.categoryId;
 
-  Category.findOne({
-    where: { id: categoryId },
-    include: [
-      {
-        model: Alias,
-        as: "alias",
-        where: {
-          userId: req.user.id,
+    const category = await Category.findByPk(categoryId)
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Категория не найдена или у Вас нет прав для удаления"
+      })
+    }
+
+    deleteFile(category.image)
+
+    await category.destroy();
+
+    return res.status(200).json({
+      success: true,
+      message: `Категория '${category.name}' была удалена`
+    })
+
+  } catch (error) {
+    console.error("Ошибка удаления категории: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+
+
+exports.getCreateCategory = async (req, res, next) => {
+  try {
+    const editMode = req.query.edit;
+    if (editMode && editMode === 'true') {
+      return res.redirect('/admin/posts')
+    }
+    const existsAliases = await Alias.findAll({
+      include: [
+        {
+          model: Category,
+          required: false, // чтобы получить aliases даже без категорий
         },
-      },
-    ],
-  })
-    .then((category) => {
-      console.log(category);
-      if (!category) {
-        req.flash("error", "У вас нет прав для удаления категории");
-        throw new Error("Категория не найдена или не принадлежит пользователю");
-      }
-      return category.destroy();
+      ],
     })
-    .then((result) => {
-      req.flash("success", "Категория удалена");
-      res.redirect("/admin/create-category");
-    })
-    .catch((err) => {
-      console.log("Ошибка удаления категории: ", err);
-      res.redirect("/admin/create-category");
+    const existCategories = await Category.findAll()
+
+    res.render("admin/create-category", {
+      categories: existCategories,
+      aliases: existsAliases,
+      pageTitle: "Добавить категорию",
+      path: "/admin/create-category",
+      editing: editMode === 'true' ? true : false,
+      csrfToken: req.csrfToken(),
+      errorMessage: req.flash("error"),
+      successMessage: req.flash("success"),
     });
-};
-
-exports.getCreateCategory = (req, res, next) => {
-  // let success = req.flash("success");
-  // let message = req.flash("error");
-  // success = success.length > 0 ? success[0] : null;
-  // message = message.length > 0 ? message[0] : null;
-
-  const editMode = req.query.edit;
-  let existsAliases;
-
-  Alias.findAll({
-    // where: { userId: req.user.id },
-    include: [
-      {
-        model: Category,
-        required: false, // чтобы получить aliases даже без категорий
-      },
-    ],
-  })
-    .then((aliases) => {
-      existsAliases = aliases;
-
-      return aliases
-        .map((alias) => (alias.category ? alias.category.dataValues : null))
-        .filter((category) => category !== null);
-    })
-    .then((categories) => {
-      res.render("admin/create-category", {
-        categories: categories,
-        aliases: existsAliases,
-        pageTitle: "Добавить категорию",
-        path: "/admin/create-category",
-        editing: editMode,
-        csrfToken: req.csrfToken(),
-        errorMessage: req.flash("error"),
-        successMessage: req.flash("success"),
-      });
-    })
-    .catch((err) => console.log(err));
+  } catch (error) {
+    console.error("Ошибка отображения страницы создания категории: ", error);
+    const err = new Error(error.message)
+    err.httpStatusCode = 500
+    return next(err)
+  }
 };
 
 exports.postCreateCategory = async (req, res, next) => {
@@ -527,7 +521,7 @@ exports.postCreateCategory = async (req, res, next) => {
     const name = req.body.name.trim();
     const tagline = req.body.tagline.trim();
     const description = req.body.description.trim();
-    const logo = req.file ? "/images/category/" + req.file.filename : null;
+    const logo = req.file ? `/images/category/` + req.file.filename : null;
 
     const cleanName = sanitizeHtml(name, {
       allowedTags: [],
@@ -548,9 +542,8 @@ exports.postCreateCategory = async (req, res, next) => {
       throw new Error(`Категория с алиасом '${alias.name}' уже существует. <br>
           Создайте другую категорию`);
     }
-    // existAlias = alias;
-    const existCategory = await Category.findOne({ where: { name: cleanName } });
 
+    const existCategory = await Category.findOne({ where: { name: cleanName } });
     if (existCategory) {
       throw new Error(`Категория '${cleanName}' уже существует.<br>
           Введите другое название категории`);
@@ -564,7 +557,7 @@ exports.postCreateCategory = async (req, res, next) => {
 
     await alias.setCategory(createdCategory);
 
-    req.flash('success', `Категория ${cleanName} успешно добавлена`)
+    req.flash('success', `Категория '${cleanName}' успешно добавлена`)
     res.redirect("/admin/create-category");
 
   } catch (err) {
@@ -572,121 +565,86 @@ exports.postCreateCategory = async (req, res, next) => {
     req.flash('error', err.message)
     res.redirect("/admin/create-category");
   }
-
-  // if (!req.file) {
-  //   // Вместо throw — возвращаем Promise.reject()
-  //   return Promise.reject(new Error("Ошибка создания категории")).catch(
-  //     (err) => {
-  //       console.log("Ошибка создания категории", err.message);
-  //       res.redirect("/admin/create-category");
-  //     }
-  //   );
-  // }
-
-
-
 };
 
-exports.getEditCategory = (req, res, next) => {
-  let success = req.flash("success");
-  let message = req.flash("error");
-  success = success.length > 0 ? success[0] : null;
-  message = message.length > 0 ? message[0] : null;
+exports.getEditCategory = async (req, res, next) => {
+  try {
+    const editMode = req.query.edit;
+    if (!editMode || editMode === 'false') {
+      return res.redirect("/admin/create-category");
+    }
 
-  const editMode = req.query.edit;
-  if (!editMode) {
-    return res.redirect("/admin/create-category");
-  }
-  const categoryId = req.params.categoryId;
+    const categoryId = req.params.categoryId;
 
-  let updatedCategory;
-  let existsAliases;
-
-  Category.findOne({
-    where: { id: categoryId },
-    include: [
-      {
-        model: Alias,
-        as: "alias",
-        where: {
-          userId: req.user.id,
+    const updatedCategory = await Category.findOne({
+      where: { id: categoryId },
+      include: [
+        {
+          model: Alias,
+          as: "alias",
         },
-      },
-    ],
-  })
-    .then((category) => {
-      if (!category) {
-        req.flash("error", "Категория для редактирования не найдена");
-        throw new Error("Категория не существует");
-      }
-      updatedCategory = category;
-      return Alias.findAll();
+      ],
     })
-    .then((aliases) => {
-      if (!aliases) {
-        throw new Error("Алиасы не найдены");
-      }
-      existsAliases = aliases;
-      return Category.findAll();
-    })
-    .then((categories) => {
-      if (!categories) {
-        throw new Error("Категории не найдены");
-      }
-      res.render("admin/create-category", {
-        pageTitle: "Редактировать категорию",
-        path: "/admin/create-category",
-        editing: editMode,
-        aliases: existsAliases,
-        category: updatedCategory,
-        categoryAlias: existsAliases.filter(alias => alias.categoryId === updatedCategory.id).map(alias => alias.name),
-        categories: categories,
-        csrfToken: req.csrfToken(),
-        errorMessage: message,
-        successMessage: success,
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.redirect("/admin/create-category");
+
+    if (!updatedCategory) {
+      req.flash("error", "Категория для редактирования не найдена");
+      throw new Error("Категория не существует");
+    }
+
+    res.render("admin/create-category", {
+      pageTitle: "Редактировать категорию",
+      path: "/admin/create-category",
+      editing: editMode,
+      category: updatedCategory,
+      categoryAlias: updatedCategory.alias.name,
+      csrfToken: req.csrfToken(),
+      errorMessage: req.flash("error"),
+      successMessage: req.flash("success"),
     });
+  } catch (error) {
+    console.error("Ошибка отображения страницы редактирования категории: ", error);
+    const err = new Error(error)
+    err.httpStatusCode = 500
+    return next(err)
+  }
 };
 
-exports.postEditCategory = (req, res, next) => {
-  const categoryId = req.body.categoryId;
-  const updatedName = req.body.name;
-  const updatedTagline = req.body.tagline;
-  const updatedDescription = req.body.description;
-  const aliasId = req.body.aliasId;
-  let existAlias;
+exports.postEditCategory = async (req, res, next) => {
+  try {
+    const categoryId = req.body.categoryId;
+    const updatedName = req.body.name;
+    const updatedTagline = req.body.tagline;
+    const updatedDescription = req.body.description;
+    const imageDeleted = req.body.imageDeleted
 
-  Alias.findByPk(aliasId)
-    .then((alias) => {
-      existAlias = alias;
-      return Category.findByPk(categoryId);
-    })
-    .then((category) => {
-      if (
-        existAlias.categoryId === "null" ||
-        existAlias.categoryId === "undefined" ||
-        existAlias.categoryId !== category.id
-      ) {
-        existAlias.setCategory(category);
-      }
-      let logoUrl = category.image;
-      category.name = updatedName;
-      category.tagline = updatedTagline;
-      category.description = updatedDescription;
-      if (req.file) logoUrl = "/images/category/" + req.file.filename;
-      category.image = logoUrl;
-      return category.save();
-    })
-    .then((result) => {
-      req.flash("success", "Категория успешно отредактирована!");
-      res.redirect("/admin/create-category");
-    })
-    .catch((err) => console.log(err));
-};
+    const updatedCategory = await Category.findByPk(categoryId);
+
+    updatedCategory.name = updatedName;
+    updatedCategory.tagline = updatedTagline;
+    updatedCategory.description = updatedDescription;
+
+    if (req.file) {
+      deleteFile(updatedCategory.image)
+      updatedCategory.image = "/images/category/" + req.file.filename;
+    }
+
+    if (imageDeleted && imageDeleted === 'true') {
+      deleteFile(updatedCategory.image)
+      updatedCategory.image = null
+    }
+
+    await updatedCategory.save();
+
+    req.flash("success", "Категория успешно отредактирована!");
+    res.redirect("/admin/create-category");
+  } catch (error) {
+    console.error("Ошибка обновления категории: ", error)
+    const err = new Error(error.message)
+    err.httpStatusCode = 500
+    return next(err)
+  }
+}
+
 
 exports.getAddGuide = async (req, res, next) => {
   try {

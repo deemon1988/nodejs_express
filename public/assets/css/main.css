@@ -3832,7 +3832,7 @@ body.is-menu-visible #menu {
   padding-top: 100px;
 }
 
-.actions.auth {
+.actions.auth{
   display: flex;
   margin-top: 40px;
   gap: 30px;
@@ -4273,6 +4273,7 @@ figure.image.right {
   flex-direction: column;
   justify-content: space-between;
   gap: 10px;
+  width: fit-content;
 }
 
 span.image figure .image img {

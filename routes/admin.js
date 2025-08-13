@@ -7,6 +7,7 @@ const isAdmin = require("../middleware/is-admin");
 const csrf = require("csurf");
 const csrfProtection = csrf();
 const { body } = require("express-validator");
+const { deleteFile } = require("../util/fileUtils");
 
 router.get(
   "/posts",
@@ -82,7 +83,7 @@ router.post('/add-guide', upload.fields([
   { name: "image", maxCount: 1 },
   { name: "cover", maxCount: 1 },
 ]),
-csrfProtection,
+  csrfProtection,
   isAuth,
   isAdmin,
   [
@@ -90,9 +91,9 @@ csrfProtection,
       min: 5,
     }),
     body("fileUrl", "Укажите ссылку для скачивания")
-    .notEmpty()
-    .isURL()
-    .withMessage('Введите корректный URL адрес ссылки для скачивания'),
+      .notEmpty()
+      .isURL()
+      .withMessage('Введите корректный URL адрес ссылки для скачивания'),
     body("preview", "Превью не может быть пустым").notEmpty(),
     body("content", "Описание не может быть пустым").notEmpty(),
     body("category", "Категория не выбрана").notEmpty(),
@@ -129,9 +130,10 @@ router.get(
 );
 router.post(
   "/update-category",
+  upload.single("image"),
+  csrfProtection,
   isAuth,
   isAdmin,
-  upload.single("image"),
   adminController.postEditCategory
 );
 router.post(
@@ -139,9 +141,7 @@ router.post(
   upload.single("image"),
   isAuth,
   isAdmin,
-  [
-    body
-  ],
+
   adminController.postCreateCategory
 );
 
@@ -149,7 +149,7 @@ router.post("/create-alias", isAuth, isAdmin, adminController.postCreateAlias);
 router.post("/edit-alias", isAuth, isAdmin, adminController.postEditAlias);
 
 router.post(
-  "/delete-category",
+  "/delete-category/:categoryId",
   csrfProtection,
   isAuth,
   isAdmin,
@@ -161,5 +161,23 @@ router.get(
   csrfProtection,
   adminController.postCancelPostCreate
 )
+
+router.get('/delete-file', async (req, res) => {
+  try {
+    const filePath = req.query.path
+    const {success, message} = await deleteFile(filePath)
+    if(!success) throw new Error(message)
+    
+    res.status(200).json({
+      success: true
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    })
+  }
+})
 
 module.exports = router;

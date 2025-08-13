@@ -30,48 +30,49 @@ const { where } = require("sequelize");
 const Guide = require("../models/guide");
 const { formatFileSize, formatContentType } = require("../util/fileFeatures");
 const { title } = require("process");
+const { postsPagination, withLikePostsPagination } = require("../public/assets/js/pagination/main-page-pagination");
 
 exports.getIndexPage = async (req, res, next) => {
-  let page = parseInt(req.query.page) || 1;
-  const limit = 5;
+  try {
+    let page = +req.query.page || 1;
+    const limit = 5;
 
-  const viewHistory = req.session.viewHistory || null;
+    const viewHistory = req.session.viewHistory || null;
+    const userId = req.user ? req.user.id : null;
 
-  const userId = req.user ? req.user.id : null;
+    const allPostsData = await getAllPostsOnPage(userId, page, limit);
+    const mergedPosts = await getMergedPosts(userId, viewHistory, page, limit);
 
-  // let allPostsJson = {};
-  let topPosts;
+    // const { rows: postsWithUserLike } = await getPostsWithLikedUsersQuery(userId)
 
-  let allPostsData = await getAllPostsOnPage(userId, page, limit);
+    const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId)
 
-  const mergedPosts = await getMergedPosts(userId, viewHistory, page, limit);
+    const topPostInEachCategory = await getTopPostsByCataegoryQuery();
+    const topTop5PostsFromEachCategory = await getRandomPostsFromTop5Query()
 
-  getPostsWithLikedUsersQuery(userId)
-    .then(({ rows: posts }) => {
-      // allPostsJson["posts"] = posts.map((p) => p.toJSON());
-      return getTopPostsByCataegoryQuery();
-    })
-    .then((posts) => {
-      topPosts = posts; //posts.map((p) => p.toJSON());
-      return getRandomPostsFromTop5Query();
-    })
-    .then((posts) => {
-      return getRandomPosts(posts, 5);
-    })
-    .then((randomPosts) => {
-      res.render("blog/blog", {
-        pageTitle: "Главная страница",
-        topPosts: topPosts,
-        allPosts: viewHistory ? mergedPosts : allPostsData,
-        randomPosts: randomPosts,
-        successMessage: req.flash("success"),
-        path: "/",
-        csrfToken: req.csrfToken(),
-        // recomendetPosts: recomendetData,
-      });
-    })
-
-    .catch((err) => console.log(err));
+    res.render("blog/blog", {
+      pageTitle: "Главная страница",
+      topPosts: topPostInEachCategory,
+      allPosts: posts,//viewHistory ? mergedPosts : allPostsData,
+      randomTopPosts: getRandomPosts(topTop5PostsFromEachCategory, 5),
+      successMessage: req.flash("success"),
+      path: "/",
+      csrfToken: req.csrfToken(),
+      // recomendetPosts: recomendetData,
+      currentPage: currentPage, 
+      hasNextPage: hasNextPage, 
+      hasPreviousPage: hasPreviousPage, 
+      nextPage: nextPage, 
+      previousPage: previousPage, 
+      lastPage: lastPage, 
+      totalPages: totalPages
+    });
+  } catch (error) {
+    console.error("Ошибка рендеринга страницы: ", error)
+    const err = new Error(error)
+    err.httpStatusCode = 500
+    next(err)
+  }
 };
 
 exports.getPostById = (req, res, next) => {
@@ -379,24 +380,32 @@ exports.getArchive = async (req, res, next) => {
   }
 };
 
+const ITEMS_PER_PAGE = 1
 exports.getLibrary = async (req, res, next) => {
   try {
-    // const categoriesWithPosts = await getAllCategoriesWithPosts();
-    // const allPostsByDate = await getAllPostsByDate();
-    // allPostsByDate.sort(
-    //   (a, b) => new Date(a.dataValues.date) - new Date(b.dataValues.date)
-    // ),
-    const guides = await Guide.findAll()
+    const page = Number(req.query.page) || 1
+    const offset = (page - 1) * ITEMS_PER_PAGE
+    const { count, rows: guides } = await Guide.findAndCountAll({
+      offset: offset,
+      limit: ITEMS_PER_PAGE
+    })
+
+    const totalPages = Math.ceil(count / ITEMS_PER_PAGE)
 
     res.render("blog/library", {
       pageTitle: "Полезные шпаргалки и чек-листы",
       path: "/library",
       csrfToken: req.csrfToken(),
       guides: guides,
+      currentPage: page,
+      hasNextPage: ITEMS_PER_PAGE * page < count,
+      hasPreviousPage: page > 1,
+      nextPage: page + 1,
+      previousPage: page - 1,
+      lastPage: totalPages,
+      totalPages: totalPages,
       formatFileSize: formatFileSize,
       formatContentType: formatContentType
-      // posts: allPostsByDate,
-      // categories: categoriesWithPosts,
     });
   } catch (error) {
     console.log("Ошибка рендеринга страницы:", error);
@@ -438,14 +447,14 @@ exports.subscribe = async (req, res, next) => {
 exports.getSubscribe = async (req, res, next) => {
   try {
     return res.render('blog/subscribe', {
-       pageTitle: "Оформление подписки",
+      pageTitle: "Оформление подписки",
       path: "/subscribe-page",
       csrfToken: req.csrfToken(),
     })
-  } catch(error) {
+  } catch (error) {
     console.log(error)
   }
-  }
+}
 exports.getRenderGuide = async (req, res, next) => {
   try {
     if (!req.user) {

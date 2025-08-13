@@ -1,4 +1,6 @@
 <%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/assets/css/badges.css">
+
 	</head>
 
 	<body class="is-preload">
@@ -21,8 +23,8 @@
 							<!-- Post -->
 							 <p>Показывать посты упорядоченные по дате, а если есть рекомендуемые, то сначала их</p>
 
-							<% if (allPosts.posts.length > 0) { %>
-								<% for (let post of allPosts.posts) { %>
+							<% if (allPosts && allPosts.length > 0) { %>
+								<% for (let post of allPosts) { %>
 									<article class="post page-preview">
 										<header>
 											<div class="title">
@@ -86,22 +88,13 @@
 											<h1>No Posts Found!</h1>
 											<% } %>
 
-												<!-- Pagination -->
-												<ul class="actions pagination">
-													 <% if (allPosts.page > 1) { %>
-														<li><a href="/?page=<%= allPosts.page - 1 %>" class="button large previous">Previous
-															Page</a></li>
-														<% } else { %>
-													<li><a href="" class="disabled button large previous">Previous
-															Page</a></li>
-														<% } %>
-													<% if (allPosts.page < allPosts.totalPages) { %>
-													<li><a href="/?page=<%= allPosts.page + 1 %>" class="button large next">Next Page</a></li>
-														<% } else { %>
-													<li><a href="" class="disabled button large next">Next Page</a></li>
-													<% } %>
-												</ul>
+											<%- include('../includes/pagination.ejs', {currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages}) %>
 
+										 <!-- Pagination -->
+										<ul class="actions pagination">
+											<li><a href="" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a></li>
+											<li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Next Page</a></li>
+										</ul>
 						</div>
 
 						<!-- Sidebar -->
@@ -200,8 +193,8 @@
 								<h3>Мир Вокруг Нас</h3>
 								<p>Самый новый пост в каждой категории</p>
 								<ul class="posts">
-									<% if (randomPosts.length> 0) { %>
-										<% for (let post of randomPosts) { %>
+									<% if (randomTopPosts && randomTopPosts.length> 0) { %>
+										<% for (let post of randomTopPosts) { %>
 											<li>
 												<article>
 													<header>

@@ -30,11 +30,15 @@
                             <li><a href="/materials/mixed" class="button fit">📚 Универсальные</a></li>
                         </ul>
                     </section>
+
+                    
                     <% if (guides && guides.length > 0) { %>
                     <% for (let guide of guides) { %>
+                     <article class="post guide-card">
                     <div class="guide-header">
                     <h1><%= guide.title %></h1>
-                    
+                    </div>
+                    <div>
                     <% if (guide.accessType === 'free') { %>
                         <span class="badge badge-success">Бесплатно</span>
                     <% } else if (guide.accessType === 'paid') { %>
@@ -42,17 +46,17 @@
                     <% } else if (guide.accessType === 'subscription') { %>
                         <span class="badge badge-primary">По подписке</span>
                     <% } %>
-                    </div>
-
-                    <button 
-                    onclick="checkGuideAccess(this.dataset.guideId)" 
-                    data-guide-id="<%= guide.id %>" 
-                    class="btn btn-primary">
-                    Скачать PDF
+                    <button onclick="checkGuideAccess(this.dataset.guideId)" data-guide-id="<%= guide.id %>" 
+                        class="btn btn-primary">
+                        Скачать PDF
                     </button>
+                    </div>
+                    </article>
                     <% } %>
                     <% } %>
-                    <!-- Post -->
+
+                    <%- include('../includes/pagination.ejs') %>
+                    
                     <!-- Section Header -->
                     <section class="box">
                         <header>
@@ -78,11 +82,13 @@
                                 <a href="#" class="author"><img src="/images/health-and-sports.png" alt="" /></a>
                             </div>
                         </header>
-                        <a href="/images/morning-checklist.jpg" class="image featured"><img
-                                src="/images/morning-checklist.jpg" alt="Превью чек-листа утренней рутины" /></a>
+                        <a href="" class="image featured"><img
+                                src="" alt="Превью чек-листа утренней рутины" /></a>
                         <p><%= guide.preview %>
                         </p>
                         
+                        
+
                         <footer>
                             <ul class="actions">
                                 <li><a href="" class="button large download-btn" data-guide-id="<%= guide.id %>">Скачать
@@ -112,8 +118,8 @@
                                 <a href="#" class="author"><img src="/images/health-and-sports.png" alt="" /></a>
                             </div>
                         </header>
-                        <a href="/images/morning-checklist.jpg" class="image featured"><img
-                                src="/images/morning-checklist.jpg" alt="Превью чек-листа утренней рутины" /></a>
+                        <a href="" class="image featured"><img
+                                src="" alt="Превью чек-листа утренней рутины" /></a>
                         <p>Этот чек-лист поможет начать утро осознанно: от стакана воды до задач дня. Распечатайте и
                             прикрепите на видное место!
                         </p>
@@ -138,65 +144,10 @@
                         </footer>
                     </article>
 
-                    <article class="post">
-                        <header>
-                            <div class="title">
-                                <h2><a href="/downloads/pomodoro-cheatsheet.pdf">Шпаргалка по технике Pomodoro</a></h2>
-                                <p>Краткое руководство по фокусировке и тайм-менеджменту</p>
-                            </div>
-                            <div class="meta">
-                                <time class="published" datetime="2025-08-01">1 августа 2025</time>
-                                <a href="#" class="author"><span class="name">The Everything Journal</span><img
-                                        src="/images/avatar.jpg" alt="" /></a>
-                            </div>
-                        </header>
-                        <a href="/images/pomodoro.jpg" class="image featured"><img src="/images/pomodoro.jpg"
-                                alt="Pomodoro" /></a>
-                        <p>Техника Pomodoro — мощный инструмент для концентрации. Этот файл — шпаргалка на каждый день.
-                        </p>
-                        <footer>
-                            <ul class="actions">
-                                <li><a href="/library/123" class="button large download-btn" data-guide-id="123">Скачать PDF</a>
-                                </li>
-                            </ul>
-                            <ul class="stats">
-                                <li><a href="#">Саморазвитие</a></li>
-                            </ul>
-                        </footer>
-                    </article>
-
-                    <article class="post">
-                        <header>
-                            <div class="title">
-                                <h2><a href="/downloads/habit-tracker.pdf">Трекер привычек на месяц</a></h2>
-                                <p>Простой способ отслеживать ежедневные привычки</p>
-                            </div>
-                            <div class="meta">
-                                <time class="published" datetime="2025-08-01">1 августа 2025</time>
-                                <a href="#" class="author"><span class="name">The Everything Journal</span><img
-                                        src="/images/avatar.jpg" alt="" /></a>
-                            </div>
-                        </header>
-                        <a href="/images/habit-tracker.jpg" class="image featured"><img src="/images/habit-tracker.jpg"
-                                alt="Трекер привычек" /></a>
-                        <p>Отметки каждый день помогут выработать постоянство. Удобно вести от руки или в PDF.</p>
-                        <footer>
-                            <ul class="actions">
-                                <li><a href="/downloads/habit-tracker.pdf" class="button large">Скачать PDF</a></li>
-                            </ul>
-                            <ul class="stats">
-                                <li><a href="#">Личностный рост</a></li>
-                            </ul>
-                        </footer>
-                    </article>
-
-
-
-
                     <!-- Pagination -->
                     <ul class="actions pagination">
-                        <li><a href="" class="disabled button large previous">Previous Page</a></li>
-                        <li><a href="#" class="button large next">Next Page</a></li>
+                        <li><a href="" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a></li>
+                        <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Next Page</a></li>
                     </ul>
 
                 </div>
