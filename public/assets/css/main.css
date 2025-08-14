@@ -2298,7 +2298,6 @@ select {
 select option {
   /* color: #3c3b3b;
   background: #ffffff; */
-  
 }
 
 select:focus::-ms-value {
@@ -3791,6 +3790,7 @@ body.is-menu-visible #menu {
   display: flex;
   flex-direction: row;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 #category-filter .categories-filter-list,
@@ -3800,6 +3800,10 @@ body.is-menu-visible #menu {
   align-items: flex-end;
   margin-left: 30px;
   gap: 30px;
+}
+
+.categories-filter-list {
+  margin: 0;
 }
 
 #category-filter .categories-filter-list li,
@@ -3832,7 +3836,7 @@ body.is-menu-visible #menu {
   padding-top: 100px;
 }
 
-.actions.auth{
+.actions.auth {
   display: flex;
   margin-top: 40px;
   gap: 30px;
@@ -4347,6 +4351,26 @@ input #cover:hover {
 }
 
 /* Library-page */
+.guides-footer {
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.guides-footer .actions {
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.meta.guides {
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.meta.guides .author {
+  border-left: 0;
+
+}
+
 .author.guides {
   display: flex;
   flex-direction: column;
@@ -4447,8 +4471,6 @@ input #cover:hover {
   margin: 5px 0;
 }
 
-
-
 /* Guides Library */
 .guide {
   padding: 3em 3em 1em 3em;
@@ -4490,8 +4512,6 @@ input #cover:hover {
   padding-left: 5px;
   background: rgba(160, 160, 160, 0.075);
 }
-
-
 
 .post.page-preview img {
   width: 100%;

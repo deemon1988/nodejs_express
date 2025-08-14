@@ -55,7 +55,8 @@ exports.checkAccess = async (req, res, next) => {
           message: 'Требуется оплата',
           action: 'pay',
           price: guide.price,
-          guideId: guide.id
+          guideId: guide.id,
+          userId: req.user.id
         });
       }
     }
@@ -97,7 +98,7 @@ exports.initiatePayment = async (req, res, next) => {
   try {
     const { guideId } = req.body;
     const guide = await Guide.findByPk(guideId);
-    
+
     if (!guide || guide.accessType !== 'paid') {
       return res.status(400).json({ error: 'Неверный гайд для оплаты' });
     }
@@ -125,6 +126,30 @@ exports.initiatePayment = async (req, res, next) => {
       message: 'Оплата инициализирована'
     });
 
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+
+// Страница успеха
+exports.successPayment = async (req, res, next) => {
+  try {
+    const paymentId = req.query.paymentId;
+    const payment = await Payment.findOne({
+      where: { paymentId: paymentId },
+      // include: [Subscription]
+    });
+    const guide = await Guide.findOne({where: {id: payment.guideId}})
+
+    res.render('payment/payment-success', {
+      pageTitle: 'Успешно оплачено',
+      payment: payment,
+      guide: guide
+      // subscription: payment?.Subscription
+    });
   } catch (err) {
     next(err);
   }

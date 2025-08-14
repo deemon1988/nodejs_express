@@ -1,6 +1,6 @@
 <%- include('../includes/head.ejs') %>
     <link rel="stylesheet" href="/assets/css/create-post.css">
-    <script src="https://cdn.tiny.cloud/1/<%= tinyApiKey %>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- <script src="https://cdn.tiny.cloud/1/<%= tinyApiKey %>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script> -->
     </head>
 
     <body class="is-preload single">
@@ -114,8 +114,7 @@
                                                             <option value="" selected>-- Выберите категорию --</option>
                                                             <% for (let category of categories) { %>
                                                                 <option value="<%= category.id %>"
-                                                                    <%=guide.categoryId===category.id ? 'selected' : ''
-                                                                    %> >
+                                                                    <%= guide.categoryId === category.id ? 'selected' : '' %>
                                                                     <%= category.name %>
                                                                 </option>
                                                                 <% } %>

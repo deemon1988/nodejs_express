@@ -25,6 +25,7 @@ const { clearSessionImages } = require("../util/post-utils/clearSessionTemp");
 const { deleteOldCover, deleteOldImage } = require("../util/post-utils/deleteOldImages");
 const { checkImageFormat } = require("../util/post-utils/checkUploadedImage");
 const { postsPagination } = require("../public/assets/js/pagination/main-page-pagination");
+const { getYandexDiskToken } = require("../public/assets/js/yandexApi/helpers");
 
 exports.postAddImage = async (req, res) => {
   try {
@@ -389,7 +390,9 @@ exports.postEditPost = async (req, res, next) => {
 
     // Обновляем entityId и entityType для использованных изображений
     const usedImages = getContentImages(updatedContent)
-    await updateTinyMceImages(updatedPost.id, usedImages)
+    if (usedImages && usedImages.length > 0) {
+      await updateTinyMceImages(updatedPost.id, usedImages)
+    }
 
     // Удаляем неиспользованные изображения из БД
     await deleteUnusedTinyMceImages(oldTinymceImages, usedImages)
@@ -404,7 +407,7 @@ exports.postEditPost = async (req, res, next) => {
     clearSessionImages(req)
     const error = new Error(err)
     error.httpStatusCode = 500
-    return next(error)
+    next(error)
   }
 };
 
@@ -674,6 +677,7 @@ exports.getAddGuide = async (req, res, next) => {
       successMessage: null,
       hasError: false,
       validationErrors: [],
+      yandexDiskAccessToken: getYandexDiskToken(req)
     })
   } catch (error) {
     console.log("Ошибка: ", error)
@@ -816,7 +820,10 @@ exports.handleYandexCallback = async (req, res, next) => {
       return res.status(401).json({ error: 'Токен истёк. Авторизуйтесь заново.' });
     }
 
-    req.session.yandexDiskAccessToken = accessToken
+    req.session.yandexDiskAccessToken = {
+      token: accessToken,
+      expireTime: expireTime
+    }
     await req.session.save()
 
     req.flash("success", "Успешная авторизация, теперь можно получить ссылку");
@@ -833,10 +840,8 @@ exports.getDownloadLink = async (req, res) => {
   const fileName = req.query.fileName;
 
   try {
-    const yandexDiskAccessToken = req.yandexDiskAccessToken;
-
+    const yandexDiskAccessToken = getYandexDiskToken(req)
     if (!yandexDiskAccessToken) {
-      console.log("access token - ", yandexDiskAccessToken)
       req.flash("error", "Требуется авторизация Яндекс ID!");
       return res.status(403).json({
         error: 'Требуется авторизация',
@@ -845,14 +850,19 @@ exports.getDownloadLink = async (req, res) => {
     }
 
     const path = `guides/${fileName}`;
+    // Открываем файл для публичного доступа
+    await axios.put(`https://cloud-api.yandex.net/v1/disk/resources/publish`, null, {
+      params: { path },
+      headers: { Authorization: `${yandexDiskAccessToken.token}` }
+    })
 
     // Получаем метаданные
     const response = await axios.get(`https://cloud-api.yandex.net/v1/disk/resources`, {
       params: { path },
-      headers: { Authorization: `${yandexDiskAccessToken}` }
+      headers: { Authorization: `${yandexDiskAccessToken.token}` }
     });
 
-    const publicUrl = response.data.file;
+    const publicUrl = response.data.public_url;
     const fileSize = response.data.size;
     const mimeType = response.data.mime_type
 

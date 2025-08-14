@@ -1,0 +1,88 @@
+<%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/assets/css/payment.css">
+</head>
+
+
+ <body class="is-preload">
+
+        <!-- Wrapper -->
+        <div id="wrapper">
+
+              <!-- Main -->
+                <div id="main">
+
+    <main>
+    <section class="success-section">
+      <div class="container">
+        <div class="success-card">
+          <div class="success-icon">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+          <h1>Поздравляем!</h1>
+          <p class="success-message">Вы успешно оплатили товар</p>
+          
+          <% if (payment) { %>
+            <div class="payment-details">
+              <h3>Детали платежа</h3>
+              <div class="detail-row">
+                <span>Номер платежа:</span>
+                <span><%= payment.paymentId %></span>
+              </div>
+              <div class="detail-row">
+                <span>Сумма:</span>
+                <span><%= payment.amount %> ₽</span>
+              </div>
+              <div class="detail-row">
+                <span>Товар:</span>
+                <span>Полезные материалы и гайды</span>
+              </div>
+              <div class="detail-row">
+                <span>Статус:</span>
+                <span class="status-success">Оплачено</span>
+              </div>
+            </div>
+          <% } %>
+
+          <% if (guide) { %>
+            <div class="subscription-details">
+              <h3>Информация о товаре</h3>
+              <div class="detail-row purchased-product-info">
+                <span><%= guide.title %></span>
+                <img src="<%= guide.cover %>" alt="<%= guide.title %>">
+              </div>
+             
+              <div class="detail-row">
+                <span>Теперь материал доступен для скачивания:</span>
+                <a href="<%= guide.fileUrl %>" class="status-active">Скачать</a>
+              </div>
+            </div>
+          <% } %>
+
+          <div class="success-actions">
+            <a href="/library" class="btn btn-primary">Перейти в библиотеку</a>
+            <a href="/profile" class="btn btn-outline">Личный кабинет</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+    </div>
+
+  
+
+
+
+</div>
+
+<%- include('../includes/main-scripts.ejs') %>
+
+
+<script src="/assets/js/downloadGuideHandler.js"></script>
+<script src="/assets/js/guide/guideAccess.js"></script>
+
+
+
+
+<%- include('../includes/scripts.ejs') %>
+

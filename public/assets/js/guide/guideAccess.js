@@ -51,7 +51,7 @@ function showAccessModal(data) {
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        initiatePayment(data.guideId);
+        initiatePayment(data.guideId, data.userId);
       }
     });
   }
@@ -78,7 +78,7 @@ async function initiatePayment(guideId) {
   try {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    const response = await fetch('/access/payment/initiate', {
+    const response = await fetch('/access/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -92,7 +92,9 @@ async function initiatePayment(guideId) {
     if (data.success) {
       // Здесь интеграция с платежной системой
       // stripe.confirmCardPayment(data.clientSecret)
-      alert('Оплата инициализирована');
+      // alert('Оплата инициализирована');
+
+      window.location.href = `/access/payment?token=${data.token}&paymentId=${data.paymentId}`
     } else {
       throw new Error(data.error || 'Ошибка оплаты');
     }

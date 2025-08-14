@@ -77,7 +77,7 @@
                                 <h2><a href="/downloads/morning-checklist.pdf"><%= guide.title %></a></h2>
                                 <p>Полезные привычки для продуктивного начала дня. Удобен для печати.</p>
                             </div>
-                            <div class="meta">
+                            <div class="meta guides">
                                 <a href="#" class="author guides"><span class="name heading">Формат: <%= guide.fileType %> (<%= formatFileSize(guide.fileSize) %>)</span><span class="name info"><%= formatContentType(guide.contentType) %></span></a>
                                 <a href="#" class="author"><img src="/images/health-and-sports.png" alt="" /></a>
                             </div>
@@ -89,7 +89,7 @@
                         
                         
 
-                        <footer>
+                        <footer class="guides-footer">
                             <ul class="actions">
                                 <li><a href="" class="button large download-btn" data-guide-id="<%= guide.id %>">Скачать
                                         PDF <i class="bi bi-download"></i></a></li>
@@ -112,7 +112,7 @@
                                 <h2><a href="/downloads/morning-checklist.pdf">Чек-лист утренней рутины</a></h2>
                                 <p>Полезные привычки для продуктивного начала дня. Удобен для печати.</p>
                             </div>
-                            <div class="meta">
+                            <div class="meta guides">
                                 <a href="#" class="author guides"><span class="name heading">Формат: PDF (1.2
                                         МБ)</span><span class="name info">🎁 Бесплатно</span></a>
                                 <a href="#" class="author"><img src="/images/health-and-sports.png" alt="" /></a>
@@ -130,7 +130,7 @@
                             <li>— Категории: верстка, дизайн, автоматизация, Git, тестирование</li>
                             <li>— Подходит для новичков и тех, кто хочет оптимизировать рабочий процесс</li>
                         </ul>
-                        <footer>
+                        <footer class="guides-footer">
                             <ul class="actions">
                                 <li><a href="/library/" class="button large download-btn" data-guide-id="">Скачать
                                         PDF <i class="bi bi-download"></i></a></li>
@@ -222,46 +222,13 @@
                     </section>
 
 
-<!-- Footer -->
-<section id="footer">
-    <!-- Меню в футере -->
-    <div class="footer-menu">
-        <section>
-            <h3>Навигация</h3>
-            <ul class="links">
-                <li><a class="<%= path === '/archive' ? 'active' : '' %>" href="/archive">Архив</a></li>
-                <li><a href="/faq">FAQ / ЧаВо</a></li>
-                <li><a class="<%= path === '/about' ? 'active' : '' %>" href="/about">О блоге</a></li>
-            </ul>
-        </section>
-        <section>
-            <h3>Дополнительно</h3>
-            <ul class="links">
-                <li><a href="/privacy">Политика конфиденциальности</a></li>
-                <li><a href="/contacts">Контакты</a></li>
-            </ul>
-        </section>
-      
-    </div>
-    
-    <!-- Социальные иконки -->
-    <ul class="icons">
-        <li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-        <li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
-        <li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-        <li><a href="#" class="icon solid fa-rss"><span class="label">RSS</span></a></li>
-        <li><a href="#" class="icon solid fa-envelope"><span class="label">Email</span></a></li>
-    </ul>
-    
-    <p class="copyright">&copy; Untitled. Design: <a href="http://html5up.net">HTML5 UP</a>. Images: <a
-            href="http://unsplash.com">Unsplash</a>.</p>
-</section>
+<%- include('../includes/footer.ejs') %>
 
 </section>
 
 </div>
 
-<%- include('../includes/footer.ejs') %>
+
 <%- include('../includes/main-scripts.ejs') %>
 
 <script src="/assets/js/downloadGuideHandler.js"></script>

@@ -84,7 +84,6 @@ app.use((req, res, next) => {
       }
 
       req.user = user;
-      req.yandexDiskAccessToken = req.session?.yandexDiskAccessToken ? req.session.yandexDiskAccessToken : null
       next();
     })
     .catch((err) => {
@@ -109,7 +108,7 @@ app.use((req, res, next) => {
   req.imageUploadAttempted = false;
   req.coverUploadAttempted = false;
   req.galleryUploadAttempted = false;
-   req.galleryFilesAttempted = []; // Массив для отслеживания отдельных файлов галереи
+  req.galleryFilesAttempted = []; // Массив для отслеживания отдельных файлов галереи
   next();
 });
 
@@ -158,8 +157,8 @@ User.hasMany(Alias);
 
 User.hasOne(YandexAccount)
 
-Category.belongsToMany(Guide, {through: 'Category_Guide'})
-Guide.belongsToMany(Category, {through: 'Category_Guide'})
+Category.belongsToMany(Guide, { through: 'Category_Guide' })
+Guide.belongsToMany(Category, { through: 'Category_Guide' })
 
 Payment.belongsTo(User);
 Payment.belongsTo(Guide);

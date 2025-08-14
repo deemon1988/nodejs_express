@@ -16,8 +16,8 @@ async function updateTinyMceImages(entityId, entityType, usedImages) {
         )
     } catch (error) {
         console.log(error)
-        const err = new Error("Ошибка при обновлении изображений в БД", error.message)
-        next(err)
+        throw new Error("Ошибка при обновлении изображений в БД", error.message)
+       
     }
 
 }
