@@ -24,6 +24,7 @@ const { updateTinyMceImages, deleteUnusedTinyMceImages } = require("../util/post
 const { clearSessionImages } = require("../util/post-utils/clearSessionTemp");
 const { deleteOldCover, deleteOldImage } = require("../util/post-utils/deleteOldImages");
 const { checkImageFormat } = require("../util/post-utils/checkUploadedImage");
+const { postsPagination } = require("../public/assets/js/pagination/main-page-pagination");
 
 exports.postAddImage = async (req, res) => {
   try {
@@ -185,9 +186,9 @@ exports.postCancelPostCreate = (req, res, next) => {
   res.redirect('/admin/posts')
 }
 
-exports.postDeletePost = async (req, res, next) => {
+exports.deletePost = async (req, res, next) => {
   try {
-    const postId = req.body.postId;
+    const postId = req.params.postId;
     const deleteablePost = await Post.findOne({ where: { id: postId, userId: req.user.id } })
     if (!deleteablePost) {
       req.flash("error", "У вас не прав для удаления поста");
@@ -206,35 +207,49 @@ exports.postDeletePost = async (req, res, next) => {
     await deleteablePost.destroy()
 
     req.flash("success", "Пост был удален");
-    res.redirect("/admin/posts");
+    res.status(200).json({
+      success: true,
+      message: "Пост был удален"
+    })
+    // res.redirect("/admin/posts");
   } catch (err) {
     console.log(err);
     req.flash("error", `Не получилось удалить пост: ${err.message}`);
-    res.redirect("/admin/posts");
+    res.status(500).json({
+      success: false,
+      message: `Не получилось удалить пост: ${err.message}`
+    })
+    // res.redirect("/admin/posts");
   }
 };
 
-exports.getAllPosts = (req, res, next) => {
-  let message = req.flash("error");
-  let success = req.flash("success");
-  message = message.length > 0 ? message[0] : null;
-  success = success.length > 0 ? success[0] : null;
+exports.getAllPosts = async (req, res, next) => {
+  try {
+    const page = req.query.page
+    const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await postsPagination(page)
 
-  Post.findAll({
-    where: { userId: req.user.id },
-    include: [{ model: Category, as: "category" }],
-  })
-    .then((posts) => {
-      res.render("admin/posts", {
-        pageTitle: "Админ посты",
-        posts: posts,
-        path: "/admin/posts",
-        csrfToken: req.csrfToken(),
-        errorMessage: message,
-        successMessage: success,
-      });
-    })
-    .catch((err) => console.log(err));
+    res.render("admin/posts", {
+      pageTitle: "Админ посты",
+      path: "/admin/posts",
+      csrfToken: req.csrfToken(),
+      errorMessage: req.flash("error"),
+      successMessage: req.flash("success"),
+      posts: posts,
+      currentPage: currentPage,
+      hasNextPage: hasNextPage,
+      hasPreviousPage: hasPreviousPage,
+      nextPage: nextPage,
+      previousPage: previousPage,
+      lastPage: lastPage,
+      totalPages: totalPages
+    });
+
+  } catch (error) {
+    console.error(error.message)
+    const err = new Error(error)
+    err.httpStatusCode = 500
+    next(err)
+  }
 };
 
 exports.getEditPost = (req, res, next) => {

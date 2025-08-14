@@ -23,8 +23,8 @@ function showAccessModal(data) {
       title: 'Требуется авторизация',
       text: 'Войдите в аккаунт для доступа к материалу',
       icon: 'info',
-      confirmButtonText: 'Войти',
-      cancelButtonText: 'Отмена',
+      confirmButtonText: '<span class="btn-text">Войти</span>',
+      cancelButtonText: '<span class="btn-text">Отмена</span>',
       showCancelButton: true
     }).then((result) => {
       if (result.isConfirmed) {
@@ -40,9 +40,15 @@ function showAccessModal(data) {
         <p>Оплатите для получения доступа</p>
       `,
       icon: 'info',
-      confirmButtonText: 'Оплатить',
-      cancelButtonText: 'Отмена',
-      showCancelButton: true
+      confirmButtonText: '<span class="btn-text">Оплатить</span>',
+      cancelButtonText: '<span class="btn-text">Отмена</span>',
+      showCancelButton: true,
+      customClass: {
+        popup: 'swal2-custom-popup',
+        title: 'swal2-custom-title',
+        confirmButton: 'swal2-custom-btn swal2-confirm-btn large',
+        cancelButton: 'swal2-custom-btn swal2-cancel-btn large'
+      }
     }).then((result) => {
       if (result.isConfirmed) {
         initiatePayment(data.guideId);
@@ -54,24 +60,24 @@ function showAccessModal(data) {
       title: 'Требуется подписка',
       text: 'Этот гайд доступен только по подписке',
       icon: 'info',
-      confirmButtonText: 'Оформить подписку',
-      cancelButtonText: 'Отмена',
+      confirmButtonText: '<span class="btn-text">Оформить подписку</span>',
+      cancelButtonText: '<span class="btn-text">Отмена</span>',
       showCancelButton: true
     }).then((result) => {
       if (result.isConfirmed) {
         window.location.href = '/subscribe-page';
       }
     })
-    .catch(err => {
+      .catch(err => {
         console.log(err)
-    })
+      })
   }
 }
 
 async function initiatePayment(guideId) {
   try {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
+
     const response = await fetch('/access/payment/initiate', {
       method: 'POST',
       headers: {

@@ -54,14 +54,14 @@
                                     <li><a href="/admin/edit-post/<%= post.id %>?edit=true" class="button large edit-btn">
                                         Редактировать <i class="bi bi-pencil-square"></i></a></li>
                                     <li>
-                                        <form action="/admin/delete-post" method="post" class="post-delete-form">
-                                             <button type="submit" name="action" value="delete" class="button large delete-btn"
-                                                onclick="return confirm(`Вы уверены, что хотите удалить пост с id=<%= post.id %> Название: <%= post.title %> ?`)">
+                                       
+                                             <button type="button" name="action" value="delete" class="button large delete-btn"
+                                                onclick="deletePost(this)">
                                                 Удалить <i class="bi bi-folder-x"></i>
                                             </button>
                                             <input type="hidden" value="<%= post.id %>" name="postId">
                                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                        </form>
+                                      
                                     </li>
                                 </ul>
                                 <ul class="stats">
@@ -79,6 +79,13 @@
                                 <h1>No Posts Found!</h1>
                                 <% } %>
 
+
+                <!-- Pagination -->
+            <ul class="actions pagination">
+                <li><a href="" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a></li>
+                <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Next Page</a></li>
+            </ul>
+
             </div>
             <!-- Sidebar -->
             <section id="sidebar">
@@ -88,7 +95,7 @@
 
                     <header>
                         <a href="#" class="logo"><img src="/images/logo.jpg" alt="" /></a>
-                        <h2>Статьи</h2>
+                        <h2>Админ посты</h2>
                         <p>Another fine responsive site template by <a href="http://html5up.net">HTML5 UP</a>
                         </p>
                     </header>
@@ -211,5 +218,6 @@
 <%- include('../includes/footer.ejs') %>
 <%- include('../includes/main-scripts.ejs') %>
 
+<script src="/assets/js/post/adminPostHandler.js"></script>
 
 <%- include('../includes/scripts.ejs') %>

@@ -7,7 +7,7 @@ const Post = require("../../../../models/post")
 const User = require("../../../../models/user")
 const { getPostsWithLikedUsersQuery } = require("../../../../services/postService")
 
-const ITEMS_PER_PAGE = 1
+const ITEMS_PER_PAGE = 2
 
 async function postsPagination(pageNumber) {
     const page = +pageNumber || 1
