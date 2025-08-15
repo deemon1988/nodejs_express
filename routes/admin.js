@@ -100,7 +100,7 @@ router.post('/add-guide', upload.fields([
   ],
   adminController.postAddGuide)
 
-router.get('/api/yandex-disk-start', csrfProtection, isAuth, isAdmin, adminController.getYandexDiskUrl)
+router.get('/api/yandex-disk-start', csrfProtection, isAuth, isAdmin, adminController.yandexDiskAuth)
 router.get('/yandex/disk/callback', csrfProtection, isAuth, isAdmin, adminController.handleYandexCallback)
 router.get('/api/yandex-disk-get-link', csrfProtection, isAuth, isAdmin, adminController.getDownloadLink)
 router.get('/yandex/disk/download-pdf', csrfProtection, isAuth, isAdmin, adminController.getDownloadPdf)

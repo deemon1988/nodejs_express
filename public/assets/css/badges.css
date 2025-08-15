@@ -14,64 +14,79 @@
 }
 
 .badge-success {
+  font-size: 16px;
   color: #fff;
   background-color: #28a745;
 }
 
 .badge-danger {
+  font-size: 16px;
   color: #fff;
   background-color: #dc3545;
 }
 
 .badge-primary {
+  font-size: 16px;
   color: #fff;
   background-color: #007bff;
 }
 
 /* Pagination */
- .second-pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin: 30px 0;
+.second-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 30px 0;
 }
 
 .second-pagination a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    padding: 8px 12px;
-    text-decoration: none;
-    color: #333;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    font-weight: 500;
-    transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #333;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
 }
 
 .second-pagination a:hover {
-    background-color: #e9ecef;
-    color: inherit !important;
-    border-color: #adb5bd;
+  background-color: #e9ecef;
+  color: inherit !important;
+  border-color: #adb5bd;
 }
 
 .second-pagination a:active {
-    transform: translateY(1px);
+  transform: translateY(1px);
 }
 
 /* Стили для активной страницы */
 .second-pagination a.active {
-    background-color: #007bff;
-    color: white !important;
-    border-color: #007bff;
+  background-color: #007bff;
+  color: white !important;
+  border-color: #007bff;
 }
 
 .second-pagination a.active:hover {
-    background-color: #0056b3;
-    color: white;
-} 
+  background-color: #0056b3;
+  color: white;
+}
 
+.badge-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 10px;
+}
+
+@media screen and (max-width: 736px) {
+  .badge-action {
+    padding-bottom: 20px;
+  }
+}

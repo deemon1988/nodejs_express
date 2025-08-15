@@ -7,20 +7,22 @@ const paymentController = require('../controllers/paymentController')
 const isAuth = require("../middleware/is-auth");
 
 // Проверка доступа к гайду
-router.get('/guide/:guideId/access', isAuth, accessController.checkAccess);
+router.get('/guide/:guideId/access', csrfProtection, accessController.checkAccess);
 router.post('/payment/initiate', isAuth, accessController.initiatePayment);
 
 // Инициализация оплаты
 router.get('/payment', csrfProtection, isAuth, (req, res, next) => {
-    const token = req.query.token
-    const paymentId = req.query.paymentId
+    const { token, paymentId, userEmail, amount, productName, orderDate } = req.query;
     res.render('payment/payment-page', {
         pageTitle: 'Прием платежа с помощью виджета ЮKassa',
         path: '/access/payment',
         csrfToken: req.csrfToken(),
         confirmation_token: token,
         paymentId: paymentId,
-
+        userEmail: userEmail,
+        amount: amount,
+        productName: productName,
+        orderDate: orderDate
     })
 });
 

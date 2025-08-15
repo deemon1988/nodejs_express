@@ -4,7 +4,7 @@ const sequelize = require("./util/database.js");
 const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
 const pgPool = require("./util/pgPool.js");
-const { formatDateOnly } = require("./util/date");
+const { formatDateOnly, formatDate } = require("./util/date");
 const { fixPrepositions } = require("./util/fixPrepositions.js");
 const csrf = require("csurf");
 const flash = require("connect-flash");
@@ -67,6 +67,7 @@ app.use(flash());
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn || false;
   res.locals.formatDateOnly = formatDateOnly;
+  res.locals.formatDate = formatDate;
   res.locals.fixPrepositions = fixPrepositions;
   next();
 });

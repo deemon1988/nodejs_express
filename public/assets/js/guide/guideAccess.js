@@ -3,7 +3,9 @@
 async function checkGuideAccess(guideId) {
   try {
     const response = await fetch(`/access/guide/${guideId}/access`);
+
     const data = await response.json();
+
     if (data.hasAccess) {
       // Начинаем загрузку
       window.location.href = data.downloadUrl;
@@ -23,9 +25,15 @@ function showAccessModal(data) {
       title: 'Требуется авторизация',
       text: 'Войдите в аккаунт для доступа к материалу',
       icon: 'info',
-      confirmButtonText: '<span class="btn-text">Войти</span>',
+      confirmButtonText: '<span class="btn-text" style="padding: 0 10px;">Войти</span>',
       cancelButtonText: '<span class="btn-text">Отмена</span>',
-      showCancelButton: true
+      showCancelButton: true,
+      customClass: {
+        popup: 'swal2-custom-popup',
+        // title: 'swal2-custom-title',
+        confirmButton: 'swal2-custom-btn swal2-confirm-btn large',
+        cancelButton: 'swal2-custom-btn swal2-cancel-btn large'
+      }
     }).then((result) => {
       if (result.isConfirmed) {
         window.location.href = '/login';
@@ -45,7 +53,7 @@ function showAccessModal(data) {
       showCancelButton: true,
       customClass: {
         popup: 'swal2-custom-popup',
-        title: 'swal2-custom-title',
+        // title: 'swal2-custom-title',
         confirmButton: 'swal2-custom-btn swal2-confirm-btn large',
         cancelButton: 'swal2-custom-btn swal2-cancel-btn large'
       }
@@ -94,7 +102,16 @@ async function initiatePayment(guideId) {
       // stripe.confirmCardPayment(data.clientSecret)
       // alert('Оплата инициализирована');
 
-      window.location.href = `/access/payment?token=${data.token}&paymentId=${data.paymentId}`
+      const params = new URLSearchParams({
+        token: data.token,
+        paymentId: data.paymentId,
+        userEmail: data.userEmail,
+        amount: data.amount,
+        productName: data.productName,
+        orderDate: data.orderDate
+      });
+
+      window.location.href = `/access/payment?${params.toString()}`;
     } else {
       throw new Error(data.error || 'Ошибка оплаты');
     }

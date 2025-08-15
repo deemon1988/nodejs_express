@@ -779,7 +779,7 @@ exports.postAddGuide = async (req, res, next) => {
 };
 
 
-exports.getYandexDiskUrl = (req, res, next) => {
+exports.yandexDiskAuth = (req, res, next) => {
   const clientId = process.env.CLIENT_ID_DISK_API;
   const redirectUri = process.env.REDIRECT_URI_DISK_API; // должен быть настроен в Яндексе
   const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
@@ -862,7 +862,14 @@ exports.getDownloadLink = async (req, res) => {
       headers: { Authorization: `${yandexDiskAccessToken.token}` }
     });
 
-    const publicUrl = response.data.public_url;
+    const publickey = response.data.public_key
+    if (!publickey) {
+      return res.status(404).json({ error: 'Файл закрыт для публичного доступа' })
+    }
+
+    const result = await axios.get(`https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(publickey)}`)
+
+    const publicUrl = result.data.href;
     const fileSize = response.data.size;
     const mimeType = response.data.mime_type
 

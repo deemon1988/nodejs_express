@@ -1,3 +1,4 @@
+const Guide = require('../models/guide');
 const Payment = require('../models/payment');
 
 const shopId = process.env.YOOKASSA_SHOP_ID
@@ -10,9 +11,10 @@ exports.createPayment = async (req, res, next) => {
         // const { plan, email, username, password } = req.body;
         const userId = req.user?.id || null;
         const guideId = req.body.guideId;
+        const guide = await Guide.findByPk(guideId)
         // Определяем стоимость
-        let amount = 100.00;
-        let description = '';
+        let amount = +guide.price;
+        let description = `Оплата заказа № 72 для ${req.user.email}`;
 
         // if (plan === 'monthly') {
         //   amount = 299;
@@ -32,7 +34,7 @@ exports.createPayment = async (req, res, next) => {
                 type: 'embedded' // ← ВАЖНО для виджета
             },
             description: description,
-            meta: {
+            metadata: {
                 userId: userId,
                 // plan: plan
             },
@@ -50,12 +52,11 @@ exports.createPayment = async (req, res, next) => {
 
         const data = await result.json()
         console.log(data)
-
         if (!result.ok) {
             throw new Error(data.description || 'Ошибка при создании платежа');
         }
 
-        await Payment.create({
+        const paymnet = await Payment.create({
             amount: amount,
             status: 'pending',
             paymentId: data.id,
@@ -65,7 +66,11 @@ exports.createPayment = async (req, res, next) => {
         res.json({
             success: true,
             token: data.confirmation.confirmation_token, // ← Токен для виджета
-            paymentId: data.id
+            paymentId: data.id,
+            userEmail: req.user.email,
+            amount: amount,
+            productName: guide.title,
+            orderDate: data.created_at
         });
 
     } catch (err) {
@@ -79,22 +84,30 @@ exports.createPayment = async (req, res, next) => {
 
 // Webhook для уведомлений
 exports.paymentWebhook = async (req, res, next) => {
-  try {
-    const event = req.body.event;
-    const paymentObject = req.body.object;
+    try {
+        const event = req.body.event;
+        const paymentObject = req.body.object;
+        const payment = await Payment.findOne({ where: { paymentId: paymentObject.id } });
 
-    if (event === 'payment.succeeded') {
-      // Обработка успешной оплаты
-      console.log('Платёж успешен:', paymentObject.id);
-      // Здесь обновляем БД, активируем подписку и т.д.
-    } else if (event === 'payment.canceled') {
-      console.log('Платёж отменён:', paymentObject.id);
-      // Обработка отмены
+        if (event === 'payment.succeeded') {
+            // Обработка успешной оплаты
+            console.log('Платёж успешен:', paymentObject.id);
+            // Здесь обновляем БД, активируем подписку и т.д.
+            if (payment) {
+                payment.status = 'succeeded';
+                await payment.save();
+            }
+        } else if (event === 'payment.canceled') {
+            console.log('Платёж отменён:', paymentObject.id);
+            // Обработка отмены
+            if (payment) {
+                payment.status = 'canceled';
+                await payment.save();
+            }
+        }
+        res.status(200).send({ result: 'ok' });
+    } catch (err) {
+        console.error('Ошибка webhook:', err);
+        res.status(500).send({ error: 'Webhook error' });
     }
-
-    res.status(200).send({ result: 'ok' });
-  } catch (err) {
-    console.error('Ошибка webhook:', err);
-    res.status(500).send({ error: 'Webhook error' });
-  }
 };

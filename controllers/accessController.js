@@ -37,9 +37,9 @@ exports.checkAccess = async (req, res, next) => {
     if (guide.accessType === 'paid') {
       const payment = await Payment.findOne({
         where: {
-          userId: req.user.id,
+          userId: req.user?.id || null,
           guideId: guide.id,
-          status: 'completed'
+          status: 'succeeded'
         }
       });
 
@@ -137,19 +137,51 @@ exports.initiatePayment = async (req, res, next) => {
 // Страница успеха
 exports.successPayment = async (req, res, next) => {
   try {
+    const shopId = process.env.YOOKASSA_SHOP_ID
+    const secretKey = process.env.YOOKASSA_SECRET_KEY
     const paymentId = req.query.paymentId;
     const payment = await Payment.findOne({
       where: { paymentId: paymentId },
       // include: [Subscription]
     });
-    const guide = await Guide.findOne({where: {id: payment.guideId}})
-
+    const guide = await Guide.findOne({ where: { id: payment.guideId } })
+    payment.status = 'succeeded'
+    payment.save()
     res.render('payment/payment-success', {
       pageTitle: 'Успешно оплачено',
       payment: payment,
       guide: guide
       // subscription: payment?.Subscription
     });
+
+    // const response = await fetch(`https://api.yookassa.ru/v3/payments/${paymentId}`, {
+    //   headers: {
+    //     'Authorization': 'Basic ' + Buffer.from(`${shopId}:${secretKey}`).toString('base64'),
+    //     'Content-Type': 'application/json'
+    //   }
+    // });
+    // const paymentInfo = await response.json()
+    // if (!response.ok) {
+    //   throw new Error(paymentInfo.description || 'Ошибка при получении данных платежа');
+    // }
+    // if (paymentInfo.status === 'succeeded') {
+    //   payment.status = 'succeeded'
+    //   payment.save()
+    //   res.render('payment/payment-success', {
+    //     pageTitle: 'Успешно оплачено',
+    //     payment: payment,
+    //     guide: guide
+    //     // subscription: payment?.Subscription
+    //   });
+    // } else if (paymentInfo.status === 'canceled') {
+    //   payment.status = 'canceled'
+    //   payment.save()
+    //   res.render('payment/payment-canceled', {
+    //     pageTitle: 'Отмена платежа',
+    //     payment: payment,
+    //     guide: guide
+    //   });
+    // }
   } catch (err) {
     next(err);
   }

@@ -15,11 +15,11 @@
     <section class="success-section">
       <div class="container">
         <div class="success-card">
-          <div class="success-icon">
-            <i class="bi bi-check-circle-fill"></i>
+          <div class="success-icon cancel-icon">
+            <i class="bi bi-x-circle-fill"></i>
           </div>
-          <h1>Поздравляем!</h1>
-          <p class="success-message">Вы успешно оплатили товар</p>
+          <h1>Платеж отменен</h1>
+          <p class="success-message">Вы отменили заказ на оплату товара</p>
           
           <% if (payment) { %>
             <div class="payment-details">
@@ -38,7 +38,7 @@
               </div>
               <div class="detail-row">
                 <span>Статус:</span>
-                <span class="status-success">Оплачено</span>
+                <span class="status-cancel">Отменено</span>
               </div>
             </div>
           <% } %>
@@ -52,15 +52,14 @@
               </div>
              
               <div class="detail-row">
-                <span>Теперь материал доступен для скачивания:</span>
-                <a href="<%= guide.fileUrl %>" class="status-active">Скачать</a>
+                <span>Материал не доступен для скачивания</span>
               </div>
             </div>
           <% } %>
 
           <div class="success-actions">
             <a href="/library" class="btn btn-primary">Перейти в библиотеку</a>
-            <a href="/user/profile" class="btn btn-outline">Личный кабинет</a>
+            <a href="/profile" class="btn btn-outline">Личный кабинет</a>
           </div>
         </div>
       </div>
@@ -85,4 +84,3 @@
 
 
 <%- include('../includes/scripts.ejs') %>
-

@@ -14,14 +14,14 @@ const Payment = sequelize.define('payments', {
     allowNull: false,
   },
   status: {
-    type: Sequelize.ENUM('pending', 'completed', 'failed', 'refunded'),
+    type: Sequelize.ENUM('pending', 'succeeded', 'canceled', 'waiting_for_capture'),
     allowNull: false,
     defaultValue: 'pending'
   },
   paymentId: { // ID от платежной системы
     type: Sequelize.STRING,
     allowNull: true,
-  }
+  },
 });
 
 

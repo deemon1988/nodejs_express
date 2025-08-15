@@ -2897,6 +2897,9 @@ ul.posts article header > :last-child {
     margin: 0 0 2em 0;
     width: 100%;
   }
+  #category-filter .categories-filter-list {
+    margin: 0;
+  }
 }
 
 /* Post */
@@ -3802,7 +3805,7 @@ body.is-menu-visible #menu {
   gap: 30px;
 }
 
-.categories-filter-list {
+#main #category-filter .categories-filter-list {
   margin: 0;
 }
 

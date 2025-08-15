@@ -31,6 +31,7 @@ const Guide = require("../models/guide");
 const { formatFileSize, formatContentType } = require("../util/fileFeatures");
 const { title } = require("process");
 const { postsPagination, withLikePostsPagination } = require("../public/assets/js/pagination/main-page-pagination");
+const Payment = require("../models/payment");
 
 exports.getIndexPage = async (req, res, next) => {
   try {
@@ -59,12 +60,12 @@ exports.getIndexPage = async (req, res, next) => {
       path: "/",
       csrfToken: req.csrfToken(),
       // recomendetPosts: recomendetData,
-      currentPage: currentPage, 
-      hasNextPage: hasNextPage, 
-      hasPreviousPage: hasPreviousPage, 
-      nextPage: nextPage, 
-      previousPage: previousPage, 
-      lastPage: lastPage, 
+      currentPage: currentPage,
+      hasNextPage: hasNextPage,
+      hasPreviousPage: hasPreviousPage,
+      nextPage: nextPage,
+      previousPage: previousPage,
+      lastPage: lastPage,
       totalPages: totalPages
     });
   } catch (error) {
@@ -392,6 +393,19 @@ exports.getLibrary = async (req, res, next) => {
 
     const totalPages = Math.ceil(count / ITEMS_PER_PAGE)
 
+    const userPayments = await Payment.findAll({
+      where: {
+        userId: req.user?.id || null,
+        status: 'succeeded'
+      },
+      attributes: [
+        'guideId'
+      ]
+    })
+
+    const userAvailableGuidesIds = userPayments.map(payment => payment.guideId)
+
+
     res.render("blog/library", {
       pageTitle: "Полезные шпаргалки и чек-листы",
       path: "/library",
@@ -405,7 +419,8 @@ exports.getLibrary = async (req, res, next) => {
       lastPage: totalPages,
       totalPages: totalPages,
       formatFileSize: formatFileSize,
-      formatContentType: formatContentType
+      formatContentType: formatContentType,
+      userAvailableGuidesIds: userAvailableGuidesIds || []
     });
   } catch (error) {
     console.log("Ошибка рендеринга страницы:", error);

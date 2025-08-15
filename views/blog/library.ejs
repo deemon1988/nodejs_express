@@ -38,11 +38,15 @@
                     <div class="guide-header">
                     <h1><%= guide.title %></h1>
                     </div>
-                    <div>
+                    <div class="badge-action">
                     <% if (guide.accessType === 'free') { %>
                         <span class="badge badge-success">Бесплатно</span>
                     <% } else if (guide.accessType === 'paid') { %>
-                        <span class="badge badge-danger">Платно <%= guide.price %> руб.</span>
+                        <% if (userAvailableGuidesIds.includes(guide.id)) { %>
+                            <span class="badge badge-success">Куплено</span>
+                        <% } else { %>
+                            <span class="badge badge-danger">Платно <%= guide.price %> руб.</span>
+                        <% } %>
                     <% } else if (guide.accessType === 'subscription') { %>
                         <span class="badge badge-primary">По подписке</span>
                     <% } %>
