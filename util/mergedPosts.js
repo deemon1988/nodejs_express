@@ -11,13 +11,14 @@ async function getMergedPosts(userId, viewHistory, page = 1, limit = 10) {
     // Получаем все просмотренные посты с categoryId
     const viewedPostsRaw = viewHistory?.length
       ? await Post.findAll({
-          where: {
-            id: { [Op.in]: viewHistory }
-          },
-          attributes: ['id', 'categoryId']
-        })
+        where: {
+          id: { [Op.in]: viewHistory }
+        },
+        attributes: ['id', 'categoryId']
+      })
       : [];
 
+      console.log('viewedPostsRaw - ', viewedPostsRaw.length)
     // Получаем список id всех категорий из истории просмотра
     const categoryIds = [...new Set(viewedPostsRaw.map(p => p.categoryId))];
 
@@ -28,54 +29,54 @@ async function getMergedPosts(userId, viewHistory, page = 1, limit = 10) {
         ...(viewHistory?.length && { id: { [Op.notIn]: viewHistory } }),
       },
       include: [
-        { 
-          model: Category, as: 'category' 
-        },  
         {
-        model: Comment,
-        as: "comments",
-        attributes: [],
-        required: false,
-      },
-      {
-        model: User,
-        as: "likedUsers",
-        attributes: ["id"], // нужно, чтобы мы могли проверить id
-        through: { attributes: [] },
-        where: { id: userId }, //userId ? { id: userId } : undefined,
-        required: false,
-      },
-    ],
+          model: Category, as: 'category'
+        },
+        {
+          model: Comment,
+          as: "comments",
+          attributes: [],
+          required: false,
+        },
+        {
+          model: User,
+          as: "likedUsers",
+          attributes: ["id"], // нужно, чтобы мы могли проверить id
+          through: { attributes: [] },
+          where: { id: userId }, //userId ? { id: userId } : undefined,
+          required: false,
+        },
+      ],
       order: [["createdAt", "DESC"]],
     });
 
     // Получаем просмотренные посты
     const viewedPosts = viewHistory?.length
       ? await Post.findAll({
-          where: {
-            id: { [Op.in]: viewHistory }
+        where: {
+          id: { [Op.in]: viewHistory }
+        },
+        include: [
+          {
+            model: Category, as: 'category'
           },
-          include: [
-            { 
-              model: Category, as: 'category' 
-            },
-             {
-        model: Comment,
-        as: "comments",
-        attributes: [],
-        required: false,
-      },
-      {
-        model: User,
-        as: "likedUsers",
-        attributes: ["id"], // нужно, чтобы мы могли проверить id
-        through: { attributes: [] },
-        where: { id: userId }, //userId ? { id: userId } : undefined,
-        required: false,
-      },
-          ],
-          order: [["createdAt", "DESC"]],
-        })
+          {
+            model: Comment,
+            as: "comments",
+            attributes: [],
+            required: false,
+          },
+          {
+            model: User,
+            as: "likedUsers",
+            attributes: ["id"], // нужно, чтобы мы могли проверить id
+            through: { attributes: [] },
+            where: { id: userId }, //userId ? { id: userId } : undefined,
+            required: false,
+          },
+        ],
+        order: [["createdAt", "DESC"]],
+      })
       : [];
 
     // Объединяем: сначала рекомендуемые, потом просмотренные
@@ -88,11 +89,23 @@ async function getMergedPosts(userId, viewHistory, page = 1, limit = 10) {
     const paginatedPosts = allPosts.slice(offset, offset + limit);
 
     return {
+      //  posts: paginatedPosts,
+      // total,
+      // page,
+      // limit,
+      // totalPages,
       posts: paginatedPosts,
       total,
-      page,
+      currentPage: page,
+      hasNextPage: limit * page < total,
+      hasPreviousPage: page > 1,
+      nextPage: page + 1,
+      previousPage: page - 1,
+      lastPage: totalPages,
       limit,
       totalPages,
+
+
     };
   } catch (error) {
     console.error("Error fetching posts:", error);

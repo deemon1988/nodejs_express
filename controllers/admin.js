@@ -63,8 +63,8 @@ exports.getAddPost = (req, res, next) => {
       categories: categories,
       csrfToken: req.csrfToken(),
       hasError: false,
-      errorMessage: req.flash("error") || null,
-      successMessage: req.flash("success") || null,
+      errorMessage: req.flash("error")[0] || null,
+      successMessage: req.flash("success")[0] || null,
       validationErrors: [],
     });
   });
@@ -522,8 +522,8 @@ exports.getCreateCategory = async (req, res, next) => {
       path: "/admin/create-category",
       editing: editMode === 'true' ? true : false,
       csrfToken: req.csrfToken(),
-      errorMessage: req.flash("error"),
-      successMessage: req.flash("success"),
+      errorMessage: req.flash("error")[0] || null,
+      successMessage: req.flash("success")[0] || null,
     });
   } catch (error) {
     console.error("Ошибка отображения страницы создания категории: ", error);
@@ -673,8 +673,8 @@ exports.getAddGuide = async (req, res, next) => {
       editing: false,
       categories: categories,
       csrfToken: req.csrfToken(),
-      errorMessage: req.flash("error"),
-      successMessage: null,
+      errorMessage: req.flash("error")[0] || null,
+      successMessage: req.flash("success")[0] || null,
       hasError: false,
       validationErrors: [],
       yandexDiskAccessToken: getYandexDiskToken(req)
@@ -824,9 +824,10 @@ exports.handleYandexCallback = async (req, res, next) => {
       token: accessToken,
       expireTime: expireTime
     }
+    
+    req.flash("success", "Успешная авторизация, теперь можно получить ссылку");
     await req.session.save()
 
-    req.flash("success", "Успешная авторизация, теперь можно получить ссылку");
     res.redirect('/admin/add-guide')
 
   } catch (error) {

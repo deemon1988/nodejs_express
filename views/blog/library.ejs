@@ -43,7 +43,7 @@
                         <span class="badge badge-success">Бесплатно</span>
                     <% } else if (guide.accessType === 'paid') { %>
                         <% if (userAvailableGuidesIds.includes(guide.id)) { %>
-                            <span class="badge badge-success">Куплено</span>
+                            <span class="badge badge-success">Доступно</span>
                         <% } else { %>
                             <span class="badge badge-danger">Платно <%= guide.price %> руб.</span>
                         <% } %>
@@ -150,7 +150,7 @@
 
                     <!-- Pagination -->
                     <ul class="actions pagination">
-                        <li><a href="" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a></li>
+                        <li><a href="?page=<%= previousPage %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a></li>
                         <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Next Page</a></li>
                     </ul>
 

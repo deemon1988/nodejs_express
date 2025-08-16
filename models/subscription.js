@@ -11,11 +11,11 @@ const Subscription = sequelize.define('subscriptions', {
   },
   startDate: {
     type: Sequelize.DATE,
-    allowNull: false,
+    allowNull: true,
   },
   endDate: {
     type: Sequelize.DATE,
-    allowNull: false,
+    allowNull: true,
   },
   isActive: {
     type: Sequelize.BOOLEAN,

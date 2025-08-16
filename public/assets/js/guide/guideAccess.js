@@ -70,14 +70,36 @@ function showAccessModal(data) {
       icon: 'info',
       confirmButtonText: '<span class="btn-text">Оформить подписку</span>',
       cancelButtonText: '<span class="btn-text">Отмена</span>',
-      showCancelButton: true
+      showCancelButton: true,
+      customClass: {
+        popup: 'swal2-custom-popup',
+        confirmButton: 'swal2-custom-btn swal2-confirm-btn large',
+        cancelButton: 'swal2-custom-btn swal2-cancel-btn large'
+      }
     }).then((result) => {
       if (result.isConfirmed) {
-        window.location.href = '/subscribe-page';
+        // window.location.href = '/subscribe-page';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        return fetch('/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'CSRF-Token': csrfToken
+          },
+        })
+          .then(result => result.json())
+          .then(data => {
+            if (data.success) {
+              swalConfirmSubsribtion()
+            } else {
+              swalErrorSubsribtion()
+            }
+          })
       }
     })
       .catch(err => {
         console.log(err)
+        swalErrorSubsribtion()
       })
   }
 }
@@ -119,4 +141,33 @@ async function initiatePayment(guideId) {
     console.error('Ошибка оплаты:', err);
     alert('Не удалось инициализировать оплату');
   }
+}
+
+function swalConfirmSubsribtion() {
+  return Swal.fire({
+    title: 'Поздравляем!',
+    text: 'Подписка успешно оформлена',
+    icon: 'info',
+    confirmButtonText: '<span class="btn-text">ОК</span>',
+    showCloseButton: true,
+    timer: 3000, // Автоматическое закрытие через 3 секунды (3000 мс)
+    timerProgressBar: true,
+    customClass: {
+      popup: 'swal2-custom-popup',
+      confirmButton: 'swal2-custom-btn swal2-confirm-btn large',
+    }
+  })
+}
+
+function swalErrorSubsribtion() {
+  return Swal.fire({
+    title: 'Ошибка',
+    text: 'Не получилось оформить подписку',
+    icon: 'error',
+    confirmButtonText: '<span class="btn-text">Закрыть</span>',
+    customClass: {
+      popup: 'swal2-custom-popup',
+      confirmButton: 'swal2-custom-btn swal2-confirm-btn large',
+    }
+  })
 }

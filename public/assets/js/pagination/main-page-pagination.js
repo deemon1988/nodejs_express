@@ -89,7 +89,7 @@ async function withLikePostsPagination(pageNumber, userId) {
     comments.forEach(comment => {
         commentsCountMap.set(comment.dataValues.postId, parseInt(comment.dataValues.count));
     });
-    console.log(commentsCountMap)
+
     const postsWithComments = posts.map(post => ({
         ...post.toJSON(),
         commentsCount: commentsCountMap.get(post.id)

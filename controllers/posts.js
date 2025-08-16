@@ -32,6 +32,8 @@ const { formatFileSize, formatContentType } = require("../util/fileFeatures");
 const { title } = require("process");
 const { postsPagination, withLikePostsPagination } = require("../public/assets/js/pagination/main-page-pagination");
 const Payment = require("../models/payment");
+const Subscription = require("../models/subscription");
+// const { getRecomendedPosts } = require("../util/post-utils/recomendedPosts");
 
 exports.getIndexPage = async (req, res, next) => {
   try {
@@ -39,34 +41,38 @@ exports.getIndexPage = async (req, res, next) => {
     const limit = 5;
 
     const viewHistory = req.session.viewHistory || null;
+    console.log('viewHistory - ' ,viewHistory)
     const userId = req.user ? req.user.id : null;
-
+    const allPosts = await Post.findAll()
+    console.log('allPosts - ', allPosts.length)
+    
     const allPostsData = await getAllPostsOnPage(userId, page, limit);
     const mergedPosts = await getMergedPosts(userId, viewHistory, page, limit);
-
+    console.log('allPostsData - ', allPostsData.posts.length)
+    console.log('mergedPosts - ', mergedPosts.posts.length)
+    // const recomendedPosts = viewHistory ? getRecomendedPosts(mergedPosts.posts, viewHistory, 5) : getRandomPosts(allPostsData.posts)
     // const { rows: postsWithUserLike } = await getPostsWithLikedUsersQuery(userId)
-
-    const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId)
+    // const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId)
 
     const topPostInEachCategory = await getTopPostsByCataegoryQuery();
     const topTop5PostsFromEachCategory = await getRandomPostsFromTop5Query()
 
     res.render("blog/blog", {
       pageTitle: "Главная страница",
-      topPosts: topPostInEachCategory,
-      allPosts: posts,//viewHistory ? mergedPosts : allPostsData,
+      topPosts: getRandomPosts(topPostInEachCategory, 5),
+      allPosts: viewHistory ? mergedPosts.posts : allPostsData.posts,
       randomTopPosts: getRandomPosts(topTop5PostsFromEachCategory, 5),
-      successMessage: req.flash("success"),
+      // recomendedPosts: recomendedPosts,
+      successMessage: req.flash("success")[0],
       path: "/",
       csrfToken: req.csrfToken(),
-      // recomendetPosts: recomendetData,
-      currentPage: currentPage,
-      hasNextPage: hasNextPage,
-      hasPreviousPage: hasPreviousPage,
-      nextPage: nextPage,
-      previousPage: previousPage,
-      lastPage: lastPage,
-      totalPages: totalPages
+      currentPage: viewHistory ? mergedPosts.currentPage : allPostsData.currentPage,
+      hasNextPage: viewHistory ? mergedPosts.hasNextPage : allPostsData.hasNextPage,
+      hasPreviousPage: viewHistory ? mergedPosts.hasPreviousPage : allPostsData.hasPreviousPage,
+      nextPage: viewHistory ? mergedPosts.nextPage : allPostsData.nextPage,
+      previousPage: viewHistory ? mergedPosts.previousPage : allPostsData.previousPage,
+      lastPage: viewHistory ? mergedPosts.lastPage : allPostsData.lastPage,
+      totalPages: viewHistory ? mergedPosts.totalPages : allPostsData.totalPages
     });
   } catch (error) {
     console.error("Ошибка рендеринга страницы: ", error)
@@ -133,6 +139,8 @@ exports.getPostById = (req, res, next) => {
 };
 
 exports.getAllPosts = async (req, res, next) => {
+  const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId) // getPostsWithLikedUsersQuery(userId)
+
   const userId = req.user ? req.user.id : null;
   let randomPosts;
   let allPosts;
@@ -337,28 +345,39 @@ exports.getCategory = (req, res, next) => {
     });
 };
 
-exports.getCategories = (req, res, next) => {
-  const userId = req.user ? req.user.id : null;
-  let allPosts;
+exports.getCategories = async (req, res, next) => {
+  try {
+    const page = req.query.page || 1
+    const userId = req.user ? req.user.id : null;
 
-  getPostsWithLikedUsersQuery(userId)
-    .then(({ rows: posts }) => {
-      allPosts = posts;
-      return getAllCategoriesWithPosts();
-    })
-    .then((categories) => {
-      const categoriesJson = categories.map((c) => c.toJSON());
-      res.render("blog/categories", {
-        pageTitle: "Категории",
-        path: "/categories",
-        posts: allPosts,
-        randomPosts: getRandomPosts(allPosts, 5),
-        categories: categoriesJson,
-        formatDate: formatDateOnly,
-        csrfToken: req.csrfToken(),
-      });
-    })
-    .catch((err) => console.log(err));
+    const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId) // getPostsWithLikedUsersQuery(userId)
+    const categoriesWithPosts = await getAllCategoriesWithPosts()
+    const topPostsByCataegory = await getTopPostsByCataegoryQuery()
+    console.log(topPostsByCataegory)
+    res.render("blog/categories", {
+      pageTitle: "Категории",
+      path: "/categories",
+      posts: posts,
+      randomPosts: getRandomPosts(topPostsByCataegory, 5),
+      categories: categoriesWithPosts,
+      formatDate: formatDateOnly,
+      csrfToken: req.csrfToken(),
+      posts: posts,
+      currentPage: currentPage,
+      hasNextPage: hasNextPage,
+      hasPreviousPage: hasPreviousPage,
+      nextPage: nextPage,
+      previousPage: previousPage,
+      lastPage: lastPage,
+      totalPages: totalPages
+    });
+
+  } catch (error) {
+    console.error("Ошибка получения страницы с категориями: ", error.message)
+    const err = new Error(error)
+    err.httpStatusCode = 500
+    next(err)
+  }
 };
 
 exports.getArchive = async (req, res, next) => {
@@ -439,10 +458,11 @@ exports.checkBeforeDownload = (req, res) => {
 // Подписка
 exports.subscribe = async (req, res, next) => {
   try {
-    const email = req.body.email;
+    // const email = req.body.email;
+    const email = req.user.email
     const userId = req.user.id
     // Здесь сохраните email в базу, файл, Redis и т.д.
-
+    await Subscription.create({ isActive: true, userId: userId })
     await User.update({ isSubscribed: true }, { where: { id: userId } })
     console.log('Успешно Подписан:', email);
 
@@ -452,9 +472,10 @@ exports.subscribe = async (req, res, next) => {
     res.json({ success: true });
   } catch (err) {
     console.log(err)
-    const error = new Error(err)
-    error.httpStatusCode = 500
-    return next(error)
+    res.json({ success: false });
+    // const error = new Error(err)
+    // error.httpStatusCode = 500
+    // return next(error)
   }
 
 };

@@ -4,7 +4,7 @@
 	</head>
 
 	<body class="is-preload">
-		<% if(successMessage && successMessage.length> 0) { %>
+		<% if(typeof successMessage !== 'undefined' && successMessage)  { %>
 			<div class="flash-message success" style="display: block">
 				<%= successMessage %>
 					<span class="close-button">&times;</span>
@@ -92,8 +92,8 @@
 
 										 <!-- Pagination -->
 										<ul class="actions pagination">
-											<li><a href="" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a></li>
-											<li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Next Page</a></li>
+											<li><a href="?page=<%= previousPage %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Предыдущая</a></li>
+											<li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Следующая</a></li>
 										</ul>
 						</div>
 
@@ -112,7 +112,7 @@
 							<!-- Mini Posts -->
 							<section>
 								<h3>Всё, Что Важно</h3>
-								<p>3-5 случайных карточек</p>
+								<p>3-5 карточек топовых постов из каждой категории</p>
 								<div class="mini-posts">
 									<% if (topPosts.length > 0) { %>
 									

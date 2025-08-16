@@ -5,17 +5,17 @@
 
   <body class="is-preload">
 
-     <% if(errorMessage && errorMessage.length> 0) { %>
+      <% if(errorMessage && errorMessage.length> 0) { %>
             <div class="flash-message error" style="display: block">
                 <%- errorMessage %>
                     <span class="close-button">&times;</span>
             </div>
-            <% } %>
-                    <% if(successMessage && successMessage.length> 0) { %>
-			<div class="flash-message success" style="display: block">
-				<%= successMessage %>
-					<span class="close-button">&times;</span>
-			</div>
+      <% } %>
+      <% if(typeof successMessage !== 'undefined' && successMessage)  { %>
+        <div class="flash-message success" style="display: block">
+          <%= successMessage %>
+            <span class="close-button">&times;</span>
+        </div>
 			<% } %>
 
     <!-- Wrapper -->

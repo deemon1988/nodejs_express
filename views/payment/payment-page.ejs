@@ -1,130 +1,100 @@
 <%- include('../includes/head.ejs') %>
-  <!--Подключение библиотеки для инициализации виджета ЮKassa-->
-  <script src="https://yookassa.ru/checkout-widget/v1/checkout-widget.js"></script>
-  <style>
-    .order-info {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 30px;
-      border: 1px solid #e9ecef;
-    }
-    .order-info h3 {
-      margin-top: 0;
-      color: #333;
-      border-bottom: 2px solid #00BF96;
-      padding-bottom: 10px;
-    }
-    .order-details {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 15px;
-    }
-    .detail-item {
-      margin-bottom: 10px;
-    }
-    .detail-label {
-      font-weight: 600;
-      color: #555;
-      display: inline-block;
-      min-width: 120px;
-    }
-    .detail-value {
-      color: #333;
-    }
-    #payment-form {
-      margin-top: 20px;
-    }
-    .test-info {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 5px;
-      padding: 15px;
-      margin: 20px 0;
-      color: #856404;
-    }
-    .test-info b {
-      color: #856404;
-    }
-  </style>
-</head>
+<!--Подключение библиотеки для инициализации виджета ЮKassa-->
+<script src="https://yookassa.ru/checkout-widget/v1/checkout-widget.js"></script>
+<link rel="stylesheet" href="/assets/css/payment.css">
+
+  </head>
 
 
-<body class="is-preload">
+  <body class="is-preload">
 
-        <!-- Wrapper -->
-        <div id="wrapper">
+    <!-- Wrapper -->
+    <div id="wrapper">
 
-            
-              <!-- Main -->
-                <div id="main">
-  
-  <!-- Блок с информацией о заказе -->
-  <div class="order-info">
-    <h3>Информация о заказе</h3>
-    <div class="order-details">
-      <div class="detail-item">
-        <span class="detail-label">Номер заказа:</span>
-        <span class="detail-value"><%= paymentId %></span>
+
+      <!-- Main -->
+      <div id="main">
+
+        <!-- Блок с информацией о заказе -->
+        <div class="order-info">
+          <h3>Информация о заказе</h3>
+          <div class="order-details">
+            <div class="detail-item">
+              <span class="detail-label">Номер заказа:</span>
+              <span class="detail-value">
+                <%= paymentId %>
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Email:</span>
+              <span class="detail-value">
+                <%= userEmail %>
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Дата заказа:</span>
+              <span class="detail-value">
+                <%= formatDate(orderDate) %>
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Наименование:</span>
+              <span class="detail-value">
+                <%= productName %>
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Стоимость:</span>
+              <span class="detail-value">
+                <%= amount %> ₽
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <h4>Оплата заказа</h4>
+        <!--Контейнер, в котором будет отображаться платежная форма-->
+        <div id="payment-form"></div>
+
+        <div class="test-info">
+          <p><b>Данные банковской карты для оплаты в тестовом магазине:</b></p>
+          <ul>
+            <li>номер — <b>5555 5555 5555 4477</b></li>
+            <li>срок действия — <b>01/30</b> (или другая дата, больше текущей)</li>
+            <li>CVC — <b>123</b> (или три любые цифры)</li>
+            <li>код для прохождения 3-D Secure — <b>123</b> (или три любые цифры)</li>
+          </ul>
+          <p><a href="https://yookassa.ru/developers/payment-acceptance/testing-and-going-live/testing#test-bank-card"
+              target="_blank">Другие тестовые банковские карты</a></p>
+        </div>
+
+
       </div>
-      <div class="detail-item">
-        <span class="detail-label">Email:</span>
-        <span class="detail-value"><%= userEmail %></span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Дата заказа:</span>
-        <span class="detail-value"><%= formatDate(orderDate) %></span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Наименование:</span>
-        <span class="detail-value"><%= productName %></span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Стоимость:</span>
-        <span class="detail-value"><%= amount %> ₽</span>
-      </div>
-    </div>
-  </div>
 
-  <h4>Оплата заказа</h4>
-  <!--Контейнер, в котором будет отображаться платежная форма-->
-  <div id="payment-form"></div>
-
-  <div class="test-info">
-    <p><b>Данные банковской карты для оплаты в тестовом магазине:</b></p>
-    <ul>
-      <li>номер — <b>5555 5555 5555 4477</b></li>
-      <li>срок действия — <b>01/30</b> (или другая дата, больше текущей)</li>
-      <li>CVC — <b>123</b> (или три любые цифры)</li>
-      <li>код для прохождения 3-D Secure — <b>123</b> (или три любые цифры)</li>
-    </ul>
-    <p><a href="https://yookassa.ru/developers/payment-acceptance/testing-and-going-live/testing#test-bank-card" target="_blank">Другие тестовые банковские карты</a></p>
-  </div>
 
 
     </div>
 
+    <%- include('../includes/main-scripts.ejs') %>
+
+      <script>
+        //Инициализация виджета. Все параметры обязательные.
+        const checkout = new window.YooMoneyCheckoutWidget({
+          confirmation_token: '<%= confirmation_token %>', //Токен, который перед проведением оплаты нужно получить от ЮKassa
+          return_url: 'http://localhost:3000/access/successPayment?paymentId=<%= paymentId %>', //Ссылка на страницу завершения оплаты, это может быть любая ваша страница
+
+          customization: {
+            modal: false
+          },
+          error_callback: function (error) {
+            console.log(error)
+          }
+        });
+
+        //Отображение платежной формы в контейнере
+        checkout.render('payment-form');
+      </script>
 
 
-</div>
 
-<%- include('../includes/main-scripts.ejs') %>
-
-  <script>
-  //Инициализация виджета. Все параметры обязательные.
-  const checkout = new window.YooMoneyCheckoutWidget({
-      confirmation_token: '<%= confirmation_token %>', //Токен, который перед проведением оплаты нужно получить от ЮKassa
-      return_url: 'http://localhost:3000/access/successPayment?paymentId=<%= paymentId %>', //Ссылка на страницу завершения оплаты, это может быть любая ваша страница
-
-      error_callback: function(error) {
-          console.log(error)
-      }
-  });
-
-  //Отображение платежной формы в контейнере
-  checkout.render('payment-form');
-  </script>
-
-
-
-<%- include('../includes/scripts.ejs') %>
+      <%- include('../includes/scripts.ejs') %>

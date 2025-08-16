@@ -57,9 +57,19 @@ async function getAllPostsOnPage(userId, page = 1, limit = 10, postsIds) {
     });
 
     return {
+      // posts: batchOfPosts,
+      // total,
+      // page,
+      // limit,
+      // totalPages,
       posts: batchOfPosts,
       total,
-      page,
+      currentPage: page,
+      hasNextPage: limit * page < total,
+      hasPreviousPage: page > 1,
+      nextPage: page + 1,
+      previousPage: page - 1,
+      lastPage: totalPages,
       limit,
       totalPages,
     };

@@ -67,9 +67,9 @@ exports.checkAccess = async (req, res, next) => {
         where: {
           userId: req.user.id,
           isActive: true,
-          endDate: {
-            [Sequelize.Op.gt]: new Date()
-          }
+          // endDate: {
+          //   [Sequelize.Op.gt]: new Date()
+          // }
         }
       });
 
@@ -77,13 +77,15 @@ exports.checkAccess = async (req, res, next) => {
         return res.json({
           hasAccess: true,
           downloadUrl: guide.fileUrl,
-          message: 'Доступ разрешен'
+          message: 'Доступ разрешен',
+          guideId: guideId
         });
       } else {
         return res.json({
           hasAccess: false,
           message: 'Требуется подписка',
-          action: 'subscribe'
+          action: 'subscribe',
+          guideId: guideId
         });
       }
     }
@@ -145,43 +147,44 @@ exports.successPayment = async (req, res, next) => {
       // include: [Subscription]
     });
     const guide = await Guide.findOne({ where: { id: payment.guideId } })
-    payment.status = 'succeeded'
-    payment.save()
-    res.render('payment/payment-success', {
-      pageTitle: 'Успешно оплачено',
-      payment: payment,
-      guide: guide
-      // subscription: payment?.Subscription
+    // payment.status = 'succeeded'
+    // payment.save()
+    // res.render('payment/payment-success', {
+    //   pageTitle: 'Успешно оплачено',
+    //   payment: payment,
+    //   guide: guide
+    //   // subscription: payment?.Subscription
+    // });
+
+    const response = await fetch(`https://api.yookassa.ru/v3/payments/${paymentId}`, {
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(`${shopId}:${secretKey}`).toString('base64'),
+        'Content-Type': 'application/json'
+      }
     });
 
-    // const response = await fetch(`https://api.yookassa.ru/v3/payments/${paymentId}`, {
-    //   headers: {
-    //     'Authorization': 'Basic ' + Buffer.from(`${shopId}:${secretKey}`).toString('base64'),
-    //     'Content-Type': 'application/json'
-    //   }
-    // });
-    // const paymentInfo = await response.json()
-    // if (!response.ok) {
-    //   throw new Error(paymentInfo.description || 'Ошибка при получении данных платежа');
-    // }
-    // if (paymentInfo.status === 'succeeded') {
-    //   payment.status = 'succeeded'
-    //   payment.save()
-    //   res.render('payment/payment-success', {
-    //     pageTitle: 'Успешно оплачено',
-    //     payment: payment,
-    //     guide: guide
-    //     // subscription: payment?.Subscription
-    //   });
-    // } else if (paymentInfo.status === 'canceled') {
-    //   payment.status = 'canceled'
-    //   payment.save()
-    //   res.render('payment/payment-canceled', {
-    //     pageTitle: 'Отмена платежа',
-    //     payment: payment,
-    //     guide: guide
-    //   });
-    // }
+    const paymentInfo = await response.json()
+    if (!response.ok) {
+      throw new Error(paymentInfo.description || 'Ошибка при получении данных платежа');
+    }
+    if (paymentInfo.status === 'succeeded') {
+      payment.status = 'succeeded'
+      payment.save()
+      res.render('payment/payment-success', {
+        pageTitle: 'Успешно оплачено',
+        payment: payment,
+        guide: guide
+        // subscription: payment?.Subscription
+      });
+    } else if (paymentInfo.status === 'canceled') {
+      payment.status = 'canceled'
+      payment.save()
+      res.render('payment/payment-canceled', {
+        pageTitle: 'Отмена платежа',
+        payment: payment,
+        guide: guide
+      });
+    }
   } catch (err) {
     next(err);
   }

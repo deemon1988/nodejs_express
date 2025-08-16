@@ -66,12 +66,11 @@
                                     <h1>No Posts Found!</h1>
                                     <% } %>
 
-                                    <!-- Pagination -->
-										<ul class="actions pagination">
-											<li><a href="" class="disabled button large previous">Previous
-													Page</a></li>
-											<li><a href="#" class="button large next">Next Page</a></li>
-										</ul>
+										 <!-- Pagination -->
+                                        <ul class="actions pagination">
+                                            <li><a href="?page=<%= previousPage %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Предыдущая</a></li>
+                                            <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Следующая</a></li>
+                                        </ul>
 
                 </div>
                 <!-- Sidebar -->

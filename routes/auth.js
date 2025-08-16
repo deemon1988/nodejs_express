@@ -35,7 +35,7 @@ router.post(
       .custom((value, { req }) => {
         // Если пользователь не найден или у него нет пароля (null/undefined), отклоняем
         if (!req.user || !req.user.password || typeof req.user.password !== 'string') {
-          return Promise.reject("Введен неверный пароль!");
+          return Promise.reject("Пользователь с этим Email не зарегестрирован");
         }
         // Проверяем пароль только если email прошел валидацию
         if (req.user) {

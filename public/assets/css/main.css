@@ -4371,7 +4371,6 @@ input #cover:hover {
 
 .meta.guides .author {
   border-left: 0;
-
 }
 
 .author.guides {
@@ -4548,6 +4547,7 @@ input #cover:hover {
   align-items: baseline;
   margin: auto;
   gap: 50px;
+  flex-direction: row-reverse;
 }
 
 .tooltip {
@@ -4606,4 +4606,9 @@ input #cover:hover {
 
 .tooltip:hover i {
   color: #000;
+}
+
+ul.pagination > li:last-child {
+  display: flex;
+  justify-content: end;
 }

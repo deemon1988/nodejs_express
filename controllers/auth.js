@@ -11,21 +11,21 @@ const User = require("../models/user");
 
 exports.getLogin = (req, res, err) => {
   // Функция для отрисовки страницы логина
-  const renderLoginPage = () => {
-    res.render("user/singin", {
-      pageTitle: "Авторизация",
-      errorMessage: req.flash("error"),
-      successMessage: req.flash("success"),
-      csrfToken: req.csrfToken(),
-      validationErrors: [],
-      oldInput: {
-        email: req.query.email || "",
-        password: "",
-        postId: req.query.postId || null,
-      },
-    });
-  };
-  renderLoginPage();
+
+  res.render("user/singin", {
+    pageTitle: "Авторизация",
+    errorMessage: req.flash("error")[0] || null,
+    successMessage: req.flash("success")[0] || null,
+    csrfToken: req.csrfToken(),
+    validationErrors: [],
+    oldInput: {
+      email: req.query.email || "",
+      password: "",
+      postId: req.query.postId || null,
+    },
+  });
+
+
 };
 
 exports.postLogin = (req, res, next) => {
@@ -38,7 +38,7 @@ exports.postLogin = (req, res, next) => {
 
     return res.status(422).render("user/singin", {
       errorMessage: errors.array()[0].msg,
-      successMessage: req.flash("success"),
+      // successMessage: req.flash("success"),
       pageTitle: "Авторизация",
       csrfToken: req.csrfToken(),
       oldInput: {
@@ -486,10 +486,10 @@ exports.getAuthCallback = async (req, res, next) => {
     // Здесь можно сохранить пользователя в сессию или базу
     req.session.isLoggedIn = true;
     req.session.userId = currentUser.id;
-
-    await req.session.save()
     req.flash("success", "Вы успешно авторизовались!");
-    return res.redirect('/')
+    await req.session.save()
+
+    res.redirect('/')
 
   } catch (error) {
     console.error(error.response?.data || error.message);

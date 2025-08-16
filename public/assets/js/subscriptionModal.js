@@ -85,3 +85,5 @@ function skipAndDownload(guideId) {
     closeSubscriptionModal();
     startDownload(guideId);
 }
+
+module.exports = { showSubscriptionModal }

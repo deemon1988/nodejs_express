@@ -2,13 +2,13 @@
     </head>
 
     <body class="auth">
-        <% if(errorMessage && errorMessage.length> 0) { %>
+        <% if(errorMessage) { %>
             <div class="flash-message error" style="display: block">
                 <%= errorMessage %>
                     <span class="close-button">&times;</span>
             </div>
             <% } %>
-                    <% if(successMessage && successMessage.length> 0) { %>
+                    <% if(typeof successMessage !== 'undefined' && successMessage) { %>
 			<div class="flash-message success" style="display: block">
 				<%= successMessage %>
 					<span class="close-button">&times;</span>

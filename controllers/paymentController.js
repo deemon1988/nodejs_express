@@ -11,10 +11,46 @@ exports.createPayment = async (req, res, next) => {
         // const { plan, email, username, password } = req.body;
         const userId = req.user?.id || null;
         const guideId = req.body.guideId;
+
         const guide = await Guide.findByPk(guideId)
         // Определяем стоимость
         let amount = +guide.price;
-        let description = `Оплата заказа № 72 для ${req.user.email}`;
+
+        // Проверяем есть ли уже созданный платеж для этого гайда и пользователя 
+        // со статусом 'pending'
+        const pendingPayment = await Payment.findOne({
+            where: { userId: userId, guideId: guideId, status: 'pending' }
+        })
+        console.log('Существующий платеж в БД - ' , pendingPayment)
+
+        if (pendingPayment) {
+            const result = await fetch(`https://api.yookassa.ru/v3/payments/${pendingPayment.paymentId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + Buffer.from(`${shopId}:${secretKey}`).toString('base64'),
+                    'Idempotence-Key': require('crypto').randomUUID() // уникальный ключ
+                },
+            })
+            const exist_data = await result.json()
+            console.log('Существующий платеж Юмани - ' , pendingPayment)
+
+            if (exist_data.status === 'pending' && exist_data.confirmation?.confirmation_token) {
+                return res.json({
+                    success: true,
+                    token: exist_data.confirmation.confirmation_token, // ← Токен для виджета
+                    paymentId: exist_data.id,
+                    userEmail: req.user.email,
+                    amount: amount,
+                    productName: guide.title,
+                    orderDate: new Date()
+                });
+            }
+        } else if(pendingPayment){
+            // Платёж истёк или неактивен — удаляем его и создаём новый
+            await pendingPayment.destroy();
+        }
+
+
 
         // if (plan === 'monthly') {
         //   amount = 299;
@@ -23,6 +59,10 @@ exports.createPayment = async (req, res, next) => {
         //   amount = 2990;
         //   description = 'Премиум подписка на 1 год';
         // }
+
+        // Генерируем номер заказа заранее
+        const orderNumber = 'ORD-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        let description = `Оплата заказа №${orderNumber} для ${req.user.email}`;
 
         // Создаем платеж с типом confirmation = embedded (для виджета)
         const payment = ({
