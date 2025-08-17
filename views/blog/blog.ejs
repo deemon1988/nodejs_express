@@ -9,7 +9,7 @@
 				<%= successMessage %>
 					<span class="close-button">&times;</span>
 			</div>
-			<% } %>
+		<% } %>
 
 				<!-- Wrapper -->
 				<div id="wrapper">
@@ -72,7 +72,7 @@
 																	class="icon solid fa-comment">
 																	<%= post.commentsCount || 0 %>
 																</a>
-																<% } else { %>
+															<% } else { %>
 															
 																		<a class="icon solid fa-comment not-active">
 																			<%= post.commentsCount || 0 %>
@@ -86,9 +86,9 @@
 									<% } %>
 										<% } else { %>
 											<h1>No Posts Found!</h1>
-											<% } %>
+										<% } %>
 
-											<%- include('../includes/pagination.ejs', {currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages}) %>
+										<%- include('../includes/pagination.ejs', {currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages}) %>
 
 										 <!-- Pagination -->
 										<ul class="actions pagination">
@@ -153,9 +153,9 @@
 								<h3>Рекомендуемое вам</h3>
 								<p>ПОказывать 3-5 карточек из рекомендуемых постов с наивысших рейтингом</p>
 								<div class="mini-posts">
-									<% if (topPosts.length > 0) { %>
+									<% if (recomendedPosts.length > 0) { %>
 									
-										<% for (let post of topPosts) { %>
+										<% for (let post of recomendedPosts) { %>
 											<!-- Mini Post -->
 											<article class="mini-post">
 
@@ -193,8 +193,8 @@
 								<h3>Мир Вокруг Нас</h3>
 								<p>Самый новый пост в каждой категории</p>
 								<ul class="posts">
-									<% if (randomTopPosts && randomTopPosts.length> 0) { %>
-										<% for (let post of randomTopPosts) { %>
+									<% if (latestPostsByCategory && latestPostsByCategory.length> 0) { %>
+										<% for (let post of latestPostsByCategory) { %>
 											<li>
 												<article>
 													<header>

@@ -1,0 +1,200 @@
+<%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/assets/css/badges.css">
+<link rel="stylesheet" href="/assets/css/search.css">
+
+    </head>
+
+    <body class="is-preload">
+
+        <!-- Wrapper -->
+        <div id="wrapper">
+
+            <%- include('../includes/navigation.ejs') %>
+
+            <!-- Main -->
+            <div id="main">
+
+                <section id="" class="box search-section">
+                    <header>
+                        <h2 class="search-heading">🔍 Результаты поиска<%= query ? ' для "' + query + '"' : '' %></h2>
+                        <% if (query && query.trim()) { %>
+                        <p class="search-results-info">Найдено результатов: <%= totalResults %></p>
+                    </header>
+                </section>
+
+
+                <article class="post">
+                    <% if (hasResults) { %>
+                        <div class="search-results">
+                            <ul class="search-results-list">
+                            <% results.forEach(function(item) { %>
+    <li class="search-results-item">
+        <article>
+            <header class="search-item-container">
+                <div class="title">
+                    <h2>
+                        <a href="<%= item.searchType === 'guide' ? '/guides/' : '/posts/' %><%= item.id %>">
+                            <%= item.title %>
+                            <% if (item.searchType === 'guide') { %>
+                                <span class="type-badge guide">Гайд</span>
+                            <% } else { %>
+                                <span class="type-badge post">Пост</span>
+                            <% } %>
+                        </a>
+                    </h2>
+                    <p class="excerpt">
+                        <%= item.content ? item.content.substring(0, 200) : (item.preview ? item.preview.substring(0, 200) : '') %> ...
+                    </p>
+                </div>
+                <div class="meta search">
+                    <% if (item.searchType === 'guide' && item.categories && item.categories.length > 0) { %>
+                        <span class="category">
+                            <%= item.categories[0].name %>
+                        </span>
+                    <% } else if (item.searchType === 'post' && item.category) { %>
+                        <span class="category">
+                            <%= item.category.name %>
+                        </span>
+                    <% } else { %>
+                        <span class="category">
+                            <%= item.searchType === 'guide' ? 'Guide' : 'Post' %>
+                        </span>
+                    <% } %>
+                    <span class="type">
+                        <%= item.searchType === 'guide' ? 'Гайд' : 'Пост' %>
+                    </span>
+                </div>
+            </header>
+
+            <% if (item.tags && item.tags.length > 0) { %>
+                <div class="tags">
+                    <% item.tags.forEach(function(tag) { %>
+                        <span class="tag">
+                            <%= tag %>
+                        </span>
+                    <% }) %>
+                </div>
+            <% } %>
+        </article>
+    </li>
+<% }) %>
+                            </ul>
+                        </div>
+                        <% } else { %>
+                        <div class="no-results">
+                            <h3>Ничего не найдено</h3>
+                            <p>Попробуйте изменить поисковый запрос или использовать другие ключевые
+                                слова.</p>
+                        </div>
+                        <% } %>
+                            <% } else { %>
+                                <div class="no-query">
+                                    <h3>Введите поисковый запрос</h3>
+                                    <p>Используйте форму выше для поиска по сайтам, категориям и гайдам.
+                                    </p>
+                                </div>
+                            <% } %>
+
+                </article>
+
+                <%- include('../includes/search-pagination.ejs') %>
+
+            
+                    <!-- Pagination -->
+                    <ul class="actions pagination">
+                        <% let paginationUrl = '?query=' + encodeURIComponent(query);
+                            if (categoryId) {
+                                paginationUrl += '&category=' + categoryId;
+                            }
+                            if (type) {
+                                paginationUrl += '&type=' + type;
+                            } %>
+                        <li><a href="<%= paginationUrl %>&page=<%= previousPage %>"
+                                class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a>
+                        </li>
+                        <li><a href="<%= paginationUrl %>&page=<%= nextPage %>"
+                                class="<%= hasNextPage ? '' : 'disabled' %> button large next">Next Page</a></li>
+                    </ul>
+
+            </div>
+
+            <!-- Sidebar -->
+            <section id="sidebar">
+             
+
+            <section>
+                <div class="mini-posts">
+                           <!-- Фильтры -->
+<% if (query && query.trim()) { %>
+<section class="search-filters">
+    <div class="filter-container">
+        <h3>Фильтры</h3>
+        <form method="get" action="/search" class="filter-form">
+            <input type="hidden" name="query" value="<%= query %>">
+            
+            <div class="filter-group">
+                <label for="type">Тип:</label>
+                <select name="type" id="type" onchange="this.form.submit()">
+                    <option value="" <%= !type ? 'selected' : '' %>>Все типы</option>
+                    <option value="posts" <%= type == 'posts' ? 'selected' : '' %>>Посты</option>
+                    <option value="guides" <%= type == 'guides' ? 'selected' : '' %>>Гайды</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="category">Категория:</label>
+                <select name="category" id="category" onchange="this.form.submit()">
+                    <option value="">Все категории</option>
+                    <% categories.forEach(function(cat) { %>
+                        <option value="<%= cat.id %>" <%= categoryId == cat.id ? 'selected' : '' %>>
+                            <%= cat.name %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+            
+            <button type="submit" class="button small">Применить</button>
+            <% if (categoryId || type) { %>
+                <a href="?query=<%= encodeURIComponent(query) %>" class="button small">Сбросить фильтры</a>
+            <% } %>
+        </form>
+    </div>
+</section>
+<% } %>
+                </div>
+            </section>
+
+                <!-- Posts List -->
+                <section>
+                    <h3></h3>
+                    <ul class="posts">
+
+                        <li>
+                            <article>
+                                <header>
+                                    <h3><a href="">
+
+                                        </a></h3>
+                                </header>
+                                <a href="" class="image"><img src="" alt="" /></a>
+                            </article>
+                        </li>
+
+                    </ul>
+                </section>
+
+
+
+
+<%- include('../includes/footer.ejs') %>
+
+
+    </section>
+
+</div>
+
+
+<%- include('../includes/main-scripts.ejs') %>
+
+
+<%- include('../includes/scripts.ejs') %>

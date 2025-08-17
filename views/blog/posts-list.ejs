@@ -1,5 +1,6 @@
 <%- include('../includes/head.ejs') %>
-    </head>
+<link rel="stylesheet" href="/assets/css/badges.css">
+</head>
 
     <body class="is-preload"> 
 
@@ -33,7 +34,7 @@
 											</span><img src="<%= post.category.image %>" alt="" /></a>
                                     </div>
                                 </header>
-                                <a href="/posts/<%= post.id %>" class="image featured"><img src="<%= post.image %>"
+                                <a href="/posts/<%= post.id %>" class="image featured"><img src="<%= post.cover %>"
                                         alt="" /></a>
                                 <p>
                                     <%- fixPrepositions(post.content) %>
@@ -66,11 +67,12 @@
                                     <h1>No Posts Found!</h1>
                                     <% } %>
 
-										 <!-- Pagination -->
-                                        <ul class="actions pagination">
-                                            <li><a href="?page=<%= previousPage %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Предыдущая</a></li>
-                                            <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Следующая</a></li>
-                                        </ul>
+			    <%- include('../includes/pagination.ejs', {currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages}) %>
+                <!-- Pagination -->
+                <ul class="actions pagination">
+                    <li><a href="?page=<%= previousPage %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Предыдущая</a></li>
+                    <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Следующая</a></li>
+                </ul>
 
                 </div>
                 <!-- Sidebar -->
@@ -78,7 +80,6 @@
 
                     <!-- Intro -->
                     <section id="intro">
-
                         <header>
                             <a href="#" class="logo"><img src="images/logo.jpg" alt="" /></a>
                             <h2>Исследуем мир. Вместе.</h2>
@@ -91,24 +92,21 @@
                     <section>
                         <div class="mini-posts">
                             <h1>Факты и Мысли</h1>
-                            <p>Карточки рекомендуемых постов или самых популярных, если нет просмотренных</p>
-                            <% if(topOrRecomendetPosts && topOrRecomendetPosts.length> 0) { %>
-                                <% for(let post of topOrRecomendetPosts) { %>
+                            <p>Карточки самых популярных постов 3-5</p>
+                            <% if(mostPopularPosts && mostPopularPosts.length > 0) { %>
+                                <% for(let post of mostPopularPosts) { %>
                                     <!-- Mini Post -->
                                     <article class="mini-post">
                                         <header>
-                
                                             <h3><a href="/category?cat=<%= post.categoryId %>">
                                                     <%= post.title %>
                                                 </a></h3>
                                             <time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
-                                            <!-- <a href="#" class="author"><img src="images/avatar.jpg" alt="" /></a> -->
                                         </header>
                                         <a href="/single/<%= post.id %>" class="image"><img src="<%= post.image %>" alt="" /></a>
                                     </article>
-                                    <% } %>
-                                        <% } %>
-
+                                <% } %>
+                            <% } %>
                         </div>
                     </section>
 

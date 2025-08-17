@@ -2,13 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 
-// Путь и имя файла
-// const filePath =  path.resolve(__dirname,'./views/blog/category/New3template.ejs');
-// const templatePath = path.resolve(__dirname, './views/blog/category/template.ejs');
-
-
-// createOrRenameHtmlFile(filePath, 'New4template.ejs', templatePath)
-
 /**
  * Переименовывает HTML-файл или создаёт новый на основе шаблона
  * @param {string} filePath - Путь к файлу, который нужно переименовать (может не существовать)

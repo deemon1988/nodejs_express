@@ -77,9 +77,9 @@
                                 </footer>
                             </article>
                             <% } %>
-                                <% } else { %>
-                                    <h1>No Posts Found!</h1>
-                                    <% } %>
+                            <% } else { %>
+                                <h1>No Posts Found!</h1>
+                            <% } %>
 
                                         <!-- Pagination -->
                                         <ul class="actions pagination">
@@ -111,10 +111,11 @@
                                      <h3> <%= category.name %></h3>
                                     <article class="mini-post">
                                         <header>
-                                            <h3><a href="/category?cat=<%= category.id %>">
+                                            <h3>
+                                                <a href="/category?cat=<%= category.id %>">
                                                 <%- fixPrepositions(category.tagline) %>
-                                                    
-                                                </a></h3>
+                                                </a>
+                                            </h3>
 
                                         </header>
                                         <a href="/category?cat=<%= category.id %>" class="image"><img
@@ -165,7 +166,9 @@
 
 
 <%- include('../includes/footer.ejs') %>
-	<%- include('../includes/main-scripts.ejs') %>
+<%- include('../includes/main-scripts.ejs') %>
 
-	<script src="/assets/js/postHandler.js"></script>
-    <%- include('../includes/scripts.ejs') %>
+<script src="/assets/js/postHandler.js"></script>
+<%- include('../includes/scripts.ejs') %>
+
+    

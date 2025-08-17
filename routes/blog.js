@@ -11,7 +11,7 @@ router.post("/post/:postId/like", postsController.postLike);
 
 router.get("/categories", csrfProtection, postsController.getCategories);
 
-router.get("/category", postsController.getCategory)
+router.get("/category", csrfProtection, postsController.getCategory)
 
 router.get("/archive", csrfProtection, postsController.getArchive);
 
@@ -30,6 +30,7 @@ router.post('/subscribe', csrfProtection, isAuth, postsController.subscribe);
 router.get("/library/:guideId", isAuth, postsController.getRenderGuide);
 router.get("/library/guide/:guideId", isAuth, postsController.getGuide);
 
+router.get('/search', csrfProtection, postsController.getSearch)
 
 router.post("/comment/:postId", isAuth, postsController.postComment)
 router.post("/posts/:postId/:commentId", isAuth, postsController.postDeleteComment)

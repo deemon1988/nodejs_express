@@ -233,8 +233,8 @@ exports.getAllPosts = async (req, res, next) => {
       pageTitle: "Админ посты",
       path: "/admin/posts",
       csrfToken: req.csrfToken(),
-      errorMessage: req.flash("error"),
-      successMessage: req.flash("success"),
+      errorMessage: req.flash("error")[0] || null,
+      successMessage: req.flash("success")[0] || null,
       posts: posts,
       currentPage: currentPage,
       hasNextPage: hasNextPage,
@@ -457,13 +457,26 @@ exports.postEditAlias = (req, res, next) => {
   Alias.findByPk(aliasId)
     .then((alias) => {
       if (actionType === "delete") {
+        const templatePath = path.join(__dirname, '..', 'views/blog/category/', `${alias.name}.ejs`)
+        if (!fs.existsSync(templatePath)) {
+          console.log(`Файл-шаблон не найден: ${templatePath}`)
+          throw new Error(`Файл-шаблон не найден: ${templatePath}`);
+        }
+        fs.unlink(templatePath, (err) => {
+          if (err) throw new Error(err);
+          console.log(`${templatePath} was deleted`);
+        })
         return alias.destroy();
       }
       alias.name = updatedName;
       return alias.save();
     })
     .then((result) => res.redirect("/admin/create-category"))
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.error(err)
+      req.flash('error', err.message)
+      res.redirect("/admin/create-category")
+    })
 };
 
 exports.postDeleteCategory = async (req, res, next) => {
@@ -616,8 +629,8 @@ exports.getEditCategory = async (req, res, next) => {
       category: updatedCategory,
       categoryAlias: updatedCategory.alias.name,
       csrfToken: req.csrfToken(),
-      errorMessage: req.flash("error"),
-      successMessage: req.flash("success"),
+      errorMessage: req.flash("error")[0] || null,
+      successMessage: req.flash("success")[0] || null,
     });
   } catch (error) {
     console.error("Ошибка отображения страницы редактирования категории: ", error);
@@ -687,8 +700,9 @@ exports.getAddGuide = async (req, res, next) => {
 
 exports.postAddGuide = async (req, res, next) => {
   try {
-    const { title, preview, content, fileUrl, fileType, fileSize, accessType, price } = req.body;
+    const { title, preview, content, fileUrl, fileType, fileSize, accessType, price, category } = req.body;
     const userId = req.user.id
+    const guideCategory = await Category.findByPk(Number(category));
     const cleanTitle = sanitizeHtml(title, {
       allowedTags: [],
       allowedAttributes: {},
@@ -710,7 +724,6 @@ exports.postAddGuide = async (req, res, next) => {
       const categories = await Category.findAll();
 
       checkAndSaveFileFromRequest(req, '/images/guides')
-      console.log(req.session.tempImage)
 
       return res.status(422).render("admin/add-guide", {
         guide: {
@@ -723,7 +736,8 @@ exports.postAddGuide = async (req, res, next) => {
           fileType: fileType,
           fileSize: fileSize,
           accessType: accessType,
-          price: price
+          price: price,
+          categoryId: +category,
         },
 
         pageTitle: "Добавить гайд",
@@ -748,9 +762,10 @@ exports.postAddGuide = async (req, res, next) => {
       fileType,
       fileSize,
       accessType: accessType,
-      price: price
+      price: price,
+      // categoryId: +category
     });
-
+    await createdGuide.addCategory(guideCategory)
     // Удаляем изображения сохраненные в Temp или обновляем временное изображение и удаляем ранее сохраненное
     checkAndSaveFileFromRequest(req, '/images/posts')
 
@@ -765,12 +780,11 @@ exports.postAddGuide = async (req, res, next) => {
 
     clearSessionImages(req)
 
-    req.flash('success', 'Успешно добавлено');
+    req.flash('success', 'Гайд успешно добавлен!');
     return res.redirect('/library');
 
   } catch (err) {
     console.error("Ошибка при добавлении гайда:", err); // ← должно выводиться
-    req.flash("error", `Не удалось добавить гайд - ${err.message}`);
     clearSessionImages(req)
     const error = new Error(err.message);
     error.httpStatusCode = 500;
@@ -824,7 +838,7 @@ exports.handleYandexCallback = async (req, res, next) => {
       token: accessToken,
       expireTime: expireTime
     }
-    
+
     req.flash("success", "Успешная авторизация, теперь можно получить ссылку");
     await req.session.save()
 

@@ -157,7 +157,7 @@ exports.getAllPostsByDate = async (dateFilter) => {
         'post.id',
         'title',
         'content',
-        'post.createdAt',  
+        'post.createdAt',
         [sequelize.fn("DATE", sequelize.col("post.createdAt")), "date"]
       ],
       group: [
@@ -178,3 +178,35 @@ exports.getAllPostsByDate = async (dateFilter) => {
     console.log("Ошибка получения постов:", error);
   }
 };
+
+exports.getLatestPostPerCategory = async () => {
+  const result = await sequelize.query(`
+    SELECT DISTINCT ON ("categoryId") 
+      p.*,
+      c."name" as "categoryName",
+      c."image" as "categoryImage"
+    FROM "posts" p
+    LEFT JOIN "categories" c ON p."categoryId" = c."id"
+    WHERE p."isPublished" = true
+    ORDER BY "categoryId", "createdAt" DESC
+  `, {
+    type: Sequelize.QueryTypes.SELECT
+  });
+
+  return result;
+};
+
+exports.getMostPopularPosts = async (quantity) => {
+  return await Post.findAll({
+    include: [
+      {
+        model: Category,
+        as: "category",
+      },
+    ],
+    order: [
+      ["likes", "DESC"],
+    ],
+    limit: quantity
+  });
+}

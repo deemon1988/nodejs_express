@@ -114,7 +114,7 @@
                                                             <option value="" selected>-- Выберите категорию --</option>
                                                             <% for (let category of categories) { %>
                                                                 <option value="<%= category.id %>"
-                                                                    <%= guide.categoryId === category.id ? 'selected' : '' %>
+                                                                    <%= guide.categoryId === category.id ? 'selected' : '' %>>
                                                                     <%= category.name %>
                                                                 </option>
                                                                 <% } %>

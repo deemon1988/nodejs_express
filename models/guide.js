@@ -49,7 +49,6 @@ const Guide = sequelize.define('guides', {
     type: Sequelize.DECIMAL(10, 2),
     allowNull: true,
   }
-
 });
 
 // Связь с изображениями

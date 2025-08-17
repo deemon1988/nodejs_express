@@ -27,7 +27,7 @@ async function getAllPostsOnPage(userId, page = 1, limit = 10, postsIds) {
     // 4. Вычисляем offset для пагинации
     const offset = (page - 1) * limit;
 
-    // 5. Получаем порцию постов в по дате
+    // 5. Получаем порцию постов по дате
     const batchOfPosts = await Post.findAll({
       where,
       include: [
@@ -46,7 +46,7 @@ async function getAllPostsOnPage(userId, page = 1, limit = 10, postsIds) {
           as: "likedUsers",
           attributes: ["id"], // нужно, чтобы мы могли проверить id
           through: { attributes: [] },
-          where: { id: userId }, //userId ? { id: userId } : undefined,
+          where: { id: userId },
           required: false,
         },
       ],
@@ -57,11 +57,6 @@ async function getAllPostsOnPage(userId, page = 1, limit = 10, postsIds) {
     });
 
     return {
-      // posts: batchOfPosts,
-      // total,
-      // page,
-      // limit,
-      // totalPages,
       posts: batchOfPosts,
       total,
       currentPage: page,

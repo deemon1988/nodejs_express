@@ -18,22 +18,25 @@ const {
   getTopPosts,
   getTopCreatedAtPosts,
   getAllPostsByDate,
+  getLatestPostPerCategory,
+  getMostPopularPosts
 } = require("../services/postService");
 const { getRandomPosts } = require("../util/shuffle");
 const Alias = require("../models/allowed-alias");
 const { viewHistory } = require("../util/viewHistory");
-const { getRecommendedPosts } = require("../util/recomendedPosts");
+// const { getRecommendedPosts } = require("../util/recomendedPosts");
 const { getAllPostsOnPage } = require("../util/allPostsPerPage");
 const { getMergedPosts } = require("../util/mergedPosts");
 const { getAllCategoriesWithPosts } = require("../services/categoryService");
-const { where } = require("sequelize");
+
 const Guide = require("../models/guide");
 const { formatFileSize, formatContentType } = require("../util/fileFeatures");
-const { title } = require("process");
+
 const { postsPagination, withLikePostsPagination } = require("../public/assets/js/pagination/main-page-pagination");
 const Payment = require("../models/payment");
 const Subscription = require("../models/subscription");
-// const { getRecomendedPosts } = require("../util/post-utils/recomendedPosts");
+const { getRecomendedPosts } = require("../util/post-utils/recomendedPosts");
+const { Op } = require("sequelize");
 
 exports.getIndexPage = async (req, res, next) => {
   try {
@@ -41,28 +44,31 @@ exports.getIndexPage = async (req, res, next) => {
     const limit = 5;
 
     const viewHistory = req.session.viewHistory || null;
-    console.log('viewHistory - ' ,viewHistory)
+
     const userId = req.user ? req.user.id : null;
     const allPosts = await Post.findAll()
-    console.log('allPosts - ', allPosts.length)
-    
+
+
+    let mergedPosts
     const allPostsData = await getAllPostsOnPage(userId, page, limit);
-    const mergedPosts = await getMergedPosts(userId, viewHistory, page, limit);
-    console.log('allPostsData - ', allPostsData.posts.length)
-    console.log('mergedPosts - ', mergedPosts.posts.length)
-    // const recomendedPosts = viewHistory ? getRecomendedPosts(mergedPosts.posts, viewHistory, 5) : getRandomPosts(allPostsData.posts)
+    if (viewHistory) {
+      mergedPosts = await getMergedPosts(userId, viewHistory, page, limit);
+    }
+
+    const recomendedPosts = viewHistory ? await getRecomendedPosts(viewHistory, 5) : getRandomPosts(allPosts, 5)
     // const { rows: postsWithUserLike } = await getPostsWithLikedUsersQuery(userId)
     // const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId)
+    // const topTop5PostsFromEachCategory = await getRandomPostsFromTop5Query()
 
     const topPostInEachCategory = await getTopPostsByCataegoryQuery();
-    const topTop5PostsFromEachCategory = await getRandomPostsFromTop5Query()
+    const latestPostsByCategory = await getLatestPostPerCategory()
 
     res.render("blog/blog", {
       pageTitle: "Главная страница",
       topPosts: getRandomPosts(topPostInEachCategory, 5),
       allPosts: viewHistory ? mergedPosts.posts : allPostsData.posts,
-      randomTopPosts: getRandomPosts(topTop5PostsFromEachCategory, 5),
-      // recomendedPosts: recomendedPosts,
+      recomendedPosts: recomendedPosts,
+      latestPostsByCategory: latestPostsByCategory,
       successMessage: req.flash("success")[0],
       path: "/",
       csrfToken: req.csrfToken(),
@@ -139,49 +145,61 @@ exports.getPostById = (req, res, next) => {
 };
 
 exports.getAllPosts = async (req, res, next) => {
-  const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId) // getPostsWithLikedUsersQuery(userId)
+  try {
+    let page = +req.query.page || 1;
+    const userId = req.user ? req.user.id : null;
 
-  const userId = req.user ? req.user.id : null;
-  let randomPosts;
-  let allPosts;
-  const viewHistory = req.session.viewHistory || null;
-  let page = parseInt(req.query.page) || 1;
-  const limit = 5;
+    const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId)
+    const mostPopularPosts = await getMostPopularPosts(5)
 
-  let topCreatedAtPosts;
-  let recomendetPosts;
+    const randomPosts = getRandomPosts(posts, 5);
+
+    res.render("blog/posts-list", {
+      pageTitle: "Посты",
+      posts: posts,
+      mostPopularPosts: mostPopularPosts,
+      randomPosts: randomPosts,
+      path: "/posts",
+      csrfToken: req.csrfToken(),
+      currentPage: currentPage,
+      hasNextPage: hasNextPage,
+      hasPreviousPage: hasPreviousPage,
+      nextPage: nextPage,
+      previousPage: previousPage,
+      lastPage: lastPage,
+      totalPages: totalPages
+    });
+  } catch (error) {
+    console.error("Ошибка отображения страницы постов: ", error.message)
+    const err = new Error(error)
+    err.httpStatusCode = 500
+    next(500)
+  }
+
   // let recomendetData = await getRecommendedPosts(viewHistory, page, limit);
 
-  getPostsWithLikedUsersQuery(userId)
-    .then(({ rows: posts }) => {
-      allPosts = posts.map((p) => p.toJSON());
-      allPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      randomPosts = getRandomPosts(allPosts, 6);
-      if (viewHistory) {
-        recomendetPosts = posts.filter(
-          (post) => !viewHistory.includes(post.id)
-        );
-        recomendetPosts = getRandomPosts(recomendetPosts, 5);
-      }
-      return getTopCreatedAtPosts();
-    })
-    .then((posts) => {
-      topCreatedAtPosts = posts;
-      return Category.findAll();
-    })
+  // getPostsWithLikedUsersQuery(userId)
+  //   .then(({ rows: posts }) => {
+  //     allPosts = posts.map((p) => p.toJSON());
+  //     allPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  //     randomPosts = getRandomPosts(allPosts, 6);
+  //     if (viewHistory) {
+  //       recomendetPosts = posts.filter(
+  //         (post) => !viewHistory.includes(post.id)
+  //       );
+  //       recomendetPosts = getRandomPosts(recomendetPosts, 5);
+  //     }
+  //     return getTopCreatedAtPosts();
+  //   })
+  //   .then((posts) => {
+  //     topCreatedAtPosts = posts;
+  //     return Category.findAll();
+  //   })
 
-    .then((categories) => {
-      res.render("blog/posts-list", {
-        pageTitle: "Посты",
-        posts: allPosts,
-        topOrRecomendetPosts: viewHistory ? recomendetPosts : topCreatedAtPosts,
-        randomPosts: randomPosts,
-        categories: categories,
-        path: "/posts",
-        csrfToken: req.csrfToken(),
-      });
-    })
-    .catch((err) => console.error(err.message));
+  // .then((categories) => {
+
+  // })
+
 };
 
 exports.postComment = (req, res, next) => {
@@ -301,14 +319,14 @@ exports.postLike = (req, res, next) => {
 
 exports.getCategory = (req, res, next) => {
   const userId = req.user ? req.user.id : null;
-  const catId = req.query.cat;
+  const catId = +req.query.cat;
   let category;
   let mostLikedPosts;
   let byDatePosts;
   let anotherPostsInCategory;
   let aliasName;
 
-  Alias.findByPk(catId)
+  Alias.findOne({ where: { categoryId: catId } })
     .then((alias) => {
       if (!alias) {
         throw new Error("Alias не найден");
@@ -341,6 +359,7 @@ exports.getCategory = (req, res, next) => {
         anotherPosts: getRandomPosts(anotherPostsInCategory, 5),
         categories: categories,
         path: "/categories",
+        csrfToken: req.csrfToken(),
       });
     });
 };
@@ -424,7 +443,6 @@ exports.getLibrary = async (req, res, next) => {
 
     const userAvailableGuidesIds = userPayments.map(payment => payment.guideId)
 
-
     res.render("blog/library", {
       pageTitle: "Полезные шпаргалки и чек-листы",
       path: "/library",
@@ -439,7 +457,8 @@ exports.getLibrary = async (req, res, next) => {
       totalPages: totalPages,
       formatFileSize: formatFileSize,
       formatContentType: formatContentType,
-      userAvailableGuidesIds: userAvailableGuidesIds || []
+      userAvailableGuidesIds: userAvailableGuidesIds || [],
+      successMessage: req.flash('success')[0] || null
     });
   } catch (error) {
     console.log("Ошибка рендеринга страницы:", error);
@@ -601,3 +620,295 @@ exports.getGuide = async (req, res, next) => {
   }
 
 }
+
+exports.getSearch = async (req, res, next) => {
+  try {
+    const query = req.query.query || '';
+    const categoryId = req.query.category || '';
+    const type = req.query.type || '';
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    let searchResults = [];
+    let totalResults = 0;
+    let categories = [];
+
+    categories = await Category.findAll({
+      order: [['name', 'ASC']]
+    });
+
+    if (query.trim()) {
+      const { Op } = require('sequelize');
+
+      if (type === 'posts') {
+        // Только посты
+        let postSearchConditions = {};
+        let postIncludeOptions = [{
+          model: Category,
+          as: 'category',
+          attributes: ['name']
+        }];
+
+        postSearchConditions[Op.or] = [
+          { title: { [Op.iLike]: `%${query}%` } },
+          { content: { [Op.iLike]: `%${query}%` } },
+          { preview: { [Op.iLike]: `%${query}%` } },
+          { '$category.name$': { [Op.iLike]: `%${query}%` } }
+        ];
+
+        if (categoryId) {
+          postSearchConditions['$category.id$'] = categoryId;
+        }
+
+        const postResult = await Post.findAndCountAll({
+          where: postSearchConditions,
+          include: postIncludeOptions,
+          order: [['createdAt', 'DESC']],
+          limit: limit,
+          offset: offset
+        });
+
+        searchResults = postResult.rows.map(post => ({
+          ...post.toJSON(),
+          searchType: 'post'
+        }));
+        totalResults = postResult.count;
+
+      } else if (type === 'guides') {
+        // Только гайды
+        let guideSearchConditions = {};
+        let guideIncludeOptions = [];
+
+        guideSearchConditions[Op.or] = [
+          { title: { [Op.iLike]: `%${query}%` } },
+          { content: { [Op.iLike]: `%${query}%` } },
+          { preview: { [Op.iLike]: `%${query}%` } }
+        ];
+
+        if (categoryId) {
+          guideIncludeOptions.push({
+            model: Category,
+            as: 'categories',
+            where: {
+              id: categoryId
+            },
+            attributes: []
+          });
+        } else {
+          guideIncludeOptions.push({
+            model: Category,
+            as: 'categories',
+            attributes: ['name'],
+            through: { attributes: [] }
+          });
+        }
+
+        const guideResult = await Guide.findAndCountAll({
+          where: guideSearchConditions,
+          include: guideIncludeOptions,
+          order: [['id', 'DESC']],
+          limit: limit,
+          offset: offset
+        });
+
+        searchResults = guideResult.rows.map(guide => ({
+          ...guide.toJSON(),
+          searchType: 'guide'
+        }));
+        totalResults = guideResult.count;
+
+      } else {
+        // Все типы - получаем все результаты и делаем пагинацию в памяти
+        // Это подход может быть неэффективным для больших наборов данных
+        
+        // Получаем все посты (без лимита для правильного подсчета)
+        let postSearchConditions = {};
+        let postIncludeOptions = [{
+          model: Category,
+          as: 'category',
+          attributes: ['name']
+        }];
+
+        postSearchConditions[Op.or] = [
+          { title: { [Op.iLike]: `%${query}%` } },
+          { content: { [Op.iLike]: `%${query}%` } },
+          { preview: { [Op.iLike]: `%${query}%` } },
+          { '$category.name$': { [Op.iLike]: `%${query}%` } }
+        ];
+
+        if (categoryId) {
+          postSearchConditions['$category.id$'] = categoryId;
+        }
+
+        const postResult = await Post.findAndCountAll({
+          where: postSearchConditions,
+          include: postIncludeOptions,
+          order: [['createdAt', 'DESC']]
+        });
+
+        // Получаем все гайды
+        let guideSearchConditions = {};
+        let guideIncludeOptions = [];
+
+        guideSearchConditions[Op.or] = [
+          { title: { [Op.iLike]: `%${query}%` } },
+          { content: { [Op.iLike]: `%${query}%` } },
+          { preview: { [Op.iLike]: `%${query}%` } }
+        ];
+
+        if (categoryId) {
+          guideIncludeOptions.push({
+            model: Category,
+            as: 'categories',
+            where: {
+              id: categoryId
+            },
+            attributes: []
+          });
+        } else {
+          guideIncludeOptions.push({
+            model: Category,
+            as: 'categories',
+            attributes: ['name'],
+            through: { attributes: [] }
+          });
+        }
+
+        const guideResult = await Guide.findAndCountAll({
+          where: guideSearchConditions,
+          include: guideIncludeOptions,
+          order: [['id', 'DESC']]
+        });
+
+        // Объединяем все результаты
+        const allPostResults = postResult.rows.map(post => ({
+          ...post.toJSON(),
+          searchType: 'post',
+          sortValue: post.createdAt.getTime()
+        }));
+        
+        const allGuideResults = guideResult.rows.map(guide => ({
+          ...guide.toJSON(),
+          searchType: 'guide',
+          sortValue: guide.createdAt.getTime() //guide.id // используем id как приближение
+        }));
+
+        const allResults = [...allPostResults, ...allGuideResults].sort((a, b) => b.sortValue - a.sortValue);
+
+        totalResults = allResults.length;
+        
+        // Применяем пагинацию
+        searchResults = allResults.slice(offset, offset + limit);
+      }
+    }
+
+    const totalPages = Math.ceil(totalResults / limit);
+
+    res.render('search/search-results', {
+      pageTitle: 'Результаты поиска' + (query ? ' для "' + query + '"' : ''),
+      path: '/search',
+      csrfToken: req.csrfToken(),
+      query: query,
+      categoryId: categoryId,
+      type: type,
+      results: searchResults,
+      categories: categories,
+      currentPage: page,
+      totalPages: totalPages,
+      hasPreviousPage: page > 1,
+      hasNextPage: page < totalPages,
+      nextPage: page + 1,
+      previousPage: page - 1,
+      lastPage: totalPages,
+      totalResults: totalResults,
+      hasResults: searchResults.length > 0
+    });
+
+  } catch (error) {
+    console.error('Ошибка поиска:', error);
+    next(error);
+  }
+};
+
+
+// exports.getSearch = async (req, res, next) => {
+//   try {
+//     const query = req.query.query || '';
+//     const categoryId = req.query.category || '';
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = 10;
+//     const offset = (page - 1) * limit;
+
+//     let searchResults = [];
+//     let totalResults = 0;
+//     let categories = [];
+
+//     // Получаем все категории для фильтра
+//     categories = await Category.findAll({
+//       order: [['name', 'ASC']]
+//     });
+
+//     let searchConditions = {};
+//     let includeOptions = [{
+//       model: Category,
+//       as: 'category',
+//       attributes: ['name']
+//     }];
+
+//     if (query.trim()) {
+//       const { Op } = require('sequelize');
+
+//       // Базовый поиск
+//       searchConditions[Op.or] = [
+//         { title: { [Op.iLike]: `%${query}%` } },
+//         { content: { [Op.iLike]: `%${query}%` } },
+//         { preview: { [Op.iLike]: `%${query}%` } },
+//         { '$category.name$': { [Op.iLike]: `%${query}%` } }
+//       ];
+//     }
+
+//     // Фильтр по категории
+//     if (categoryId) {
+//       searchConditions.categoryId = categoryId;
+//     }
+
+//     // Получаем результаты с пагинацией и включаем категорию
+//     const result = await Post.findAndCountAll({
+//       where: searchConditions,
+//       include: includeOptions,
+//       order: [['createdAt', 'DESC']],
+//       limit: limit,
+//       offset: offset
+//     });
+
+//     searchResults = result.rows;
+//     totalResults = result.count;
+
+//     const totalPages = Math.ceil(totalResults / limit);
+
+//     res.render('search/search-results', {
+//       pageTitle: 'Результаты поиска' + (query ? ' для "' + query + '"' : ''),
+//       path: '/search',
+//       csrfToken: req.csrfToken(),
+//       query: query,
+//       categoryId: categoryId,
+//       results: searchResults,
+//       categories: categories,
+//       currentPage: page,
+//       totalPages: totalPages,
+//       hasPreviousPage: page > 1,
+//       hasNextPage: limit * page < totalResults,
+//       nextPage: page + 1,
+//       previousPage: page - 1,
+//       lastPage: totalPages,
+//       totalResults: totalResults,
+//       hasResults: searchResults.length > 0
+//     });
+
+//   } catch (error) {
+//     console.error('Ошибка поиска:', error);
+//     next(error);
+//   }
+// };
+

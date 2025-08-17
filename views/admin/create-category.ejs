@@ -155,22 +155,25 @@
             <form action="/admin/edit-alias" method="post" id="edit-alias" >
               <div>
               <% for (let alias of aliases) { %>
-                <input type="radio" name="aliasId" value="<%= alias.id %>" id="<%= alias.id %>-edit" data-name="<%= alias.name %>">
+                <input type="radio" name="updated-aliasId" value="<%= alias.id %>" id="<%= alias.id %>-edit" data-name="<%= alias.name %>">
                 <label for="<%= alias.id %>-edit"><%= alias.name %></label>
                 <% } %>
                 </div>
                 <% } %>
               
-                <div id="updatedNameContainer" style="display: none;">
+                <div id="updatedNameContainer">
                   <label for="updatedName">Изменить навзвание алиаса</label>
                   <input type="text" name="updatedName" id="updatedName" value="" required >
-                  <div>
+                  <div class="edit-alias-actions">
                   <button type="submit" id="edit-alias" name="action" value="edit" class="button default">
                     Редактировать
                   </button>
                   <button type="submit" id="delete-alias" name="action" value="delete" class="button default"
-                  onclick="return confirm('Вы уверены, что хотите удалить этот алиас?')">
+                  onclick="return confirm('⚠️ ВНИМАНИЕ! Это действие НЕОБРАТИМО!\n\nВы уверены, что хотите УДАЛИТЬ этот алиас?\n\nНажмите OK для подтверждения или Отмена для отмены.')">
                     Удалить
+                  </button>
+                  <button type="button" id="edit-cancel" name="action" value="cancel" class="button default">
+                    Отменить
                   </button>
                   </div>
                 </div>
@@ -186,7 +189,7 @@
 
 <%- include('../includes/main-scripts.ejs') %>
 
-<script src="/assets/js/aliasHandler.js"></script>
+<script src="/assets/js/category/aliasHandler.js"></script>
 <script src="/assets/js/category/categoryFormHandler.js"></script>
 <script src="/assets/js/category/deleteCategoryHandler.js"></script>
 <%- include('../includes/scripts.ejs') %>

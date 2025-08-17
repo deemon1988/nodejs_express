@@ -1,13 +1,13 @@
 
 const { Sequelize, where } = require('sequelize');
-const { Op, fn, col, literal } = Sequelize;
+// const { Op, fn, col, literal } = Sequelize;
 const Category = require("../../../../models/category")
 const Comment = require("../../../../models/comment")
 const Post = require("../../../../models/post")
 const User = require("../../../../models/user")
-const { getPostsWithLikedUsersQuery } = require("../../../../services/postService")
+// const { getPostsWithLikedUsersQuery } = require("../../../../services/postService")
 
-const ITEMS_PER_PAGE = 2
+const ITEMS_PER_PAGE = 5
 
 async function postsPagination(pageNumber) {
     const page = +pageNumber || 1
@@ -44,7 +44,6 @@ async function withLikePostsPagination(pageNumber, userId) {
     const offset = (page - 1) * ITEMS_PER_PAGE
 
     const total = await Post.count()
-
     const posts = await Post.findAll({
 
         include: [
@@ -67,7 +66,7 @@ async function withLikePostsPagination(pageNumber, userId) {
                 as: "category",
             },
         ],
-
+        order: [['createdAt', 'DESC']],
         offset: offset,
         limit: ITEMS_PER_PAGE
     });

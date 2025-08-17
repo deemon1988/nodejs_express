@@ -2507,6 +2507,8 @@ input[type="radio"] + label:before {
 
 .image.featured img {
   width: 100%;
+  max-height: 500px;
+  object-fit: contain;
 }
 
 @media screen and (max-width: 736px) {
@@ -3967,13 +3969,12 @@ body.is-menu-visible #menu {
 .category-post-logo {
   display: flex;
   flex-direction: column-reverse;
+  max-width: 150px;
+  align-items: center;
+  gap: 20px;
 }
 
 @media screen and (min-width: 980px) {
-  .category-post-logo {
-    align-items: end;
-  }
-
   .meta {
     display: flex;
     flex-direction: column;
@@ -4611,4 +4612,24 @@ input #cover:hover {
 ul.pagination > li:last-child {
   display: flex;
   justify-content: end;
+}
+
+#updatedNameContainer {
+  display: none;
+}
+
+#updatedNameContainer.show {
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-alias-actions {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+#delete-alias:hover {
+  cursor: no-drop;
 }

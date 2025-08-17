@@ -1,20 +1,21 @@
 <%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/assets/css/badges.css">
 </head>
 
 <body class="posts-list">
 
     <% if(errorMessage && errorMessage.length> 0) { %>
-            <div class="flash-message error" style="display: block">
-                <%= errorMessage %>
-                    <span class="close-button">&times;</span>
-            </div>
-            <% } %>
-                    <% if(successMessage && successMessage.length> 0) { %>
-			<div class="flash-message success" style="display: block">
-				<%= successMessage %>
-					<span class="close-button">&times;</span>
-			</div>
-			<% } %>
+    <div class="flash-message error" style="display: block">
+        <%= errorMessage %>
+            <span class="close-button">&times;</span>
+    </div>
+    <% } %>
+            <% if(successMessage && successMessage.length> 0) { %>
+    <div class="flash-message success" style="display: block">
+        <%= successMessage %>
+            <span class="close-button">&times;</span>
+    </div>
+    <% } %>
 
     <!-- Wrapper -->
     <div id="wrapper">
@@ -79,10 +80,10 @@
                                 <h1>No Posts Found!</h1>
                                 <% } %>
 
-
+			<%- include('../includes/pagination.ejs', {currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages}) %>
                 <!-- Pagination -->
             <ul class="actions pagination">
-                <li><a href="" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a></li>
+                <li><a href="?page=<%= previousPage %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a></li>
                 <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Next Page</a></li>
             </ul>
 

@@ -1,9 +1,17 @@
-const { getRandomPosts } = require("../shuffle")
+const { Op, Sequelize } = require("sequelize")
+const Post = require("../../models/post")
 
-function getRecomendedPosts(postsList, viewHistory, quantity) {
-    const copyPostsList = [...postsList]
-    const recomendedPosts = copyPostsList.filter(post => !viewHistory.includes(post.id))
-    return getRandomPosts(recomendedPosts, quantity)
+async function getRecomendedPosts(viewHistory, quantity) {
+
+    const allPostsWithoutViewed = await Post.findAll({
+        where: {
+            id: { [Op.notIn]: viewHistory }
+        },
+        order: [Sequelize.literal('RANDOM()')],
+        limit: quantity
+    })
+
+    return allPostsWithoutViewed
 }
 
 module.exports = { getRecomendedPosts }
