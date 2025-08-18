@@ -18,6 +18,7 @@
                         href="/admin/add-guide">Добавить
                         гайд</a></li>
                 <li><a class="<%= path === '/admin/posts' ? 'active' : '' %>" href="/admin/posts">Админ посты</a></li>
+                <li><a class="<%= path === '/admin/messages' ? 'active' : '' %>" href="/admin/messages">Админ сообщения</a></li>
                 <% } %>
         </ul>
     </nav>
@@ -83,6 +84,7 @@
                 <li><a href="/admin/create-category">Добавить категорию</a></li>
                 <li><a href="/admin/add-guide">Добавить гайд</a></li>
                 <li><a href="/admin/posts">Админ посты</a></li>
+                <li><a class="<%= path === '/admin/messages' ? 'active' : '' %>" href="/admin/messages">Админ сообщения</a></li>
             </ul>
         </section>
         <% } %>

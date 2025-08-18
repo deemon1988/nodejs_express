@@ -1,0 +1,213 @@
+<%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/assets/css/badges.css">
+<link rel="stylesheet" href="/assets/css/email-messages.css">
+</head>
+
+<body class="messages-admin">
+
+    <% if(errorMessage && errorMessage.length> 0) { %>
+    <div class="flash-message error" style="display: block">
+        <%= errorMessage %>
+            <span class="close-button">&times;</span>
+    </div>
+    <% } %>
+            <% if(successMessage && successMessage.length> 0) { %>
+    <div class="flash-message success" style="display: block">
+        <%= successMessage %>
+            <span class="close-button">&times;</span>
+    </div>
+    <% } %>
+
+    <!-- Wrapper -->
+    <div id="wrapper">
+
+        <!-- Header -->
+        <!-- Menu -->
+        <%- include('../includes/navigation.ejs') %>
+
+            <!-- Main -->
+            <div id="main">
+
+                <header>
+                    <h1>Сообщения пользователей</h1>
+                    <p>Управление обращениями от пользователей</p>
+                </header>
+
+                <!-- Messages -->
+                <% if (messages && messages.length> 0) { %>
+                    <% for (let message of messages) { %>
+                        <article class="post message-item">
+                           
+                            <header>
+                                <div class="title user-message-info">
+                                    <h3>Сообщение от <%= message.firstname %> <%= message.lastname %></h3>
+                                    <p>Email: <a href="mailto:<%= message.email %>"><%= message.email %></a></p>
+                                    <span class="message-status status-<%= message.status %>">
+                                        <%= message.status === 'new' ? 'Новое' : 
+                                           message.status === 'in_progress' ? 'В работе' : 
+                                           message.status === 'replied' ? 'Отвечено' : 'Закрыто' %>
+                                    </span>
+                                </div>
+                                <div class="meta">
+                                    <time class="published" datetime="<%= message.createdAt %>">
+                                        <%= formatDate(message.createdAt) %>
+                                    </time>
+                                    <% if (message.repliedAt) { %>
+                                    <time class="published">
+                                        Отвечено: <%= formatDate(message.repliedAt) %>
+                                    </time>
+                                    <% } %>
+                                </div>
+                            </header>
+
+                            <div class="message-content">
+                                <strong>Сообщение:</strong>
+                                <p><%= message.content %></p>
+                            </div>
+                            
+                            <footer>
+                                <ul class="actions admin-messages-list">
+                                    <li class="admin-messages-item">
+                                        <button type="button" class="button large messages-reply-btn" onclick="toggleReplyForm(<%= message.id %>)">
+                                            Ответить <i class="bi bi-reply"></i>
+                                        </button>
+                                    </li>
+                                    <li class="admin-messages-item">
+                                        <form method="POST" action="/admin/messages/<%= message.id %>/status" class="admin-messages-form">
+                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                            <select name="status" onchange="this.form.submit()" class="admin-messages-select">
+                                                <option value="new" <%= message.status === 'new' ? 'selected' : '' %>>Новое</option>
+                                                <option value="in_progress" <%= message.status === 'in_progress' ? 'selected' : '' %>>В работе</option>
+                                                <option value="replied" <%= message.status === 'replied' ? 'selected' : '' %>>Отвечено</option>
+                                                <option value="closed" <%= message.status === 'closed' ? 'selected' : '' %>>Закрыто</option>
+                                            </select>
+                                        </form>
+                                    </li>
+                                    <li class="admin-messages-item">
+                                        <button type="button" class="button large messages-delete-btn" onclick="deleteMessage(<%= message.id %>)">
+                                            Удалить <i class="bi bi-trash"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </footer>
+
+                            <!-- Reply Form -->
+                            <div id="reply-form-<%= message.id %>" class="reply-form">
+                                <h3>Отправить ответ</h3>
+                                <form method="POST" action="/admin/messages/<%= message.id %>/reply">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <input type="hidden" name="userEmail" value="<%= message.email %>">
+                                    <input type="hidden" name="originalMessage" value="<%= message.content.replace(/"/g, '&quot;') %>">
+                                    
+                                    <div class="form-group">
+                                        <label>Тема:</label>
+                                        <input type="text" name="subject" class="form-control" value="Re: Сообщение от <%= formatDateOnly(message.createdAt) %>" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Сообщение:</label>
+                                        <textarea name="replyContent" class="form-control" rows="6" required></textarea>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <button type="submit" class="button primary">Отправить ответ</button>
+                                        <button type="button" class="button" onclick="toggleReplyForm(<%= message.id %>)">Отмена</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                        </article>
+                        <% } %>
+                            <% } else { %>
+                                <h2>Сообщений нет</h2>
+                                <p>Пока никто не отправлял сообщений.</p>
+                                <% } %>
+
+            <!-- Pagination -->
+            <ul class="actions pagination">
+                <li><a href="?page=<%= previousPage %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Предыдущая</a></li>
+                <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Следующая</a></li>
+            </ul>
+
+            </div>
+            <!-- Sidebar -->
+            <section id="sidebar">
+
+                <!-- Intro -->
+                <section id="intro">
+                    <header>
+                        <a href="#" class="logo"><img src="/images/logo.jpg" alt="" /></a>
+                        <h2>Админ сообщения</h2>
+                        <p>Управление обращениями пользователей</p>
+                    </header>
+                </section>
+
+                <!-- Stats -->
+                <section>
+                    <h3>Статистика сообщений</h3>
+                    <div class="mini-posts">
+                        <article class="mini-post">
+                            <header>
+                                <h3>Всего сообщений: <%= totalMessages || 0 %></h3>
+                            </header>
+                        </article>
+                        <article class="mini-post">
+                            <header>
+                                <h3>Новых: <%= newMessages || 0 %></h3>
+                            </header>
+                        </article>
+                        <article class="mini-post">
+                            <header>
+                                <h3>Отвечено: <%= repliedMessages || 0 %></h3>
+                            </header>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- Quick Actions -->
+                <section>
+                    <h3>Быстрые действия</h3>
+                    <ul class="actions vertical">
+                        <li><a href="/admin/messages?status=new" class="button">Новые сообщения</a></li>
+                        <li><a href="/admin/messages?status=in_progress" class="button">В работе</a></li>
+                        <li><a href="/admin/messages?status=replied" class="button">Отвеченные</a></li>
+                    </ul>
+                </section>
+
+                <!-- About -->
+                <section class="blurb">
+                    <h2>Информация</h2>
+                    <p>Здесь вы можете управлять сообщениями от пользователей, отвечать на них и отслеживать статус обработки.</p>
+                    <ul class="actions">
+                        <li><a href="/admin" class="button">Назад в админку</a></li>
+                    </ul>
+                </section>
+
+<%- include('../includes/footer.ejs') %>
+<%- include('../includes/main-scripts.ejs') %>
+
+<script>
+    function toggleReplyForm(messageId) {
+        const form = document.getElementById(`reply-form-${messageId}`);
+        form.classList.toggle('show');
+    }
+
+    function deleteMessage(messageId) {
+        if (confirm('Вы уверены, что хотите удалить это сообщение?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/messages/${messageId}/delete`;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_csrf';
+            csrfInput.value = '<%= csrfToken %>';
+            
+            form.appendChild(csrfInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+
+<%- include('../includes/scripts.ejs') %>

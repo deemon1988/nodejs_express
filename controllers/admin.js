@@ -26,6 +26,7 @@ const { deleteOldCover, deleteOldImage } = require("../util/post-utils/deleteOld
 const { checkImageFormat } = require("../util/post-utils/checkUploadedImage");
 const { postsPagination } = require("../public/assets/js/pagination/main-page-pagination");
 const { getYandexDiskToken } = require("../public/assets/js/yandexApi/helpers");
+const { getTopPostPerCategory, getLatestPostPerCategory, getLatestPostPerCategoryAdmin } = require("../services/postService");
 
 exports.postAddImage = async (req, res) => {
   try {
@@ -228,6 +229,8 @@ exports.getAllPosts = async (req, res, next) => {
   try {
     const page = req.query.page
     const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await postsPagination(page)
+    const topPostsByCategory = await getTopPostPerCategory()
+    const latestPostsByCategory = await getLatestPostPerCategoryAdmin()
 
     res.render("admin/posts", {
       pageTitle: "Админ посты",
@@ -236,6 +239,8 @@ exports.getAllPosts = async (req, res, next) => {
       errorMessage: req.flash("error")[0] || null,
       successMessage: req.flash("success")[0] || null,
       posts: posts,
+      topPostsByCategory: topPostsByCategory,
+      latestPostsByCategory: latestPostsByCategory,
       currentPage: currentPage,
       hasNextPage: hasNextPage,
       hasPreviousPage: hasPreviousPage,
@@ -411,72 +416,84 @@ exports.postEditPost = async (req, res, next) => {
   }
 };
 
-exports.postCreateAlias = (req, res, next) => {
-  const name = req.body.alias.trim().toUpperCase();
-
-  Alias.findOne({ where: { name: name } })
-    .then((result) => {
-      if (result) {
-        throw new Error("Alias all ready exist");
-      }
-      return Alias.create({ name: name, userId: req.user.id });
-    })
-    .then(async (alias) => {
-      // Создавать страницу с именем алиаса
-      const filePath = path.resolve(
-        __dirname,
-        `../views/blog/category/${alias.name}.ejs`
-      );
-      const templatePath = path.resolve(
-        __dirname,
-        "../views/blog/category/template.ejs"
-      );
-      return await createHtmlTemplate(
-        filePath,
-        `${alias.name}.ejs`,
-        templatePath
-      );
-    })
-    .then((file) => {
-      if (!file) {
-        throw new Error("не удалось создать шаблон");
-      }
-      res.redirect("/admin/create-category");
-    })
-    .catch((err) => {
-      console.log(err.message);
-      res.redirect("/admin/create-category");
-    });
+exports.postCreateAlias = async (req, res, next) => {
+  try {
+    const name = req.body.alias.trim().toUpperCase();
+    const alias = await Alias.findOne({ where: { name: name } })
+    if (alias) {
+      throw new Error("Alias all ready exist");
+    }
+    const createdAlias = await Alias.create({ name: name, userId: req.user.id });
+    const filePath = path.join(
+      __dirname,
+      `../views/blog/category/${createdAlias.name}.ejs`
+    );
+    const templatePath = path.join(
+      __dirname,
+      "../views/blog/category/template.ejs"
+    );
+    const createdTemplate = await createHtmlTemplate(
+      filePath,
+      `${createdAlias.name}.ejs`,
+      templatePath
+    );
+    if (!createdTemplate) {
+      throw new Error("не удалось создать шаблон");
+    }
+    req.flash('success', `Алиас '${name}' успешно создан`)
+    res.redirect("/admin/create-category");
+  } catch (error) {
+    console.error("Ошибка создания Алиаса: ", error.message);
+    req.flash('error', error.message)
+    res.redirect("/admin/create-category");
+  };
 };
 
-exports.postEditAlias = (req, res, next) => {
-  const aliasId = req.body.aliasId;
-  const updatedName = req.body.updatedName;
-  const actionType = req.body.action;
+exports.postEditAlias = async (req, res, next) => {
+  try {
+    const aliasId = req.body['updated-aliasId'];
+    const updatedName = req.body.updatedName;
+    const actionType = req.body.action;
+    const alias = await Alias.findByPk(aliasId)
+    const templatePath = path.join(__dirname, '..', 'views/blog/category/', `${alias.name}.ejs`)
 
-  Alias.findByPk(aliasId)
-    .then((alias) => {
-      if (actionType === "delete") {
-        const templatePath = path.join(__dirname, '..', 'views/blog/category/', `${alias.name}.ejs`)
-        if (!fs.existsSync(templatePath)) {
-          console.log(`Файл-шаблон не найден: ${templatePath}`)
-          throw new Error(`Файл-шаблон не найден: ${templatePath}`);
-        }
-        fs.unlink(templatePath, (err) => {
-          if (err) throw new Error(err);
-          console.log(`${templatePath} was deleted`);
-        })
-        return alias.destroy();
+    if (!fs.existsSync(templatePath)) {
+      console.log(`Файл-шаблон не найден: ${templatePath}`)
+      throw new Error(`Файл-шаблон не найден: ${templatePath}`);
+    }
+    if (actionType === "delete") {
+      fs.unlink(templatePath, (err) => {
+        if (err) throw new Error(err);
+        console.log(`${templatePath} was deleted`);
+      })
+      if (alias.categoryId) {
+        const aliasCategory = await Category.findByPk(alias.categoryId)
+        await aliasCategory.destroy();
       }
-      alias.name = updatedName;
-      return alias.save();
-    })
-    .then((result) => res.redirect("/admin/create-category"))
-    .catch((err) => {
-      console.error(err)
-      req.flash('error', err.message)
-      res.redirect("/admin/create-category")
-    })
+      await alias.destroy();
+      req.flash('success', 'Алиас был удален');
+      return res.redirect("/admin/create-category")
+    }
+
+    // Редактирование алиаса
+    if (!updatedName || updatedName.trim() === '') {
+      throw new Error('Название алиаса не может быть пустым');
+    }
+    const oldName = alias.name
+    const newTemplatePath = path.join(__dirname, '..', 'views/blog/category/', `${updatedName}.ejs`)
+    if (oldName !== updatedName) {
+      fs.renameSync(templatePath, newTemplatePath);
+    }
+    alias.name = updatedName;
+    await alias.save();
+    req.flash('success', 'Алиас успешно обновлен');
+    res.redirect("/admin/create-category")
+
+  } catch (error) {
+    console.error(error)
+    req.flash('Ошибка в postEditAlias:', error.message)
+    res.redirect("/admin/create-category")
+  }
 };
 
 exports.postDeleteCategory = async (req, res, next) => {

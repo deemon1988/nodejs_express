@@ -36,7 +36,7 @@
 												<time class="published" datetime="<%= post.createdAt %>">
 													<%= formatDateOnly(post.createdAt) %>
 												</time>
-												<a href="#" class="author category-post-logo"><span class="name">
+												<a href="/category/?category=<%= post.category.id %>" class="author category-post-logo"><span class="name">
 														<%= post.category.name %>
 													</span><img src="<%= post.category.image %>" alt="" /></a>
 											</div>
@@ -119,9 +119,7 @@
 										<% for (let post of topPosts) { %>
 											<!-- Mini Post -->
 											<article class="mini-post">
-
 												<header>
-
 													<h3><a href="/posts/<%= post.id %>">
 															<%= post.title %>
 														</a></h3>
@@ -132,14 +130,11 @@
 														<a href="#" class="published category-link">
 															<%= post.categoryName %>
 														</a>
-
 														<a href="#" class="author"><img src="" alt="" /></a>
 													</div>
 												</header>
-
-												<a href="single.html" class="image mini"><img class="img-mini"
+												<a href="/posts/<%= post.id %>" class="image mini"><img class="img-mini"
 														src="<%= post.image %>" alt="" /></a>
-
 											</article>
 											<% } %>
 												<% } else { %>

@@ -133,7 +133,7 @@ exports.postLogout = (req, res, err) => {
 };
 
 const bcrypt = require("bcryptjs");
-const { where, Op } = require("sequelize");
+const { Op } = require("sequelize");
 const YandexAccount = require("../models/yandex-account");
 const Profile = require("../models/profile");
 
@@ -187,7 +187,6 @@ exports.postRegisterUser = async (req, res, err) => {
       });
     }
 
-
     const templateData = {
       name: user.username,
       email: user.email,
@@ -204,7 +203,6 @@ exports.postRegisterUser = async (req, res, err) => {
       templateData,
       mailOptions
     );
-
 
     req.flash("success", "Вы успешно зарегестрировались!");
     res.redirect("/singin");

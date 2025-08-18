@@ -12,14 +12,13 @@ const fs = require('fs')
 const PDFDocument = require('pdfkit');
 
 const {
-  getPostsWithLikedUsersQuery,
-  getTopPostsByCataegoryQuery,
-  getRandomPostsFromTop5Query,
-  getTopPosts,
-  getTopCreatedAtPosts,
-  getAllPostsByDate,
   getLatestPostPerCategory,
-  getMostPopularPosts
+  getMostPopularPosts,
+  getRandomPostInCategory,
+  getPopularPostInCategory,
+  getPopularPostsLastMonth,
+  getTopPostsByCataegoryQuery,
+  getTopPostPerCategory
 } = require("../services/postService");
 const { getRandomPosts } = require("../util/shuffle");
 const Alias = require("../models/allowed-alias");
@@ -317,51 +316,43 @@ exports.postLike = (req, res, next) => {
     });
 };
 
-exports.getCategory = (req, res, next) => {
-  const userId = req.user ? req.user.id : null;
-  const catId = +req.query.cat;
-  let category;
-  let mostLikedPosts;
-  let byDatePosts;
-  let anotherPostsInCategory;
-  let aliasName;
+exports.getCategory = async (req, res, next) => {
+  try {
+    const page = req.query.page || 1
+    const userId = req.user ? req.user.id : null;
+    const categoryId = +req.query.category;
+    const categoryAlias = await Alias.findOne({ where: { categoryId: categoryId } })
+    const category = await Category.findByPk(categoryId);
+    const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId, categoryId)
+    const randomPostsInCategory = await getRandomPostInCategory(categoryId, 5)
+    const popularPostsInCategory = await getPopularPostInCategory(categoryId, 5)
+    const categories = await Category.findAll();
 
-  Alias.findOne({ where: { categoryId: catId } })
-    .then((alias) => {
-      if (!alias) {
-        throw new Error("Alias не найден");
-      }
-      aliasName = alias.name;
-      return Category.findByPk(catId);
-    })
-    // Category.findByPk(catId)
-    .then((cat) => {
-      category = cat;
-      return getPostsWithLikedUsersQuery(userId, category.id);
-    })
-    .then(({ rows: posts }) => {
-      const postsJson = posts.map((p) => p.toJSON());
-      mostLikedPosts = [...postsJson].sort((a, b) => b.likes - a.likes);
-      byDatePosts = [...postsJson].sort(
-        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-      );
-      anotherPostsInCategory = [...postsJson]
-        .filter((post) => post.likes === 0)
-        .sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
-
-      return Category.findAll();
-    })
-    .then((categories) => {
-      res.render(`blog/category/${aliasName}`, {
-        posts: mostLikedPosts,
-        pageTitle: category.name,
-        byDatePosts: byDatePosts.slice(0, 4),
-        anotherPosts: getRandomPosts(anotherPostsInCategory, 5),
-        categories: categories,
-        path: "/categories",
-        csrfToken: req.csrfToken(),
-      });
+    res.render(`blog/category/${categoryAlias.name}`, {
+      posts: posts,
+      category: category,
+      pageTitle: category.name,
+      popularPosts: popularPostsInCategory,
+      randomPosts: randomPostsInCategory,
+      categories: categories,
+      path: "/categories",
+      csrfToken: req.csrfToken(),
+      currentPage: currentPage,
+      hasNextPage: hasNextPage,
+      hasPreviousPage: hasPreviousPage,
+      nextPage: nextPage,
+      previousPage: previousPage,
+      lastPage: lastPage,
+      totalPages: totalPages
     });
+  } catch (error) {
+    console.error(error.message)
+    const err = new Error(error)
+    err.httpStatusCode = 500
+    next(err)
+  }
+
+
 };
 
 exports.getCategories = async (req, res, next) => {
@@ -401,19 +392,30 @@ exports.getCategories = async (req, res, next) => {
 
 exports.getArchive = async (req, res, next) => {
   try {
-    const categoriesWithPosts = await getAllCategoriesWithPosts();
-    const allPostsByDate = await getAllPostsByDate();
-    allPostsByDate.sort(
-      (a, b) => new Date(a.dataValues.date) - new Date(b.dataValues.date)
-    ),
-      console.log(allPostsByDate);
-    res.render("blog/archive", {
-      pageTitle: "Архив",
-      path: "/archive",
-      csrfToken: req.csrfToken(),
-      posts: allPostsByDate,
-      categories: categoriesWithPosts,
-    });
+    const userId = req.user?.id || null
+    const page = req.query.page || 1
+    const year = req.query.year ? +req.query.year : null;
+
+    const { posts, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await withLikePostsPagination(page, userId, null, {year: year})
+    const popularPostsLastMonth = await getPopularPostsLastMonth(3);
+    const popularPostsInCategoryByDate = await getTopPostPerCategory(year)
+
+      res.render("blog/archive", {
+        pageTitle: "Архив",
+        path: "/archive",
+        csrfToken: req.csrfToken(),
+        posts: posts,
+        lastMonthPosts: popularPostsLastMonth,
+        postsInCategoryByDate: popularPostsInCategoryByDate,
+        year: year,
+        currentPage: currentPage,
+        hasNextPage: hasNextPage,
+        hasPreviousPage: hasPreviousPage,
+        nextPage: nextPage,
+        previousPage: previousPage,
+        lastPage: lastPage,
+        totalPages: totalPages
+      });
   } catch (error) {
     console.log("Ошибка рендеринга страницы:", error);
   }
@@ -721,7 +723,7 @@ exports.getSearch = async (req, res, next) => {
       } else {
         // Все типы - получаем все результаты и делаем пагинацию в памяти
         // Это подход может быть неэффективным для больших наборов данных
-        
+
         // Получаем все посты (без лимита для правильного подсчета)
         let postSearchConditions = {};
         let postIncludeOptions = [{
@@ -787,7 +789,7 @@ exports.getSearch = async (req, res, next) => {
           searchType: 'post',
           sortValue: post.createdAt.getTime()
         }));
-        
+
         const allGuideResults = guideResult.rows.map(guide => ({
           ...guide.toJSON(),
           searchType: 'guide',
@@ -797,7 +799,7 @@ exports.getSearch = async (req, res, next) => {
         const allResults = [...allPostResults, ...allGuideResults].sort((a, b) => b.sortValue - a.sortValue);
 
         totalResults = allResults.length;
-        
+
         // Применяем пагинацию
         searchResults = allResults.slice(offset, offset + limit);
       }

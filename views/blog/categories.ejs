@@ -21,7 +21,7 @@
                             <li><a href="/categories" class="button">Все</a></li>
                             <% if (categories.length> 0) { %>
                                 <% for (let category of categories) { %>
-                                    <li><a href="/category?cat=<%= category.id %>" class="button">
+                                    <li><a href="/category?category=<%= category.id %>" class="button">
                                             <%= category.name %>
                                         </a></li>
                                     <% } %>
@@ -112,13 +112,13 @@
                                     <article class="mini-post">
                                         <header>
                                             <h3>
-                                                <a href="/category?cat=<%= category.id %>">
+                                                <a href="/category?category=<%= category.id %>">
                                                 <%- fixPrepositions(category.tagline) %>
                                                 </a>
                                             </h3>
 
                                         </header>
-                                        <a href="/category?cat=<%= category.id %>" class="image"><img
+                                        <a href="/category?category=<%= category.id %>" class="image"><img
                                                 src="<%= category.image %>" alt="<%= category.title %>" /></a>
                                     </article>
                                     <% } %>

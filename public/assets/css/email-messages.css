@@ -1,0 +1,87 @@
+.message-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+.status-new {
+  background-color: #fff3cd;
+  color: #856404;
+}
+.status-in_progress {
+  background-color: #cce5ff;
+  color: #004085;
+}
+.status-replied {
+  background-color: #d4edda;
+  color: #155724;
+}
+.status-closed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+.message-content {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-left: 3px solid #007bff;
+  margin: 10px 0;
+}
+.reply-form {
+  background-color: #e8f4fd;
+  padding: 20px;
+  border-radius: 5px;
+  margin: 15px 0;
+  display: none;
+}
+.reply-form.show {
+  display: block;
+}
+
+.actions.admin-messages-list {
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  margin-top: 1.5em;
+}
+
+.admin-messages-list button {
+  width: 80%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;бб
+}
+
+.admin-messages-form {
+  margin: 0;
+  width: 100%;
+}
+
+.admin-messages-select {
+  border: 1px solid #ccc;
+}
+
+.admin-messages-item {
+  display: flex;
+}
+.messages-delete-btn {
+  margin-left: auto;
+}
+
+.bi-trash,
+.bi-reply {
+  font-size: 20px;
+}
+
+@media screen and (max-width: 736px) {
+  .admin-messages-item button,
+  .admin-messages-select {
+    width: 80%;
+    margin: auto;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .admin-messages-select {
+    width: 100%;
+  }
+}

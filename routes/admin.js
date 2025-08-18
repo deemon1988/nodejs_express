@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/admin");
+const emailController = require('../controllers/email')
 const upload = require("../config/multerConfig");
 const isAuth = require("../middleware/is-auth");
 const isAdmin = require("../middleware/is-admin");
@@ -179,5 +180,8 @@ router.get('/delete-file', async (req, res) => {
     })
   }
 })
+
+router.get('/messages', csrfProtection, isAuth, isAdmin, emailController.getReplyToUser)
+router.post('/messages', csrfProtection, isAuth, isAdmin, emailController.postReplyToUser)
 
 module.exports = router;

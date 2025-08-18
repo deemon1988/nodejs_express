@@ -1,4 +1,5 @@
 <%- include('../../includes/head.ejs') %>
+<link rel="stylesheet" href="/assets/css/badges.css">
     </head>
 
     <body class="posts-list">
@@ -20,7 +21,7 @@
                             <li><a href="/categories" class="button">Все</a></li>
                             <% if (categories.length > 0) { %>
                                  <% for (let category of categories) { %>
-                            <li><a href="/category?cat=<%= category.id %>" class="button"><%= category.name %></a></li>
+                            <li><a href="/category?category=<%= category.id %>" class="button"><%= category.name %></a></li>
                             <% } %>
                              <% } %>
                         </ul>
@@ -57,7 +58,7 @@
                                         </li>
                                     </ul>
                                     <ul class="stats">
-                                        <li><a href="/category/?cat=<%= post.category.id %>">
+                                        <li><a href="/category/?category=<%= post.category.id %>">
                                                 <%= post.category.name %>
                                             </a></li>
                                         <li><a href="#"
@@ -75,6 +76,14 @@
                                 <% } else { %>
                                     <h1>No Posts Found!</h1>
                                     <% } %>
+                
+
+                <%- include('../../includes/pagination.ejs', {currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages}) %>
+                <!-- Pagination -->
+            <ul class="actions pagination">
+                <li><a href="?page=<%= previousPage %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Previous Page</a></li>
+                <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Next Page</a></li>
+            </ul>
 
                 </div>
                 <!-- Sidebar -->
@@ -97,8 +106,8 @@
                     <section>
                         <div class="mini-posts">
                             <!-- Mini Post -->
-                            <% if(byDatePosts.length> 0) { %>
-                                <% for (let post of byDatePosts) { %>
+                            <% if(popularPosts.length> 0) { %>
+                                <% for (let post of popularPosts) { %>
                                     <article class="mini-post">
                                         <header>
                                             <h3><a href="/single/<%= post.id %>"><%- fixPrepositions(post.title) %></a>
@@ -119,8 +128,8 @@
                     <!-- Posts List -->
                     <section>
                         <ul class="posts">
-                            <% if(anotherPosts.length> 0) { %>
-                                <% for (let post of anotherPosts) { %>
+                            <% if(randomPosts.length> 0) { %>
+                                <% for (let post of randomPosts) { %>
                                     <li>
                                         <article>
                                             <header>
@@ -153,4 +162,11 @@
                             <li><a href="/about" class="button">Далее</a></li>
                         </ul>
                     </section>
-                    <%- include('../../includes/end.ejs') %>
+
+
+
+<%- include('../../includes/footer.ejs') %>
+<%- include('../../includes/main-scripts.ejs') %>
+
+<script src="/assets/js/postHandler.js"></script>
+<%- include('../../includes/scripts.ejs') %>

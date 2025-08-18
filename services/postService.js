@@ -1,4 +1,4 @@
-const { fn, literal } = require("sequelize");
+const { fn, literal, Op } = require("sequelize");
 const Post = require("../models/post");
 const Comment = require("../models/comment");
 const Category = require("../models/category");
@@ -150,34 +150,63 @@ exports.getTopCreatedAtPosts = () => {
   );
 };
 
-exports.getAllPostsByDate = async (dateFilter) => {
+exports.getPopularPostsLastMonth = async (limit) => {
   try {
-    const postsByDate = await Post.findAll({
-      attributes: [
-        'post.id',
-        'title',
-        'content',
-        'post.createdAt',
-        [sequelize.fn("DATE", sequelize.col("post.createdAt")), "date"]
-      ],
-      group: [
-        sequelize.fn("DATE", sequelize.col("post.createdAt")),
-        "post.id",
-        "category.id",
-      ],
-      include: [
-        {
-          model: Category,
-          as: "category",
-        },
-      ],
-    });
+    const endDate = new Date()
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 1);
 
-    return postsByDate;
+    const lastMounthPosts = await Post.findAll({
+      where: {
+        createdAt: { [Op.between]: [startDate, endDate] }
+      },
+      order: [['likes', 'DESC']],
+      limit: limit,
+    });
+    return lastMounthPosts;
   } catch (error) {
-    console.log("Ошибка получения постов:", error);
+    console.log("Ошибка получения постов за последний месяц: ", error);
+    return [];
   }
 };
+
+exports.getTopPostPerCategory = async (filterYear = null) => {
+  try {
+    let whereCondition = {}
+    const topPosts = []
+    const categories = await Category.findAll({
+      attributes: ['id']
+    })
+    for (let category of categories) {
+      whereCondition.categoryId = category.id
+      if (filterYear) {
+        whereCondition.createdAt = {
+          [Op.between]: [
+            new Date(filterYear, 0, 1),
+            new Date(filterYear, 11, 31, 23, 59, 59)
+          ]
+        }
+      }
+      const topPost = await Post.findOne({
+        where: whereCondition,
+        order: [['likes', 'DESC']], // Сортируем по количеству лайков
+        include: [{
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name', 'image']
+        }]
+      })
+      if (topPost) {
+        topPosts.push(topPost);
+      }
+    }
+
+    return topPosts
+  } catch (error) {
+    console.error("Ошибка получения популярных постов в каждой категории: ", error.message)
+    return []
+  }
+}
 
 exports.getLatestPostPerCategory = async () => {
   const result = await sequelize.query(`
@@ -185,6 +214,7 @@ exports.getLatestPostPerCategory = async () => {
       p.*,
       c."name" as "categoryName",
       c."image" as "categoryImage"
+
     FROM "posts" p
     LEFT JOIN "categories" c ON p."categoryId" = c."id"
     WHERE p."isPublished" = true
@@ -194,6 +224,44 @@ exports.getLatestPostPerCategory = async () => {
   });
 
   return result;
+};
+
+exports.getLatestPostPerCategoryAdmin = async () => {
+  const result = await sequelize.query(`
+    SELECT DISTINCT ON ("categoryId") 
+      p.*,
+      c."name" as "categoryName",
+      c."image" as "categoryImage"
+
+    FROM "posts" p
+    LEFT JOIN "categories" c ON p."categoryId" = c."id"
+    ORDER BY "categoryId", "createdAt" DESC
+  `, {
+    type: Sequelize.QueryTypes.SELECT
+  });
+
+  return result;
+};
+
+exports.getRandomPostInCategory = async (categoryId, limit) => {
+  return await Post.findAll({
+    where: { categoryId: categoryId },
+    include: [{
+      model: Category,
+      as: 'category'
+    }
+    ],
+    order: sequelize.random(),
+    limit: limit
+  })
+};
+
+exports.getPopularPostInCategory = async (categoryId, limit) => {
+  return await Post.findAll({
+    where: { categoryId: categoryId },
+    order: [['likes', 'DESC']],
+    limit: limit
+  })
 };
 
 exports.getMostPopularPosts = async (quantity) => {

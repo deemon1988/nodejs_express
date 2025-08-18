@@ -43,7 +43,7 @@
   opacity: 0.8;
 }
 
-.swal2-custom-btn .btn-text{
+.swal2-custom-btn .btn-text {
   font-size: 16px;
 }
 
@@ -54,11 +54,13 @@
   border: none !important;
 }
 
-.swal2-confirm-btn, .swal2-confirm-btn:hover {
+.swal2-confirm-btn,
+.swal2-confirm-btn:hover {
   background: #2ebaae;
 }
 
-.swal2-cancel-btn, .swal2-cancel-btn:hover {
+.swal2-cancel-btn,
+.swal2-cancel-btn:hover {
   background: #b3b4b5 !important;
 }
 
@@ -97,4 +99,9 @@
 .swal2-icon {
   color: #2ebaae !important;
   border-color: #2ebaae !important;
+}
+
+.swal2-icon.swal2-error {
+  color: #f27474 !important;
+  border-color: #f27474 !important;
 }

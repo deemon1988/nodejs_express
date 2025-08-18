@@ -40,10 +40,13 @@
                                     <p>Lorem ipsum dolor amet nullam consequat etiam feugiat</p>
                                 </div>
                                 <div class="meta">
-                                    <time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
-                                    <a href="#" class="author"><span class="name"><%= post.category.name %></span><img
-                                            src="/images/avatar.jpg" alt="" /></a>
-                                </div>
+                                    <time class="published" datetime="<%= post.createdAt %>">
+                                        <%= formatDateOnly(post.createdAt) %>
+                                    </time>
+                                    <a href="/category/?category=<%= post.category.id %>" class="author category-post-logo"><span class="name">
+                                            <%= post.category.name %>
+                                        </span><img src="<%= post.category.image %>" alt="" /></a>
+								</div>
                             </header>
                             <a href="/single/<%= post.id %>" class="image featured"><img src="<%= post.image %>" alt="" /></a>
                             <p class="post-preview">
@@ -66,7 +69,7 @@
                                     </li>
                                 </ul>
                                 <ul class="stats">
-                                    <li><a class="category" href="/category/?cat=<%= post.category.id %>" data-category-id="<%= post.category.id %>">
+                                    <li><a class="category" href="/category/?category=<%= post.category.id %>" data-category-id="<%= post.category.id %>">
                                             <%= post.category.name %>
                                         </a></li>
                                     <li><a class="icon solid fa-heart" data-id="<%= post.id %>"><%= post.likes %></a></li>
@@ -104,100 +107,55 @@
 
                 <!-- Mini Posts -->
                 <section>
+                    <h3>Популярный пост в каждой категории</h3>
                     <div class="mini-posts">
                         <!-- Mini Post -->
+                         <% if (topPostsByCategory.length > 0) { %>
+                        <% for (let post of topPostsByCategory) { %>
                         <article class="mini-post">
                             <header>
-                                <h3><a href="single.html">Технологии</a></h3>
-                                <time class="published" datetime="2015-10-20">October 20, 2015</time>
-                                <a href="#" class="author"><img src="/images/avatar.jpg" alt="" /></a>
+                                <h3><a href="/posts/<%= post.id %>">
+                                        <%= post.title %>
+                                    </a></h3>
+                                <div class="post-info">
+                                    <time class="published" datetime="<%= post.createdAt %>">
+                                        <%= formatDateOnly(post.createdAt) %>
+                                    </time>
+                                    <a href="/category/?category=<%= post.category.id %>" class="published category-link">
+                                        <%= post.category.name %>
+                                    </a>
+                                    <a href="#" class="author"><img src="" alt="" /></a>
+                                </div>
                             </header>
-                            <a href="single.html" class="image"><img src="/images/pic04.jpg" alt="" /></a>
-                        </article>
-
-                        <!-- Mini Post -->
-                        <article class="mini-post">
-                            <header>
-                                <h3><a href="single.html">Жизнь</a></h3>
-                                <time class="published" datetime="2015-10-19">October 19, 2015</time>
-                                <a href="#" class="author"><img src="/images/avatar.jpg" alt="" /></a>
-                            </header>
-                            <a href="single.html" class="image"><img src="/images/pic05.jpg" alt="" /></a>
-                        </article>
-
-                        <!-- Mini Post -->
-                        <article class="mini-post">
-                            <header>
-                                <h3><a href="single.html">Путешествия</a></h3>
-                                <time class="published" datetime="2015-10-18">October 18, 2015</time>
-                                <a href="#" class="author"><img src="/images/avatar.jpg" alt="" /></a>
-                            </header>
-                            <a href="single.html" class="image"><img src="/images/pic06.jpg" alt="" /></a>
-                        </article>
-
-                        <!-- Mini Post -->
-                        <article class="mini-post">
-                            <header>
-                                <h3><a href="single.html">Дизайн</a></h3>
-                                <time class="published" datetime="2015-10-17">October 17, 2015</time>
-                                <a href="#" class="author"><img src="/images/avatar.jpg" alt="" /></a>
-                            </header>
-                            <a href="single.html" class="image"><img src="/images/pic07.jpg" alt="" /></a>
-                        </article>
-
+                            <a href="/posts/<%= post.id %>" class="image mini"><img class="img-mini"
+                                    src="<%= post.image %>" alt="" /></a>
+						</article>
+                        <% } %>
+                        <% } else { %>
+                            Нет постов
+                        <% } %>
                     </div>
                 </section>
 
                 <!-- Posts List -->
                 <section>
+                    <h3>Последний пост в каждой категории</h3>
                     <ul class="posts">
+                        <% if(latestPostsByCategory.length > 0) { %>
+                        <% for (let post of latestPostsByCategory) { %>
                         <li>
                             <article>
                                 <header>
-                                    <h3><a href="single.html">Lorem ipsum fermentum ut nisl vitae</a></h3>
-                                    <time class="published" datetime="2015-10-20">October 20, 2015</time>
+                                    <h3><a href="/posts/<%= post.id %>"><%= post.title %></a></h3>
+                                    <time class="published" datetime="<%= post.createdAt %>"><%= formatDateOnly(post.createdAt) %></time>
                                 </header>
-                                <a href="single.html" class="image"><img src="/images/pic08.jpg" alt="" /></a>
+                                <a href="/category/?category=<%= post.categoryId %>" class="image"><img src="<%= post.categoryImage %>" alt="" /></a>
                             </article>
                         </li>
-                        <li>
-                            <article>
-                                <header>
-                                    <h3><a href="single.html">Convallis maximus nisl mattis nunc id lorem</a>
-                                    </h3>
-                                    <time class="published" datetime="2015-10-15">October 15, 2015</time>
-                                </header>
-                                <a href="single.html" class="image"><img src="/images/pic09.jpg" alt="" /></a>
-                            </article>
-                        </li>
-                        <li>
-                            <article>
-                                <header>
-                                    <h3><a href="single.html">Euismod amet placerat vivamus porttitor</a></h3>
-                                    <time class="published" datetime="2015-10-10">October 10, 2015</time>
-                                </header>
-                                <a href="single.html" class="image"><img src="/images/pic10.jpg" alt="" /></a>
-                            </article>
-                        </li>
-                        <li>
-                            <article>
-                                <header>
-                                    <h3><a href="single.html">Magna enim accumsan tortor cursus ultricies</a>
-                                    </h3>
-                                    <time class="published" datetime="2015-10-08">October 8, 2015</time>
-                                </header>
-                                <a href="single.html" class="image"><img src="/images/pic11.jpg" alt="" /></a>
-                            </article>
-                        </li>
-                        <li>
-                            <article>
-                                <header>
-                                    <h3><a href="single.html">Congue ullam corper lorem ipsum dolor</a></h3>
-                                    <time class="published" datetime="2015-10-06">October 7, 2015</time>
-                                </header>
-                                <a href="single.html" class="image"><img src="/images/pic12.jpg" alt="" /></a>
-                            </article>
-                        </li>
+                        <% } %>
+                        <% } else { %>
+                            <h3>No posts found!</h3>
+                            <% } %>
                     </ul>
                 </section>
 

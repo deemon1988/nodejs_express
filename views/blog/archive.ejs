@@ -1,7 +1,5 @@
-
-
-             
 <%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/assets/css/badges.css">
     </head>
 
     <body class="is-preload">
@@ -45,7 +43,7 @@
                                     </div>
                                     <div class="meta">
                                         <time class="published" datetime="<%= post.createdAt %>">
-                                            <%= formatDateOnly(post.dataValues.date) %>
+                                            <%= formatDateOnly(post.createdAt) %>
                                         </time>
                                         <a href="#" class="author category-post-logo"><span class="name">
                                                 <%= post.category.name %>
@@ -84,11 +82,17 @@
                                     <h1>No Posts Found!</h1>
                                     <% } %>
 
-                                        <!-- Pagination -->
-                                        <ul class="actions pagination">
-                                            <li><a href="" class="disabled button large previous">Previous Page</a></li>
-                                            <li><a href="#" class="button large next">Next Page</a></li>
-                                        </ul>
+
+                <%- include('../includes/archive-pagination.ejs', {currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages}) %>
+                    <!-- Pagination -->
+                <ul class="actions pagination">
+                    <% let paginationUrl =  '';
+                    if (year) {
+                        paginationUrl += '&year=' + year;
+                    } %>
+                    <li><a href="?page=<%= previousPage %><%= paginationUrl %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Предыдущая</a></li>
+                    <li><a href="?page=<%= nextPage %><%= paginationUrl %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Следующая</a></li>
+                </ul>
 
                 </div>
 
@@ -108,19 +112,20 @@
                     <!-- Mini Posts -->
                     <section>
                         <div class="mini-posts">
-                            <% if(categories.length> 0) { %>
-                                <% for(let category of categories) { %>
+                            <h2>Популярное за последнее время</h2>
+                            <% if(lastMonthPosts.length > 0) { %>
+                                <% for(let post of lastMonthPosts) { %>
                                     <!-- Mini Post -->
-                                     <h3> <%- fixPrepositions(category.tagline) %></h3>
+                                     <h3> <%- fixPrepositions(post.preview) %></h3>
                                     <article class="mini-post">
                                         <header>
-                                            <h3><a href="/category?cat=<%= category.id %>">
-                                                    <%= category.name %>
+                                            <h3><a href="/single?postId=<%= post.id %>">
+                                                    <%= post.title %>
                                                 </a></h3>
 
                                         </header>
-                                        <a href="/category?cat=<%= category.id %>" class="image"><img
-                                                src="<%= category.image %>" alt="<%= category.title %>" /></a>
+                                        <a href="/single?postId=<%= post.id %>" class="image"><img
+                                                src="<%= post.image %>" alt="<%= post.title %>" /></a>
                                     </article>
                                     <% } %>
                                         <% } %>
@@ -130,10 +135,11 @@
 
                     <!-- Posts List -->
                     <section>
-                        <h3>Здесь и сейчас</h3>
+                        
+                        <h3>Топ по категориям за <%= year ? year : '' %> год</h3>
                         <ul class="posts">
-                             <% if (posts.length> 0) { %>
-                        <% for ( post of posts ) { %>
+                             <% if (postsInCategoryByDate.length> 0) { %>
+                        <% for ( post of postsInCategoryByDate ) { %>
                             <li>
                                <article>
 											<header>

@@ -149,8 +149,8 @@ Profile.hasMany(UserActivity);
 Category.hasMany(Post);
 Post.belongsTo(Category, { as: "category" });
 
-Category.hasOne(Alias, { onDelete: "CASCADE" });
-Alias.belongsTo(Category);
+Category.hasOne(Alias);
+Alias.belongsTo(Category, { onDelete: "CASCADE" });
 
 Alias.belongsTo(User);
 User.hasMany(Alias);
