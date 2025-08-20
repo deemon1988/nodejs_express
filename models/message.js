@@ -13,11 +13,37 @@ const Message = sequelize.define('message', {
     lastname: Sequelize.STRING,
     email: Sequelize.STRING,
     content: Sequelize.TEXT,
+    subject: Sequelize.STRING,
     status: {
-        type: Sequelize.ENUM('new', 'in_progress', 'replied', 'closed'),
+        type: Sequelize.ENUM('new', 'in_progress', 'replied', 'closed', 'userReply', 'adminReply'),
         defaultValue: 'new'
     },
-    repliedAt: Sequelize.DATE
+    repliedAt: Sequelize.DATE,
+    replyTo: Sequelize.STRING,
+    messageId: Sequelize.STRING,
+    threadId: Sequelize.STRING,
+    isReply: Sequelize.BOOLEAN,
+    receivedAt: Sequelize.DATE,
+    parentId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'messages',
+            key: 'id'
+        }
+    }
+
+});
+
+// Ассоциации
+Message.hasMany(Message, {
+    as: 'replies',
+    foreignKey: 'parentId'
+});
+
+Message.belongsTo(Message, {
+    as: 'parent',
+    foreignKey: 'parentId'
 });
 
 module.exports = Message

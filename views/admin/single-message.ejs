@@ -29,8 +29,12 @@
             <div id="main">
 
                 <header>
-                    <h1>Сообщения пользователей</h1>
-                    <p>Управление обращениями от пользователей</p>
+                    <h1>Сообщения от пользователя</h1>
+                    <p>
+                        <span><%= userData.firstname || '' %></span>
+                        <span><%= userData.lastname || '' %></span>
+                    </p>
+                    <p><%= userData.email || '' %></p>
                 </header>
 
                 <!-- Messages -->
@@ -59,9 +63,6 @@
                                         Отвечено: <%= formatDate(message.repliedAt) %>
                                     </time>
                                     <% } %>
-                                    <a href="/admin/messages/<%= message.threadId %>" class="button large messages-thread-btn">
-                                            Перейти к сообщениям <i class="bi bi-reply"></i>
-                                    </a>
                                 </div>
                             </header>
 
@@ -72,13 +73,13 @@
                             
                             <footer>
                                 <ul class="actions admin-messages-list">
-                                      <% if (message.status !== 'adminReply' && message.status !== 'replied') { %>
+                                    <% if (message.status !== 'adminReply' && message.status !== 'replied') { %>
                                     <li class="admin-messages-item">
                                         <button type="button" class="button large messages-reply-btn" onclick="toggleReplyForm(<%= message.id %>)">
                                             Ответить <i class="bi bi-reply"></i>
                                         </button>
                                     </li>
-                                    <% } %>
+                                  <% } %>
                                     <li class="admin-messages-item">
                                         <form method="POST" action="/admin/messages/<%= message.id %>/status" class="admin-messages-form">
                                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -90,13 +91,7 @@
                                             </select>
                                         </form>
                                     </li>
-                                      <% if (message.status === 'closed') { %>
-                                    <li class="admin-messages-item">
-                                        <button type="button" class="button large messages-delete-btn" onclick="deleteMessage(<%= message.id %>)">
-                                            Удалить <i class="bi bi-trash"></i>
-                                        </button>
-                                    </li>
-                                    <% } %>
+                                    
                                 </ul>
                             </footer>
 
@@ -133,10 +128,7 @@
                                 <% } %>
 
             <!-- Pagination -->
-            <ul class="actions pagination">
-                <li><a href="?page=<%= previousPage %>" class="<%= hasPreviousPage ? '' : 'disabled' %> button large previous">Предыдущая</a></li>
-                <li><a href="?page=<%= nextPage %>" class="<%= hasNextPage ? '' : 'disabled' %> button large next">Следующая</a></li>
-            </ul>
+          
 
             </div>
             <!-- Sidebar -->
@@ -191,7 +183,7 @@
                     <h2>Информация</h2>
                     <p>Здесь вы можете управлять сообщениями от пользователей, отвечать на них и отслеживать статус обработки.</p>
                     <ul class="actions">
-                        <li><a href="/admin" class="button">Назад в админку</a></li>
+                        <li><a href="/admin/messages" class="button">Назад к админку</a></li>
                     </ul>
                 </section>
 

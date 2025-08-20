@@ -182,6 +182,7 @@ router.get('/delete-file', async (req, res) => {
 })
 
 router.get('/messages', csrfProtection, isAuth, isAdmin, emailController.getReplyToUser)
-router.post('/messages', csrfProtection, isAuth, isAdmin, emailController.postReplyToUser)
+router.get('/messages/:threadId', csrfProtection, isAuth, isAdmin, emailController.getThreadMessages)
+router.post('/messages/:messageId/reply', csrfProtection, isAuth, isAdmin, emailController.postReplyToUser)
 
 module.exports = router;

@@ -23,6 +23,7 @@ const blogRoutes = require("./routes/blog.js");
 const userRoutes = require("./routes/user.js");
 const authRoutes = require("./routes/auth.js");
 const accessRoutes = require("./routes/access.js");
+const emailRoutes = require("./routes/email.js");
 
 const errorController = require("./controllers/404.js");
 const Post = require("./models/post.js");
@@ -118,6 +119,7 @@ app.use(blogRoutes);
 app.use(userRoutes);
 app.use(authRoutes);
 app.use("/access", accessRoutes);
+app.use("/email", emailRoutes);
 
 // app.get('/500', errorController.get500);
 app.use(errorController.get404);
