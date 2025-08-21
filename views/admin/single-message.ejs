@@ -1,9 +1,11 @@
 <%- include('../includes/head.ejs') %>
 <link rel="stylesheet" href="/assets/css/badges.css">
 <link rel="stylesheet" href="/assets/css/email-messages.css">
+
 </head>
 
 <body class="messages-admin">
+
 
     <% if(errorMessage && errorMessage.length> 0) { %>
     <div class="flash-message error" style="display: block">
@@ -29,18 +31,15 @@
             <div id="main">
 
                 <header>
-                    <h1>Сообщения от пользователя</h1>
-                    <p>
-                        <span><%= userData.firstname || '' %></span>
-                        <span><%= userData.lastname || '' %></span>
-                    </p>
-                    <p><%= userData.email || '' %></p>
+                    <h1>История сообщений</h1>
                 </header>
+
+
 
                 <!-- Messages -->
                 <% if (messages && messages.length> 0) { %>
                     <% for (let message of messages) { %>
-                        <article class="post message-item">
+                        <article class="post message-item"  id="message-<%= message.id %>">
                            
                             <header>
                                 <div class="title user-message-info">
@@ -54,7 +53,7 @@
                                            message.status === 'adminReply' ? 'Ответ администратора' : 'Закрыто' %>
                                     </span>
                                 </div>
-                                <div class="meta">
+                                <div class="meta message-details">
                                     <time class="published" datetime="<%= message.createdAt %>">
                                         <%= formatDate(message.createdAt) %>
                                     </time>
@@ -67,31 +66,48 @@
                             </header>
 
                             <div class="message-content">
-                                <strong>Сообщение:</strong>
+                                <strong><%= message.firstname %> <%= message.lastname %>:</strong>
                                 <p><%- message.content %></p>
                             </div>
-                            
-                            <footer>
+                            <% if(message.parent) { %>
+                            <div class="message-content parent">
+                                <strong>Ответ на сообщение:</strong>
+                                <p>От: <span><%- message.parent.firstname %> <%- message.parent.lastname %></span></p>
+                                <p><%- message.parent.content %></p>
+                                <small><%= formatDate(message.parent.createdAt) %></small>
+                            </div>
+                            <a href="#message-<%= message.parent.id %>" class="goto-parent-link">
+                                Перейти к оригинальному сообщению ↑
+                            </a>
+                            <% } %>
+                            <footer class="<%= (message.status !== 'adminReply') ? '' : 'messages-footer-hiden' %>">
                                 <ul class="actions admin-messages-list">
-                                    <% if (message.status !== 'adminReply' && message.status !== 'replied') { %>
+                                    <% if (message.status !== 'adminReply') { %>
+                                   
                                     <li class="admin-messages-item">
                                         <button type="button" class="button large messages-reply-btn" onclick="toggleReplyForm(<%= message.id %>)">
                                             Ответить <i class="bi bi-reply"></i>
                                         </button>
                                     </li>
-                                  <% } %>
                                     <li class="admin-messages-item">
-                                        <form method="POST" action="/admin/messages/<%= message.id %>/status" class="admin-messages-form">
+                                        <form method="POST" action="/admin/messages/<%= message.id %>/status?fromPage=single-message&threadId=<%= message.threadId %>" class="admin-messages-form">
                                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                             <select name="status" onchange="this.form.submit()" class="admin-messages-select">
-                                                <option value="new" <%= message.status === 'new' ? 'selected' : '' %>>Новое</option>
+                                                <% if (message.status === 'userReply') { %>
+                                                    <option value="userReply" <%= message.status === 'userReply' ? 'selected' : '' %>>Ответ пользователя</option>                                            
+                                                    <% } else { %>
+                                                        <option value="new" <%= message.status === 'new' ? 'selected' : '' %>>Новое</option>                                            
+                                                        <% } %>
+                                              
                                                 <option value="in_progress" <%= message.status === 'in_progress' ? 'selected' : '' %>>В работе</option>
+                                                <% if (message.status !== 'new' && message.status !== 'userReply') { %>
                                                 <option value="replied" <%= message.status === 'replied' ? 'selected' : '' %>>Отвечено</option>
-                                                <option value="closed" <%= message.status === 'closed' ? 'selected' : '' %>>Закрыто</option>
+                                                <% } %>
+                                         
                                             </select>
                                         </form>
                                     </li>
-                                    
+                                    <% } %>
                                 </ul>
                             </footer>
 
@@ -102,6 +118,8 @@
                                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                     <input type="hidden" name="userEmail" value="<%= message.email %>">
                                     <input type="hidden" name="originalMessage" value="<%= message.content.replace(/"/g, '&quot;') %>">
+                                    <input type="hidden" name="fromPage" value="single-message">
+                                    <input type="hidden" name="threadId" value="<%= threadId %>">
                                     
                                     <div class="form-group">
                                         <label>Тема:</label>
@@ -127,8 +145,7 @@
                                 <p>Пока никто не отправлял сообщений.</p>
                                 <% } %>
 
-            <!-- Pagination -->
-          
+
 
             </div>
             <!-- Sidebar -->
@@ -138,8 +155,12 @@
                 <section id="intro">
                     <header>
                         <a href="#" class="logo"><img src="/images/logo.jpg" alt="" /></a>
-                        <h2>Админ сообщения</h2>
-                        <p>Управление обращениями пользователей</p>
+                        <h2>Сообщения от пользователя</h2>
+                         <p>
+                        <span><%= userData.firstname || '' %></span>
+                        <span><%= userData.lastname || '' %></span>
+                    </p>
+                    <p><%= userData.email || '' %></p>
                     </header>
                 </section>
 
@@ -152,7 +173,7 @@
                                 <h3>Всего сообщений: <%= totalMessages || 0 %></h3>
                             </header>
                         </article>
-                        <article class="mini-post">
+                        <article class="mini-post <%= newMessages > 0 ? 'status-new' : '' %>">
                             <header>
                                 <h3>Новых: <%= newMessages || 0 %></h3>
                             </header>
@@ -162,19 +183,27 @@
                                 <h3>Отвечено: <%= repliedMessages || 0 %></h3>
                             </header>
                         </article>
+                        <article class="mini-post">
+                            <header>
+                                <h3>Ответы администрации: <%= adminMessages || 0 %></h3>
+                            </header>
+                        </article>
                     </div>
                 </section>
-
+                 <section>
+                    <h3>Быстрые действия</h3>
+                    <ul class="actions">
+                        <li class="actions-item"><a href="/email/check-email?threadId=<%= threadId %>" class="button large">Обновить сообщения</a></li>
+                    </ul>
+                </section>
                 <!-- Quick Actions -->
                 <section>
                     <h3>Быстрые действия</h3>
                     <ul class="actions vertical-list">
-                        <li class="vertical-item"><a href="/admin/messages?status=new" class="button">Новые сообщения</a></li>
-                        <li class="vertical-item"><a href="/admin/messages?status=in_progress" class="button">В работе</a></li>
-                        <li class="vertical-item"><a href="/admin/messages?status=replied" class="button">Отвеченные</a></li>
-                        <li class="vertical-item"><a href="/email/check-email" class="button large">Загрузить сообщения</a></li>
-                                
-                        
+                        <li class="vertical-item"><a href="/admin/messages/<%= threadId %>?status=new" class="button">Новые сообщения</a></li>
+                        <li class="vertical-item"><a href="/admin/messages/<%= threadId %>?status=in_progress" class="button">В работе</a></li>
+                        <li class="vertical-item"><a href="/admin/messages/<%= threadId %>?status=replied" class="button">Отвеченные</a></li>
+                        <li class="vertical-item"><a href="/admin/messages/<%= threadId %>" class="button">Все</a></li>
                     </ul>
                 </section>
 
@@ -183,7 +212,7 @@
                     <h2>Информация</h2>
                     <p>Здесь вы можете управлять сообщениями от пользователей, отвечать на них и отслеживать статус обработки.</p>
                     <ul class="actions">
-                        <li><a href="/admin/messages" class="button">Назад к админку</a></li>
+                        <li><a href="/admin/messages" class="button large">Назад в админ сообщения</a></li>
                     </ul>
                 </section>
 

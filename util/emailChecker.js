@@ -183,7 +183,10 @@ class YandexEmailChecker {
                 let parentId = null
                 if (isReply) {
                     const repliedId = parsed.inReplyTo || parsed.references
+                    console.log('repliedId--------',repliedId)
                     parentId = await Message.findOne({ where: { messageId: repliedId }, attributes: ['id'] })
+                    console.log('parentId--------',parentId)
+                    await Message.update({ repliedAt: new Date() }, { where: { id: parentId.id } })
                 }
                 const message = await Message.create({
                     firstname: parsed.from.value[0].name.split(' ')[0],
@@ -320,13 +323,17 @@ async function checkThreadId(replyTo, messageId) {
 }
 
 async function parsedAndCreateMessageFromClient(userData, content, parsed, messageId, threadId) {
-
+    console.log('сообщение из приложения')
     const isReply = !!(parsed.inReplyTo || parsed.references);
     let parentId = null
     if (isReply) {
         const repliedId = parsed.inReplyTo || parsed.references
-        parentId = await Message.findOne({ where: { messageId: repliedId }, attributes: ['id'] })
+    console.log('сообщение из приложения, repliedId ---', repliedId)
 
+        parentId = await Message.findOne({ where: { messageId: repliedId }, attributes: ['id'] })
+    console.log('сообщение из приложения, parentId ---', parentId)
+
+        await Message.update({ repliedAt: new Date() }, { where: { id: parentId.id } })
     }
 
     const message = await Message.create({
@@ -338,7 +345,7 @@ async function parsedAndCreateMessageFromClient(userData, content, parsed, messa
         status: 'new',
         isReply: isReply,
         messageId: messageId,
-        parentId: parentId.id,
+        parentId: parentId?.id || null,
         threadId: threadId,
         receivedAt: parsed.date || new Date(),
         replyTo: parsed.inReplyTo || parsed.references

@@ -1,13 +1,15 @@
 .message-status {
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: bold;
 }
-.status-new {
+.status-new,
+.status-userReply {
   background-color: #fff3cd;
   color: #856404;
 }
+
 .status-in_progress {
   background-color: #cce5ff;
   color: #004085;
@@ -15,7 +17,10 @@
 .status-replied {
   background-color: #d4edda;
   color: #155724;
-  font-size: 16px;
+}
+.status-adminReply {
+  background-color: #004085;
+  color: #fff;
 }
 .status-closed {
   background-color: #f8d7da;
@@ -48,7 +53,7 @@
 .admin-messages-list button {
   width: 80%;
   display: flex;
-  justify-content: space-around;
+  justify-content: space-evenly;
   align-items: center;
 }
 
@@ -74,8 +79,8 @@
 }
 
 .vertical-list {
-      flex-wrap: wrap;
-    gap: 20px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .actions .vertical-item {
@@ -89,6 +94,46 @@
   flex-wrap: wrap;
 }
 
+.meta.message-details .messages-thread-btn {
+  margin-top: 20px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+}
+
+.post.message-item .meta.message-details {
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 1.75em;
+  padding-bottom: 1.75em;
+}
+
+.post.message-item header {
+  margin-bottom: 1.75em;
+}
+
+.message-content.parent {
+  background-color: #fff9e6;
+  margin-left: 15px;
+}
+
+.message-content p {
+  margin-bottom: 5px;
+}
+
+.message-item .title.user-message-info {
+  padding-top: 1.75em;
+  padding-bottom: 1.75em;
+}
+
+.post.message-item .messages-footer-hiden {
+  display: none;
+}
+
+
+
 @media screen and (max-width: 736px) {
   .admin-messages-item button,
   .admin-messages-select {
@@ -101,8 +146,8 @@
   .admin-messages-select {
     width: 100%;
   }
-  
-.form-group.actions button {
-  width: 100%;
-}
+
+  .form-group.actions button {
+    width: 100%;
+  }
 }

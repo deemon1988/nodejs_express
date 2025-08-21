@@ -50,7 +50,7 @@
                                            message.status === 'adminReply' ? 'Ответ администратора' : 'Закрыто' %>
                                     </span>
                                 </div>
-                                <div class="meta">
+                                <div class="meta message-details">
                                     <time class="published" datetime="<%= message.createdAt %>">
                                         <%= formatDate(message.createdAt) %>
                                     </time>
@@ -72,24 +72,29 @@
                             
                             <footer>
                                 <ul class="actions admin-messages-list">
-                                      <% if (message.status !== 'adminReply' && message.status !== 'replied') { %>
+                                      <% if (message.status !== 'adminReply' && message.status !== 'replied' && message.status !== 'closed') { %>
                                     <li class="admin-messages-item">
                                         <button type="button" class="button large messages-reply-btn" onclick="toggleReplyForm(<%= message.id %>)">
                                             Ответить <i class="bi bi-reply"></i>
                                         </button>
                                     </li>
                                     <% } %>
+                                   
                                     <li class="admin-messages-item">
                                         <form method="POST" action="/admin/messages/<%= message.id %>/status" class="admin-messages-form">
                                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                             <select name="status" onchange="this.form.submit()" class="admin-messages-select">
+                                                 <% if (message.status !== 'replied') { %>
                                                 <option value="new" <%= message.status === 'new' ? 'selected' : '' %>>Новое</option>
                                                 <option value="in_progress" <%= message.status === 'in_progress' ? 'selected' : '' %>>В работе</option>
+                                                 <% } %>
                                                 <option value="replied" <%= message.status === 'replied' ? 'selected' : '' %>>Отвечено</option>
                                                 <option value="closed" <%= message.status === 'closed' ? 'selected' : '' %>>Закрыто</option>
+                                               
                                             </select>
                                         </form>
                                     </li>
+                                   
                                       <% if (message.status === 'closed') { %>
                                     <li class="admin-messages-item">
                                         <button type="button" class="button large messages-delete-btn" onclick="deleteMessage(<%= message.id %>)">
@@ -160,7 +165,7 @@
                                 <h3>Всего сообщений: <%= totalMessages || 0 %></h3>
                             </header>
                         </article>
-                        <article class="mini-post">
+                        <article class="mini-post <%= newMessages > 0 ? 'status-new' : '' %>">
                             <header>
                                 <h3>Новых: <%= newMessages || 0 %></h3>
                             </header>
@@ -172,7 +177,12 @@
                         </article>
                     </div>
                 </section>
-
+                 <section>
+                    <h3>Быстрые действия</h3>
+                    <ul class="actions">
+                        <li class="actions-item"><a href="/email/check-email" class="button large">Обновить сообщения</a></li>
+                    </ul>
+                </section>
                 <!-- Quick Actions -->
                 <section>
                     <h3>Быстрые действия</h3>
@@ -180,9 +190,6 @@
                         <li class="vertical-item"><a href="/admin/messages?status=new" class="button">Новые сообщения</a></li>
                         <li class="vertical-item"><a href="/admin/messages?status=in_progress" class="button">В работе</a></li>
                         <li class="vertical-item"><a href="/admin/messages?status=replied" class="button">Отвеченные</a></li>
-                        <li class="vertical-item"><a href="/email/check-email" class="button large">Загрузить сообщения</a></li>
-                                
-                        
                     </ul>
                 </section>
 
@@ -191,7 +198,7 @@
                     <h2>Информация</h2>
                     <p>Здесь вы можете управлять сообщениями от пользователей, отвечать на них и отслеживать статус обработки.</p>
                     <ul class="actions">
-                        <li><a href="/admin" class="button">Назад в админку</a></li>
+                       
                     </ul>
                 </section>
 

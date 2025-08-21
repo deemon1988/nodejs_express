@@ -5,7 +5,8 @@ const Message = require("../models/message")
 const { getAdminMessagesPagination } = require("../public/assets/js/pagination/admin-pagination")
 
 const { v4: uuidv4 } = require('uuid');
-const { getThreadedMessages } = require("../util/email/messageUtils")
+const { getThreadedMessages, buildMessagesThree, addParentInfo } = require("../util/email/messageUtils")
+const { Op } = require("sequelize")
 
 function generateMessageId() {
     return `<${uuidv4()}@dturblog.ru>`; // твой домен
@@ -105,15 +106,18 @@ exports.getReplyToUser = async (req, res, next) => {
     try {
         const page = req.query.page || 1
         const { messages, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await getAdminMessagesPagination(page)
-        const [newMessages] = await getThreadedMessages()
-        console.log(newMessages)
+
+        const [messagesList] = await getThreadedMessages()
+        const newMessages = messagesList.filter(message => message.status === 'new' || message.status === 'userReply')
+        const repliedMessages = messagesList.filter(message => message.status === 'replied')
+
         res.render('admin/messages', {
             pageTitle: "Сообщения от пользователей",
             path: '/admin/messages',
             successMessage: req.flash("success")[0] || null,
             errorMessage: req.flash("error")[0] || null,
             csrfToken: req.csrfToken(),
-            messages: newMessages,
+            messages: messagesList,
             currentPage: currentPage,
             hasNextPage: hasNextPage,
             hasPreviousPage: hasPreviousPage,
@@ -121,9 +125,9 @@ exports.getReplyToUser = async (req, res, next) => {
             previousPage: previousPage,
             lastPage: lastPage,
             totalPages: totalPages,
-            totalMessages: messages?.length || 0,
-            newMessages: 0,
-            repliedMessages: 0
+            totalMessages: messagesList?.length || 0,
+            newMessages: newMessages.length || 0,
+            repliedMessages: repliedMessages.length || 0
         })
     } catch (error) {
         console.error("Ошибка в getReplyToUser: ", error.message)
@@ -178,11 +182,17 @@ exports.postReplyToUser = async (req, res, next) => {
             threadId: message.threadId,
             subject: `${message.subject}`,
             receivedAt: new Date(),
-            repliedAt: new Date()
+            
         })
 
         req.flash("success", "Ответ успешно отправлен пользователю!");
-        res.redirect("/admin/messages");
+
+        if (req.body.fromPage && req.body.fromPage === 'single-message') {
+            res.redirect(`/admin/messages/${req.body.threadId}`);
+        } else {
+            res.redirect("/admin/messages/");
+        }
+
     } catch (error) {
         console.log("Ошибка при отправке ответа", error.message);
         req.flash("error", "Не удалось отправить ответ!");
@@ -193,43 +203,78 @@ exports.postReplyToUser = async (req, res, next) => {
 exports.getThreadMessages = async (req, res, next) => {
     try {
         const threadId = req.params.threadId
+        const messagesStatus = req.query.status
+
+        const whereCondition = { threadId }
+
+        if (messagesStatus) {
+            whereCondition.status = messagesStatus === 'new' ? { [Op.in]: ['new', 'userReply'] } : messagesStatus
+        }
         const threadMessages = await Message.findAll({
-            where: { threadId: threadId },
-            order: [['createdAt', 'DESC']]
+            where: whereCondition,
+            order: [['createdAt', 'DESC']],
         })
-        const parentMessage = threadMessages.find(message => message.parentId === null)
-    
+
+        // const messageThree = buildMessagesThree(threadMessages)
+        const messagesWithParents = addParentInfo(threadMessages);
+      
+        const parentMessage = await Message.findOne({ where: { threadId, parentId: null } })
+         if (!parentMessage) {
+            throw new Error('Родительское сообщение не найдено');
+        }
         const userData = {
             firstname: parentMessage.firstname,
             lastname: parentMessage.lastname,
             email: parentMessage.email
         }
-        console.log(userData)
+        const repliedMessages = threadMessages.filter(message => message.status === 'replied')
+        const newMessages = threadMessages.filter(message => message.status === 'new' || message.status === 'userReply')
+        const adminMessages = threadMessages.filter(message => message.status === 'adminReply')
+
+        if (newMessages.length > 0) {
+            req.flash('success', `Найдено ${newMessages.length} новых сообщений`)
+        }
+
         res.render('admin/single-message', {
             pageTitle: 'История переписки',
             path: '',
             successMessage: req.flash("success")[0] || null,
             errorMessage: req.flash("error")[0] || null,
             csrfToken: req.csrfToken(),
-            messages: threadMessages,
+
+            messages: messagesWithParents,
             userData: userData,
-            // currentPage: currentPage,
-            // hasNextPage: hasNextPage,
-            // hasPreviousPage: hasPreviousPage,
-            // nextPage: nextPage,
-            // previousPage: previousPage,
-            // lastPage: lastPage,
-            // totalPages: totalPages,
+
+            threadId: parentMessage.threadId,
             totalMessages: threadMessages?.length || 0,
-            newMessages: 0,
-            repliedMessages: 0
+            newMessages: newMessages.length,
+            repliedMessages: repliedMessages.length,
+            adminMessages: adminMessages.length || 0
         })
     } catch (error) {
-        console.error("Ошибка в getReplyToUser: ", error.message)
+        console.error("Ошибка в getThreadMessages: ", error.message)
         const err = new Error(error)
         err.httpStatusCode = 500
         next(err)
     }
+}
 
-
+exports.postMessageStatus = async (req, res, next) => {
+    try {
+        const messageId = req.params.messageId
+        const messageStatus = req.body.status
+        const fromPage = req.query.fromPage
+        await Message.update({ status: messageStatus }, { where: { id: messageId } })
+        if (fromPage === 'single-message') {
+            const threadId = req.query.threadId
+            res.redirect(`/admin/messages/${threadId}`)
+        } else {
+            res.redirect('/admin/messages')
+        }
+    } catch (error) {
+        console.error("Ошибка в postMessageStatus: ", error.message)
+        const err = new Error(error)
+        err.httpStatusCode = 500
+        next(err)
+    }
 }
