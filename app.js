@@ -8,8 +8,29 @@ const { formatDateOnly, formatDate } = require("./util/date");
 const { fixPrepositions } = require("./util/fixPrepositions.js");
 const csrf = require("csurf");
 const flash = require("connect-flash");
+const WebSocket = require('ws')
+const http = require('http')
+const helmetConfig = require('./config/helmet.js')
+const compression = require('compression')
+const morgan = require('morgan')
+const fs = require('fs')
 
 const app = express();
+const server = http.createServer(app)
+const wss = new WebSocket.Server({ server })
+wss.on('connection', (ws) => {
+  console.log('Новое подключение')
+
+  ws.on('message', (message) => {
+    console.log('Получено сообщение:', message);
+    // Отправляем ответ клиенту
+    ws.send(`Эхо: ${message}`);
+  });
+
+  ws.send('Привет от сервера!')
+})
+
+
 const sessionStore = new pgSession({
   pool: pgPool,
   tableName: "user_sessions",
@@ -34,7 +55,7 @@ const Like = require("./models/like.js");
 const UserActivity = require("./models/user-activity.js");
 const Category = require("./models/category.js");
 const Alias = require("./models/allowed-alias.js");
-const Image = require("./models/image.js");
+
 const YandexAccount = require('./models/yandex-account.js')
 const Guide = require('./models/guide.js');
 const Payment = require("./models/payment.js");
@@ -47,6 +68,15 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use('/images', express.static(path.join(__dirname, "images")));
 app.use(express.json());
+
+const accesLogStream = fs.createWriteStream(
+  path.join(__dirname, 'access.log'),
+  { flags: 'a' }
+)
+
+app.use(helmetConfig)
+app.use(compression())
+app.use(morgan('combined', { stream: accesLogStream }))
 
 app.use(
   session({
@@ -171,6 +201,8 @@ sequelize
   // .sync({ force: true })
   .sync()
   .then((result) => {
-    app.listen(3000);
+    server.listen(process.env.PORT || 3000);
   })
   .catch((err) => console.log(err));
+
+

@@ -8,6 +8,9 @@ const axios = require('axios')
 const qs = require('querystring');
 const crypto = require("crypto");
 const User = require("../models/user");
+const adminEmails = process.env.ADMIN_EMAILS
+  ? process.env.ADMIN_EMAILS.split(',').map(email => email.trim())
+  : [];
 
 exports.getLogin = (req, res, err) => {
   // Функция для отрисовки страницы логина
@@ -173,7 +176,7 @@ exports.postRegisterUser = async (req, res, err) => {
         username: username,
         email: email,
         password: hashedPassword,
-        role: "user",
+        role: adminEmails.includes(email) ? 'admin' : 'user',
       }
     });
 
@@ -436,7 +439,7 @@ exports.getAuthCallback = async (req, res, next) => {
       where: { email: userInfo.default_email },
       defaults: {
         email: userInfo.default_email,
-        role: 'admin'
+        role: adminEmails.includes(userInfo.default_email) ? 'admin' : 'user'
       }
     })
 

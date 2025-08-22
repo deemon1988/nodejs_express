@@ -7,6 +7,7 @@ const { getAdminMessagesPagination } = require("../public/assets/js/pagination/a
 const { v4: uuidv4 } = require('uuid');
 const { getThreadedMessages, buildMessagesThree, addParentInfo } = require("../util/email/messageUtils")
 const { Op } = require("sequelize")
+const YandexEmailChecker = require("../util/emailChecker")
 
 function generateMessageId() {
     return `<${uuidv4()}@dturblog.ru>`; // твой домен
@@ -104,20 +105,31 @@ exports.postSendEmail = async (req, res, next) => {
 
 exports.getReplyToUser = async (req, res, next) => {
     try {
-        const page = req.query.page || 1
-        const { messages, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await getAdminMessagesPagination(page)
+        const MESSAGES_PER_PAGE = 5
+        const page = +req.query.page || 1
+        
+        const messagesStatus = req.query.status
+      
+        const checker = new YandexEmailChecker();
+        const result = await checker.checkEmails();
+        req.flash('success', result.message)
 
-        const [messagesList] = await getThreadedMessages()
-        const newMessages = messagesList.filter(message => message.status === 'new' || message.status === 'userReply')
-        const repliedMessages = messagesList.filter(message => message.status === 'replied')
+        // const { messages, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await getAdminMessagesPagination(page)
 
+        const { messages, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await getThreadedMessages(page, MESSAGES_PER_PAGE, messagesStatus)
+
+
+        const newMessages = messages.filter(message => message.status === 'new' || message.status === 'userReply')
+        const repliedMessages = messages.filter(message => message.status === 'replied')
+
+        
         res.render('admin/messages', {
             pageTitle: "Сообщения от пользователей",
             path: '/admin/messages',
             successMessage: req.flash("success")[0] || null,
             errorMessage: req.flash("error")[0] || null,
             csrfToken: req.csrfToken(),
-            messages: messagesList,
+            messages: messages,
             currentPage: currentPage,
             hasNextPage: hasNextPage,
             hasPreviousPage: hasPreviousPage,
@@ -125,9 +137,10 @@ exports.getReplyToUser = async (req, res, next) => {
             previousPage: previousPage,
             lastPage: lastPage,
             totalPages: totalPages,
-            totalMessages: messagesList?.length || 0,
+            totalMessages: messages?.length || 0,
             newMessages: newMessages.length || 0,
-            repliedMessages: repliedMessages.length || 0
+            repliedMessages: repliedMessages.length || 0,
+            status: messagesStatus || null
         })
     } catch (error) {
         console.error("Ошибка в getReplyToUser: ", error.message)

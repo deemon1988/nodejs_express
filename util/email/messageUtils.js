@@ -1,16 +1,58 @@
 const sequelize = require("../database");
-
-async function getThreadedMessages(page = 1, limit = 10) {
+async function getThreadedMessages(page, limit, messagesStatus) {
     try {
-        return await sequelize.query(`
+        let whereClause = `"status" != 'adminReply'`
+        if(messagesStatus){
+            whereClause += ` AND "status" = :messagesStatus`
+        }
+
+        const offset = (page - 1) * limit
+        const rows = await sequelize.query(`
             SELECT * FROM (
                 SELECT DISTINCT ON ("threadId") *
                 FROM "messages"
-                WHERE "status" != 'adminReply'
+                WHERE ${whereClause}
                 ORDER BY "threadId", "createdAt" DESC
             ) as latest_messages
-             ORDER BY "createdAt" DESC
-            `);
+            ORDER BY "createdAt" DESC
+            LIMIT :limit OFFSET :offset
+            `,
+            {
+                replacements: {
+                    limit: parseInt(limit) || 10,
+                    offset: parseInt(offset) || 0,
+                    messagesStatus: messagesStatus
+                },
+                type: sequelize.QueryTypes.SELECT
+            }
+        );
+
+        const [countResult] = await sequelize.query(`
+            SELECT COUNT(*) FROM (
+            SELECT DISTINCT ON ("threadId") "threadId"
+            FROM "messages"
+            WHERE ${whereClause}
+            ORDER BY "threadId", "createdAt" DESC
+            ) as latest_messages
+            `, {
+                replacements: {
+                    messagesStatus: messagesStatus
+                }
+            })
+
+        const total = parseInt(countResult[0].count)
+        const totalPages = Math.ceil(total / limit)
+
+        return {
+            messages: rows,
+            currentPage: page,
+            hasNextPage: (page * limit) < total,
+            hasPreviousPage: page > 1,
+            nextPage: page + 1,
+            previousPage: page - 1,
+            lastPage: totalPages,
+            totalPages: totalPages
+        }
 
     } catch (error) {
         console.error('Error getting threaded messages:', error);
