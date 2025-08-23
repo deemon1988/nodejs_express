@@ -107,14 +107,12 @@ exports.getReplyToUser = async (req, res, next) => {
     try {
         const MESSAGES_PER_PAGE = 5
         const page = +req.query.page || 1
-        
+
         const messagesStatus = req.query.status
-      
+
         const checker = new YandexEmailChecker();
         const result = await checker.checkEmails();
         req.flash('success', result.message)
-
-        // const { messages, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await getAdminMessagesPagination(page)
 
         const { messages, currentPage, hasNextPage, hasPreviousPage, nextPage, previousPage, lastPage, totalPages } = await getThreadedMessages(page, MESSAGES_PER_PAGE, messagesStatus)
 
@@ -122,7 +120,7 @@ exports.getReplyToUser = async (req, res, next) => {
         const newMessages = messages.filter(message => message.status === 'new' || message.status === 'userReply')
         const repliedMessages = messages.filter(message => message.status === 'replied')
 
-        
+
         res.render('admin/messages', {
             pageTitle: "Сообщения от пользователей",
             path: '/admin/messages',
@@ -195,7 +193,7 @@ exports.postReplyToUser = async (req, res, next) => {
             threadId: message.threadId,
             subject: `${message.subject}`,
             receivedAt: new Date(),
-            
+
         })
 
         req.flash("success", "Ответ успешно отправлен пользователю!");
@@ -230,9 +228,9 @@ exports.getThreadMessages = async (req, res, next) => {
 
         // const messageThree = buildMessagesThree(threadMessages)
         const messagesWithParents = addParentInfo(threadMessages);
-      
+
         const parentMessage = await Message.findOne({ where: { threadId, parentId: null } })
-         if (!parentMessage) {
+        if (!parentMessage) {
             throw new Error('Родительское сообщение не найдено');
         }
         const userData = {
@@ -280,10 +278,34 @@ exports.postMessageStatus = async (req, res, next) => {
         await Message.update({ status: messageStatus }, { where: { id: messageId } })
         if (fromPage === 'single-message') {
             const threadId = req.query.threadId
-            res.redirect(`/admin/messages/${threadId}`)
+            res.json({ success: true, url: `/admin/messages/${threadId}` })
+            // res.redirect(`/admin/messages/${threadId}`)
         } else {
-            res.redirect('/admin/messages')
+            res.json({ success: true, url: '/admin/messages' })
+            // res.redirect('/admin/messages')
         }
+    } catch (error) {
+        console.error("Ошибка в postMessageStatus: ", error.message)
+        const err = new Error(error)
+        err.httpStatusCode = 500
+        next(err)
+    }
+}
+
+exports.postDeleteMessage = async (req, res, next) => {
+    try {
+        const messageId = +req.params.messageId
+        const deletableMessage = await Message.findByPk(messageId)
+        if (!deletableMessage) {
+            return res.json({
+                success: false,
+                message: `Сообщение с id=${messageId} не найдено`
+            })
+        }
+        return res.json({
+            success: true,
+            message: `Сообщение удалено`
+        })
     } catch (error) {
         console.error("Ошибка в postMessageStatus: ", error.message)
         const err = new Error(error)

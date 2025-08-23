@@ -1,10 +1,6 @@
-// async function showSendForm() {
-//     try {
-
-//     } catch () {
-
-//     }
-// }
+document.getElementById('contactButton').addEventListener('click', async function () {
+    await showSendFormModal()
+});
 
 async function showSendFormModal() {
     try {

@@ -13,6 +13,10 @@ const Message = sequelize.define('message', {
     lastname: Sequelize.STRING,
     email: Sequelize.STRING,
     content: Sequelize.TEXT,
+    contentSanitized: {
+        type: Sequelize.TEXT, // очищенный HTML
+        allowNull: true,
+    },
     subject: Sequelize.STRING,
     status: {
         type: Sequelize.ENUM('new', 'in_progress', 'replied', 'closed', 'userReply', 'adminReply'),

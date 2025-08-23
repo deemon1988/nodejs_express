@@ -3,6 +3,8 @@ const Imap = require('imap');
 const { simpleParser } = require('mailparser');
 const Message = require('../models/message');
 const sequelize = require('./database');
+const { sanitizeEmailData } = require('./email/emailSanitized');
+const sanitizeHtml = require("sanitize-html");
 
 class YandexEmailChecker {
     constructor() {
@@ -70,10 +72,9 @@ class YandexEmailChecker {
                                     try {
                                         const parsed = await simpleParser(buffer);
                                         const messageResult = await this.processEmail(parsed, seqno);
-                                        console.log('messageResult ----', messageResult)
 
                                         if (messageResult.newMessage) newMessages++
-                                        console.log('messageResult.newMessage ----', messageResult.newMessage)
+                                        
                                         msg.once('attributes', (attrs) => {
                                             this.imap.addFlags(attrs.uid, '\\Seen', (err) => {
                                                 if (err) {
@@ -180,29 +181,31 @@ class YandexEmailChecker {
                 }
 
                 const content = getFirstMessageBlock(parsed.html)
+                // Санитизация письма
+                const safeData = sanitizeEmailData(parsed);
                 let parentId = null
                 if (isReply) {
                     const repliedId = parsed.inReplyTo || parsed.references
-                    console.log('repliedId--------',repliedId)
                     parentId = await Message.findOne({ where: { messageId: repliedId }, attributes: ['id'] })
-                    console.log('parentId--------',parentId)
-                    await Message.update({ repliedAt: new Date() }, { where: { id: parentId.id } })
+                    if (parentId) {
+                        await Message.update({ repliedAt: new Date() }, { where: { id: parentId.id } })
+                    }
                 }
-                const message = await Message.create({
-                    firstname: parsed.from.value[0].name.split(' ')[0],
-                    lastname: parsed.from.value[0].name.split(' ')[1],
-                    email: parsed.from.value[0].address,
-                    content: content,
-                    subject: parsed.subject,
-                    status: isReply ? 'userReply' : 'new',
-                    replyTo: replyTo,
-                    messageId: messageId,
-                    parentId: parentId.id,
-                    threadId: threadId,
-                    isReply: isReply,
-                    receivedAt: parsed.date || new Date(),
+                if (parentId) {
+                    const message = await Message.create({
+                        ...safeData,
+                        content: content,
+                        status: isReply ? 'userReply' : 'new',
+                        replyTo: replyTo,
+                        messageId: messageId,
+                        parentId: parentId.id,
+                        threadId: threadId,
+                        isReply: isReply,
+                        receivedAt: parsed.date || new Date(),
 
-                });
+                    });
+                }
+
                 console.log('Сообщение сохранено');
                 return { newMessage: true }
             }
@@ -261,7 +264,6 @@ class YandexEmailChecker {
         if (lastNameMatch) {
             userData.lastname = lastNameMatch[1].trim();
         }
-
 
         return userData;
     }
@@ -323,25 +325,30 @@ async function checkThreadId(replyTo, messageId) {
 }
 
 async function parsedAndCreateMessageFromClient(userData, content, parsed, messageId, threadId) {
-    console.log('сообщение из приложения')
     const isReply = !!(parsed.inReplyTo || parsed.references);
     let parentId = null
     if (isReply) {
         const repliedId = parsed.inReplyTo || parsed.references
-    console.log('сообщение из приложения, repliedId ---', repliedId)
-
         parentId = await Message.findOne({ where: { messageId: repliedId }, attributes: ['id'] })
-    console.log('сообщение из приложения, parentId ---', parentId)
-
         await Message.update({ repliedAt: new Date() }, { where: { id: parentId.id } })
     }
+
+    const safeContent = sanitizeHtml(content, {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img"]),
+        allowedAttributes: {
+            a: ["href", "name", "target"],
+            img: ["src", "alt"],
+        },
+        allowedSchemes: ["http", "https", "mailto"],
+    });
 
     const message = await Message.create({
         firstname: userData.firstname,
         lastname: userData.lastname,
         email: userData.email,
-        content: content,
         subject: parsed.subject,
+        content: content,
+        contentSanitized: safeContent,
         status: 'new',
         isReply: isReply,
         messageId: messageId,
@@ -354,7 +361,6 @@ async function parsedAndCreateMessageFromClient(userData, content, parsed, messa
 }
 
 const cheerio = require('cheerio');
-const { Op } = require('sequelize');
 
 function getFirstMessageBlock(html) {
     const $ = cheerio.load(html);

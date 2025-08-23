@@ -1,7 +1,6 @@
 <%- include('../includes/head.ejs') %>
 <link rel="stylesheet" href="/assets/css/badges.css">
 <link rel="stylesheet" href="/assets/css/email-messages.css">
-
 </head>
 
 <body class="messages-admin">
@@ -83,16 +82,15 @@
                             <footer class="<%= (message.status !== 'adminReply') ? '' : 'messages-footer-hiden' %>">
                                 <ul class="actions admin-messages-list">
                                     <% if (message.status !== 'adminReply') { %>
-                                   
                                     <li class="admin-messages-item">
-                                        <button type="button" class="button large messages-reply-btn" onclick="toggleReplyForm(<%= message.id %>)">
+                                        <button type="button" class="button large toggle-reply-form-btn" data-message-id="<%= message.id %>">
                                             Ответить <i class="bi bi-reply"></i>
                                         </button>
                                     </li>
                                     <li class="admin-messages-item">
-                                        <form method="POST" action="/admin/messages/<%= message.id %>/status?fromPage=single-message&threadId=<%= message.threadId %>" class="admin-messages-form">
+                                        <form method="POST" action="/admin/messages/<%= message.id %>/status?fromPage=single-message&threadId=<%= message.threadId %>" class="admin-messages-form" enctype="application/x-www-form-urlencoded">
                                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                            <select name="status" onchange="this.form.submit()" class="admin-messages-select">
+                                            <select name="status" class="admin-messages-select">
                                                 <% if (message.status === 'userReply') { %>
                                                     <option value="userReply" <%= message.status === 'userReply' ? 'selected' : '' %>>Ответ пользователя</option>                                            
                                                     <% } else { %>
@@ -133,7 +131,7 @@
                                     
                                     <div class="form-group actions">
                                         <button type="submit" class="button primary">Отправить ответ</button>
-                                        <button type="button" class="button" onclick="toggleReplyForm(<%= message.id %>)">Отмена</button>
+                                        <button type="button" class="button toggle-reply-form-btn" data-message-id="<%= message.id %>">Отмена</button>
                                     </div>
                                 </form>
                             </div>
@@ -219,28 +217,7 @@
 <%- include('../includes/footer.ejs') %>
 <%- include('../includes/main-scripts.ejs') %>
 
-<script>
-    function toggleReplyForm(messageId) {
-        const form = document.getElementById(`reply-form-${messageId}`);
-        form.classList.toggle('show');
-    }
 
-    function deleteMessage(messageId) {
-        if (confirm('Вы уверены, что хотите удалить это сообщение?')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/admin/messages/${messageId}/delete`;
-            
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_csrf';
-            csrfInput.value = '<%= csrfToken %>';
-            
-            form.appendChild(csrfInput);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-</script>
 
+<script src="/assets/js/email/messageFormHandler.js"></script>
 <%- include('../includes/scripts.ejs') %>

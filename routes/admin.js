@@ -185,5 +185,6 @@ router.get('/messages', csrfProtection, isAuth, isAdmin, emailController.getRepl
 router.get('/messages/:threadId', csrfProtection, isAuth, isAdmin, emailController.getThreadMessages)
 router.post('/messages/:messageId/reply', csrfProtection, isAuth, isAdmin, emailController.postReplyToUser)
 router.post('/messages/:messageId/status', csrfProtection, isAuth, isAdmin, emailController.postMessageStatus)
+router.post('/messages/:messageId/delete', csrfProtection, isAuth, isAdmin, emailController.postDeleteMessage)
 
 module.exports = router;
